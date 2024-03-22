@@ -21,10 +21,10 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
     uint256 public constant MINT_VOYA_THRESHOLD = 50 * 10 ** 18;
 
     uint256 public tokenIdCounter = 1;
-    mapping(address => bool) private hasMintedWithVoya;
+    mapping(address => bool) private hasMinted;
     mapping(uint256 => uint256) private boxOpenedBlockNumber;
 
-    uint256 public remainCount = 900;
+    uint256 public remainVoyaCount = 900;
     uint256 public whiteListEndedBlock;
 
     // URI 1 is reserved
@@ -1030,110 +1030,12 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
     ];
 
     address[] private freeMintList = [
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB),
-        address(0xAAAA),
-        address(0xBBBB)
+        address(0x8e675b3B721af441E908aB2597C1BC283A0D1C4d),
+        address(0x7912e9a0bD933eB4d328C901622d5c71E21cAD08)
     ];
 
     // Events
-    event MintBox(address indexed user, uint256 boxId, uint256 mintType);
+    event MintBox(address indexed user, uint256 boxId, uint256 mintType); // minttype: 1=whitelist, 2=voya, 3=tokenOne
     event OpenBox(address indexed user, uint256 boxId, string url);
 
     constructor(
@@ -1149,116 +1051,87 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         _defender = defenderAddr;
     }
 
-    function checkCanMintByWhiteList() external view returns (bool) {
-        if (block.number < whiteListEndedBlock) {
+    function checkCanMint() external view returns (bool canMint) {
+        if (hasMinted[msg.sender]) {
+            return false;
+        }
+
+        // check if can mint token one
+        if (msg.sender == _idOneOwner && _ownerOf(1) == address(0)) {
+            return (true);
+        } else if (block.number < whiteListEndedBlock) {
+            // check if can mint by whitelist
             uint256 length = freeMintList.length;
             for (uint256 i = 0; i < length; i++) {
                 if (freeMintList[i] == msg.sender) {
                     return true;
                 }
             }
-            return false;
-        } else {
-            return false;
-        }
-    }
-
-    function currentTokenId() external view returns (uint256) {
-        return tokenIdCounter;
-    }
-
-    function mintByWhiteList(
-        bytes32 hash,
-        bytes memory signature
-    ) external payable nonReentrant {
-        require(
-            block.number < whiteListEndedBlock,
-            "Whitelist minting has ended"
-        );
-        require(msg.value == MINT_PRICE, "Insufficient BTC sent");
-
-        _validMint(hash, signature, tokenIdCounter);
-
-        bool isWhitelisted = false;
-        uint256 length = freeMintList.length;
-        for (uint256 i = 0; i < length; i++) {
-            if (freeMintList[i] == msg.sender) {
-                isWhitelisted = true;
-                freeMintList[i] = freeMintList[length - 1];
-                freeMintList.pop();
-                break;
-            }
         }
 
-        require(isWhitelisted, "You are not on the whitelist");
-
-        ++tokenIdCounter;
-        _safeMint(msg.sender, tokenIdCounter);
-        emit MintBox(msg.sender, tokenIdCounter, 1);
-    }
-
-    function checkCanMintByVoya() external view returns (bool) {
-        if (remainCount == 0) {
-            return false;
-        }
-
-        if (hasMintedWithVoya[msg.sender]) {
-            return false;
-        }
-
-        if (_voyaToken.balanceOf(msg.sender) > MINT_VOYA_THRESHOLD) {
+        // check if can mint by voya
+        if (
+            remainVoyaCount > 0 &&
+            _voyaToken.balanceOf(msg.sender) >= MINT_VOYA_THRESHOLD
+        ) {
             return true;
-        } else {
-            return false;
-        }
-    }
-
-    function mintByVoya(
-        bytes32 hash,
-        bytes memory signature
-    ) external payable nonReentrant {
-        require(remainCount > 0, "All boxes have been minted");
-        require(
-            !hasMintedWithVoya[msg.sender],
-            "You have already mint by $Voya"
-        );
-        require(
-            _voyaToken.balanceOf(msg.sender) > MINT_VOYA_THRESHOLD,
-            "Insufficient $Voya balance"
-        );
-        require(msg.value == MINT_PRICE, "Insufficient BTC sent");
-
-        _validMint(hash, signature, tokenIdCounter);
-
-        --remainCount;
-        ++tokenIdCounter;
-        hasMintedWithVoya[msg.sender] = true;
-        _safeMint(msg.sender, tokenIdCounter);
-        emit MintBox(msg.sender, tokenIdCounter, 2);
-    }
-
-    function checkCanMintTokenOne() external view returns (bool) {
-        if (msg.sender == _idOneOwner) {
-            if (_ownerOf(1) == address(0)) {
-                return true;
-            }
         }
 
         return false;
     }
 
-    function mintTokenOne(
+    function mint(
         bytes32 hash,
         bytes memory signature
     ) external payable nonReentrant {
-        require(msg.sender == _idOneOwner, "Cannot mint this token");
-        require(_ownerOf(1) == address(0), "Token #1 already minted");
         require(msg.value == MINT_PRICE, "Insufficient BTC sent");
+        _validMint(hash, signature, tokenIdCounter);
+        require(!hasMinted[msg.sender], "You have already minted a box");
 
-        _validMint(hash, signature, 1);
+        // check if can mint token one
+        if (msg.sender == _idOneOwner) {
+            _safeMint(msg.sender, 1);
+            hasMinted[msg.sender] = true;
+            emit MintBox(msg.sender, 1, 3);
+            return;
+        }
 
-        _safeMint(msg.sender, 1);
-        emit MintBox(msg.sender, 1, 3);
+        // check if can mint by whitelist
+        if (block.number < whiteListEndedBlock) {
+            bool isWhitelisted = false;
+            uint256 length = freeMintList.length;
+            for (uint256 i = 0; i < length; i++) {
+                if (freeMintList[i] == msg.sender) {
+                    isWhitelisted = true;
+                    freeMintList[i] = freeMintList[length - 1];
+                    freeMintList.pop();
+                    break;
+                }
+            }
+
+            if (isWhitelisted) {
+                ++tokenIdCounter;
+                _safeMint(msg.sender, tokenIdCounter);
+                hasMinted[msg.sender] = true;
+
+                emit MintBox(msg.sender, tokenIdCounter, 1);
+                return;
+            }
+        }
+
+        // check if can mint by voya
+        if (remainVoyaCount > 0) {
+            if (_voyaToken.balanceOf(msg.sender) >= MINT_VOYA_THRESHOLD) {
+                --remainVoyaCount;
+                ++tokenIdCounter;
+                hasMinted[msg.sender] = true;
+                _safeMint(msg.sender, tokenIdCounter);
+                emit MintBox(msg.sender, tokenIdCounter, 2);
+                return;
+            }
+        }
+
+        revert("Not eligible to mint");
     }
 
     function openBox(uint256 tokenId) external nonReentrant {

@@ -5,11 +5,14 @@ async function main() {
 	const [deployer] = await hre.ethers.getSigners();
 	const ownerAddress = deployer.address;
 
-	const [owlTokenContract, owlTokenAddresss] = await deploy("OwlToken", [ownerAddress]);
-	console.log(`OwlToken contract deployed to : ${owlTokenAddresss}`);
+	const owlTokenParams = [ownerAddress];
+	const [owlTokenContract, owlTokenAddresss] = await deploy("OwlToken", owlTokenParams);
+	console.log(`OwlToken contract deployed to : ${owlTokenAddresss}\nParams = ${owlTokenParams}`);
+
 	const backendAddress = process.env.BACKEND_WALLET;
-	const [boxGen0Contract, boxGen0Address] = await deploy("MysteryBoxGen0", [10, owlTokenAddresss, deployer.address, backendAddress]);
-	console.log(`BoxGen0 contract deployed to : ${boxGen0Address}`);
+	const boxGen0Params = [3800000, owlTokenAddresss, deployer.address, backendAddress];
+	const [boxGen0Contract, boxGen0Address] = await deploy("MysteryBoxGen0", boxGen0Params);
+	console.log(`BoxGen0 contract deployed to : ${boxGen0Address}\nParams = ${boxGen0Params}`);
 
 	// const owlTokenAddr = "0xf7d82CEA33a4D7C2F45e6Fd86EDB5b110FE70139";
 	// const backendAddress = "0x047BE992fBB36702b3684ccB91a5ec4B0e2eA042";
