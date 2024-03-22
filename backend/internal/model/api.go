@@ -5,6 +5,7 @@ type ResponseCode int
 const (
 	Success             ResponseCode = 0
 	WrongParam          ResponseCode = 401
+	HCaptchaFailed      ResponseCode = 402
 	ServerInternalError ResponseCode = 500
 )
 
@@ -16,7 +17,8 @@ type ResponseData struct {
 }
 
 type GetMintSignatureRequest struct {
-	Wallet string `json:"wallet" binding:"required"`
+	Wallet   string `json:"wallet" binding:"required"`
+	HCaptcha string `json:"hcaptcha" binding:"required"`
 }
 
 type GetMintSignatureResponse struct {

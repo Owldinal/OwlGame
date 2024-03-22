@@ -19,6 +19,12 @@ func GetMintSignature(c *gin.Context) {
 		return
 	}
 
+	_, err := service.VerifyCaptcha(req.HCaptcha)
+	if err != nil {
+		ErrorResponse(c, model.HCaptchaFailed, err.Error())
+		return
+	}
+
 	data, code, msg := service.GenerateHashAndSignForMint(req.Wallet)
 	if code == model.Success {
 		SuccessResponse(c, data)
