@@ -5,13 +5,17 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.24",
+  solidity: {
+    version: "0.8.24",
+    settings: {
+      optimizer: {
+        enabled: false,
+        runs: 200
+      }
+    }
+  },
   networks: {
     localhost: {
-      url: 'http://127.0.0.1:7545',
-      accounts: [process.env.LOCALHOST_PRIVATE_KEY || '']
-    },
-    hardhatLocal: {
       url: 'http://127.0.0.1:8545',
       accounts: [process.env.HARDHAT_PRIVATE_KEY || '',
       process.env.HARDHAT_PRIVATE_KEY_1!,
@@ -31,6 +35,21 @@ const config: HardhatUserConfig = {
       timeout: 2000000,
       accounts: [process.env.SEPOLIA_PRIVATE_KEY || '',]
     }
+  },
+  etherscan: {
+    apiKey: {
+      merlinTestnet: "no-api-key-needed"
+    },
+    customChains: [
+      {
+        network: "merlinTestnet",
+        chainId: 686868,
+        urls: {
+          apiURL: "https://testnet-scan.merlinchain.io/api",
+          browserURL: "https://testnet-scan.merlinchain.io"
+        }
+      }
+    ]
   }
 };
 
