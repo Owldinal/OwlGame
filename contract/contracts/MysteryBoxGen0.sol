@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./OwlGame.sol";
 import "./Utils.sol";
 
 contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
@@ -18,6 +17,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
     address private immutable _defender;
     IERC20 private immutable _voyaToken;
 
+    uint256 public constant MINT_PRICE = 45 * 10 ** 14; // 0.0045
     uint256 public constant MINT_VOYA_THRESHOLD = 50 * 10 ** 18;
 
     uint256 public tokenIdCounter = 1;
@@ -1170,11 +1170,12 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
     function mintByWhiteList(
         bytes32 hash,
         bytes memory signature
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         require(
             block.number < whiteListEndedBlock,
             "Whitelist minting has ended"
         );
+        require(msg.value == MINT_PRICE, "Insufficient BTC sent");
 
         _validMint(hash, signature, tokenIdCounter);
 
@@ -1215,7 +1216,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
     function mintByVoya(
         bytes32 hash,
         bytes memory signature
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         require(remainCount > 0, "All boxes have been minted");
         require(
             !hasMintedWithVoya[msg.sender],
@@ -1225,6 +1226,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
             _voyaToken.balanceOf(msg.sender) > MINT_VOYA_THRESHOLD,
             "Insufficient $Voya balance"
         );
+        require(msg.value == MINT_PRICE, "Insufficient BTC sent");
 
         _validMint(hash, signature, tokenIdCounter);
 
@@ -1245,9 +1247,13 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         return false;
     }
 
-    function mintTokenOne(bytes32 hash, bytes memory signature) external {
+    function mintTokenOne(
+        bytes32 hash,
+        bytes memory signature
+    ) external payable nonReentrant {
         require(msg.sender == _idOneOwner, "Cannot mint this token");
         require(_ownerOf(1) == address(0), "Token #1 already minted");
+        require(msg.value == MINT_PRICE, "Insufficient BTC sent");
 
         _validMint(hash, signature, 1);
 
@@ -1268,6 +1274,23 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
 
         emit OpenBox(msg.sender, tokenId, uri);
     }
+
+    // admin
+    function withdraw(
+        address payable recipient
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(recipient != address(0), "Cannot withdraw to the zero address");
+        require(address(this).balance > 0, "No funds to withdraw");
+
+        (bool success, ) = recipient.call{value: address(this).balance}("");
+        require(success, "Transfer failed");
+    }
+
+    receive() external payable {}
+
+    fallback() external payable {}
+
+    // private
 
     function _generateTokenURI(
         uint256 tokenId
