@@ -29,14 +29,10 @@ func init() {
 		panic(err)
 	}
 
-	parameterTypeUint256, _ := abi.NewType("uint256", "", nil)
 	parameterTypeAddress, _ := abi.NewType("address", "", nil)
 	signatureArguments = abi.Arguments{
 		{
 			Type: parameterTypeAddress,
-		},
-		{
-			Type: parameterTypeUint256,
 		},
 		{
 			Type: parameterTypeAddress,
@@ -50,12 +46,12 @@ func init() {
 }
 
 func GenerateHashAndSignForMint(wallet string) (response interface{}, code model.ResponseCode, msg string) {
-	tokenId, err := getTokenId()
-	if err != nil {
-		return nil, model.ServerInternalError, err.Error()
-	}
+	//tokenId, err := getTokenId()
+	//if err != nil {
+	//	return nil, model.ServerInternalError, err.Error()
+	//}
 
-	hash, signature, err := generateHashAndSignature(wallet, tokenId)
+	hash, signature, err := generateHashAndSignature(wallet, nil)
 	if err != nil {
 		return nil, model.ServerInternalError, err.Error()
 	}
@@ -79,14 +75,18 @@ func getTokenId() (*big.Int, error) {
 }
 
 func generateHashAndSignature(wallet string, tokenId *big.Int) (string, string, error) {
-	bytes, err := signatureArguments.Pack(common.HexToAddress(wallet), tokenId, boxGen0ContractAddress)
+	bytes, err := signatureArguments.Pack(common.HexToAddress(wallet), boxGen0ContractAddress)
 	if err != nil {
 		return "", "", err
 	}
 
 	hash := crypto.Keccak256Hash(bytes)
-
 	signatureBytes, _ := crypto.Sign(accounts.TextHash(hash.Bytes()), backendPrivateKey)
+
+	// The ethereum need v=27 || 28, but golang gives 0 || 1
+	if signatureBytes[64] == 0 || signatureBytes[64] == 1 {
+		signatureBytes[64] += 27
+	}
 	signature := hexutil.Encode(signatureBytes)
 
 	return hash.Hex(), signature, nil

@@ -1080,13 +1080,10 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         return false;
     }
 
-    function mint(
-        bytes32 hash,
-        bytes memory signature
-    ) external payable nonReentrant {
+    function mint(bytes memory signature) external payable nonReentrant {
         require(msg.value == MINT_PRICE, "Insufficient BTC sent");
-        _validMint(hash, signature, tokenIdCounter);
         require(!hasMinted[msg.sender], "You have already minted a box");
+        _validMint(signature);
 
         // check if can mint token one
         if (msg.sender == _idOneOwner) {
@@ -1188,16 +1185,8 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         return "https://base.uri/";
     }
 
-    function _validMint(
-        bytes32 hash,
-        bytes memory signature,
-        uint256 tokenId
-    ) internal view {
-        require(
-            hash == keccak256(abi.encode(msg.sender, tokenId, address(this))),
-            "Invalid hash"
-        );
-
+    function _validMint(bytes memory signature) internal view {
+        bytes32 hash = keccak256(abi.encode(msg.sender, address(this)));
         require(
             ECDSA.recover(
                 MessageHashUtils.toEthSignedMessageHash(hash),
