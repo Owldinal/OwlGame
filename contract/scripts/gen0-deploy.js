@@ -10,11 +10,12 @@ async function main() {
 	let owlTokenAddress, boxGen0Address;
 	let owlTokenContract, boxGen0Contract;
 
-	// owlTokenAddresss = "0xf7d82CEA33a4D7C2F45e6Fd86EDB5b110FE70139";
+	owlTokenAddress = "0x8553aFc2688B9dA9deb7AC931144BcCbe7299814";
 	// boxGen0Address = "0xE82671921e9f6da6F11f4Fb616860d6CD342E790";
 
 	if (owlTokenAddress) {
-		owlTokenContract = await hre.ethers.getContractFactory("OwlToken").then((c) => c.attach(owlTokenAddr));
+		owlTokenContract = await hre.ethers.getContractFactory("OwlToken").then((c) => c.attach(owlTokenAddress));
+		console.log(`OwlToken contract connected to : ${owlTokenAddress}`);
 	} else {
 		const owlTokenParams = [ownerAddress];
 		[owlTokenContract, owlTokenAddress] = await deploy("OwlToken", owlTokenParams);
@@ -23,10 +24,12 @@ async function main() {
 
 	if (boxGen0Address) {
 		boxGen0Contract = await hre.ethers.getContractFactory("MysteryBoxGen0").then((c) => c.attach(boxGen0Address));
+		console.log(`BoxGen0 contract connected to : ${owlTokenAddress}`);
 	} else {
-		const boxGen0Params = [3800000, owlTokenAddress, deployer.address, backendAddress];
+		const boxGen0Params = [10000000, owlTokenAddress, deployer.address, backendAddress];
 		[boxGen0Contract, boxGen0Address] = await deploy("MysteryBoxGen0", boxGen0Params);
 		console.log(`BoxGen0 contract deployed to : ${boxGen0Address}\nParams = ${boxGen0Params.join(" ")}`);
+		console.log(`npx hardhat verify --network merlinTestnet ${boxGen0Address} ${boxGen0Params.join(" ")}`);
 	}
 
 	// init contract config
@@ -36,13 +39,16 @@ async function main() {
 		),
 	];
 
-	await Promise.all(operations).then((results) => Promise.all(results.map(result => result.wait())));
-	console.log();
+	// await Promise.all(operations).then((results) => Promise.all(results.map(result => result.wait())));
+
+	console.log("\n----\n");
+	console.log("Copy to gen0-test: \n");
 	console.log(`owlTokenAddress = "${owlTokenAddress}";`);
 	console.log(`boxGen0Address = "${boxGen0Address}";`);
-	console.log();
+	console.log("\n----\n");
+	console.log("Copy to backend .env: \n");
 	console.log(`NFT_OWL_ADDR=${boxGen0Address}`);
-	console.log();
+	console.log("\n----\n");
 }
 
 main().catch((error) => {

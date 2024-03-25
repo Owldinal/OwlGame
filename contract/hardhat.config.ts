@@ -14,6 +14,10 @@ const config: HardhatUserConfig = {
       }
     }
   },
+  sourcify: {
+    enabled: false
+  },
+
   networks: {
     localhost: {
       url: 'http://127.0.0.1:8545',
@@ -26,13 +30,18 @@ const config: HardhatUserConfig = {
     },
     merlinTestnet: {
       url: 'https://testnet-rpc.merlinchain.io',
-      timeout: 2000000,
-      accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || '',
-        "0x3e9cebd0c8d24c22e77f0e276161b414356489300fdfc9dd53c94a06dab09a40"],
+      timeout: 200000000,
+      accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || ''],
+    },
+    merlinMainnet: {
+      url: 'https://rpc.merlinchain.io',
+      timeout: 200000000,
+      gasPrice: 50000000,
+      accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || ''],
     },
     sepolia: {
       url: 'https://sepolia.drpc.org',
-      timeout: 2000000,
+      timeout: 200000000,
       accounts: [process.env.SEPOLIA_PRIVATE_KEY || '',]
     }
   },
@@ -47,6 +56,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://testnet-scan.merlinchain.io/api",
           browserURL: "https://testnet-scan.merlinchain.io"
+        }
+      },
+      {
+        network: "merlinMainnet",
+        chainId: 4200,
+        urls: {
+          apiURL: "https://scan.merlinchain.io/api",
+          browserURL: "https://scan.merlinchain.io"
         }
       }
     ]

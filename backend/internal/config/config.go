@@ -15,7 +15,8 @@ type Config struct {
 
 	BackendWalletPrivateKey string `env:"BACKEND_WALLET_PRIVATE_KEY" envDefault:""`
 
-	HCaptchaKey string `env:"HCAPTCHA_KEY" envDefault:""`
+	HCaptchaKey     string `env:"HCAPTCHA_KEY" envDefault:""`
+	DisableHCaptcha bool   `env:"DISABLE_HCAPTCHA" envDefault:"false"`
 
 	DBHost     string `env:"DB_HOST" envDefault:"localhost"`
 	DBPort     int    `env:"DB_PORT" envDefault:"3306"`

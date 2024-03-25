@@ -1,6 +1,5 @@
 package log
 
-import "C"
 import (
 	"github.com/sirupsen/logrus"
 	"os"

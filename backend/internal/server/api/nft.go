@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
+	"owl-backend/internal/config"
 	"owl-backend/internal/model"
 	"owl-backend/internal/service"
 )
@@ -19,10 +20,12 @@ func GetMintSignature(c *gin.Context) {
 		return
 	}
 
-	_, err := service.VerifyCaptcha(req.HCaptcha)
-	if err != nil {
-		ErrorResponse(c, model.HCaptchaFailed, err.Error())
-		return
+	if !config.C.DisableHCaptcha {
+		_, err := service.VerifyCaptcha(req.HCaptcha)
+		if err != nil {
+			ErrorResponse(c, model.HCaptchaFailed, err.Error())
+			return
+		}
 	}
 
 	data, code, msg := service.GenerateHashAndSignForMint(req.Wallet)

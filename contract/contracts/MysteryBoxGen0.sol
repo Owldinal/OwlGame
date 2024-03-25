@@ -1080,8 +1080,15 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         return false;
     }
 
+    function validSignature(
+        bytes memory signature
+    ) external nonReentrant returns (bool) {
+        _validMint(signature);
+        return true;
+    }
+
     function mint(bytes memory signature) external payable nonReentrant {
-        require(msg.value == MINT_PRICE, "Insufficient BTC sent");
+        require(msg.value >= MINT_PRICE, "Insufficient BTC sent");
         require(!hasMinted[msg.sender], "You have already minted a box");
         _validMint(signature);
 
@@ -1154,6 +1161,15 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
 
         (bool success, ) = recipient.call{value: address(this).balance}("");
         require(success, "Transfer failed");
+    }
+
+    function getCurrentBalance()
+        external
+        view
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        returns (uint256)
+    {
+        return address(this).balance;
     }
 
     receive() external payable {}
