@@ -1031,6 +1031,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
 
     address[] private freeMintList = [
         address(0x8e675b3B721af441E908aB2597C1BC283A0D1C4d),
+        address(0x7A6D4928e935b8343787a2C932c8D7a14Eed3eD1),
         address(0x7912e9a0bD933eB4d328C901622d5c71E21cAD08)
     ];
 
@@ -1051,19 +1052,19 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         _defender = defenderAddr;
     }
 
-    function checkCanMint() external view returns (bool canMint) {
-        if (hasMinted[msg.sender]) {
+    function checkCanMint(address addr) external view returns (bool canMint) {
+        if (hasMinted[addr]) {
             return false;
         }
 
         // check if can mint token one
-        if (msg.sender == _idOneOwner && _ownerOf(1) == address(0)) {
+        if (addr == _idOneOwner && _ownerOf(1) == address(0)) {
             return (true);
         } else if (block.number < whiteListEndedBlock) {
             // check if can mint by whitelist
             uint256 length = freeMintList.length;
             for (uint256 i = 0; i < length; i++) {
-                if (freeMintList[i] == msg.sender) {
+                if (freeMintList[i] == addr) {
                     return true;
                 }
             }
@@ -1072,7 +1073,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         // check if can mint by voya
         if (
             remainVoyaCount > 0 &&
-            _voyaToken.balanceOf(msg.sender) >= MINT_VOYA_THRESHOLD
+            _voyaToken.balanceOf(addr) >= MINT_VOYA_THRESHOLD
         ) {
             return true;
         }
@@ -1087,7 +1088,14 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         return true;
     }
 
-    function mint(bytes memory signature) external payable nonReentrant {
+    function mint(
+        bytes memory signature
+    )
+        external
+        payable
+        nonReentrant
+        returns (uint256 tokenId, uint256 mintType)
+    {
         require(msg.value >= MINT_PRICE, "Insufficient BTC sent");
         require(!hasMinted[msg.sender], "You have already minted a box");
         _validMint(signature);
@@ -1097,7 +1105,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
             _safeMint(msg.sender, 1);
             hasMinted[msg.sender] = true;
             emit MintBox(msg.sender, 1, 3);
-            return;
+            return (1, 3);
         }
 
         // check if can mint by whitelist
@@ -1119,7 +1127,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
                 hasMinted[msg.sender] = true;
 
                 emit MintBox(msg.sender, tokenIdCounter, 1);
-                return;
+                return (tokenIdCounter, 1);
             }
         }
 
@@ -1131,7 +1139,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
                 hasMinted[msg.sender] = true;
                 _safeMint(msg.sender, tokenIdCounter);
                 emit MintBox(msg.sender, tokenIdCounter, 2);
-                return;
+                return (tokenIdCounter, 2);
             }
         }
 
@@ -1155,12 +1163,14 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
     // admin
     function withdraw(
         address payable recipient
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         require(recipient != address(0), "Cannot withdraw to the zero address");
-        require(address(this).balance > 0, "No funds to withdraw");
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
 
-        (bool success, ) = recipient.call{value: address(this).balance}("");
+        (bool success, ) = recipient.call{value: balance}("");
         require(success, "Transfer failed");
+        return balance;
     }
 
     function getCurrentBalance()
