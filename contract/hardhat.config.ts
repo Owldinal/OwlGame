@@ -30,7 +30,7 @@ const config: HardhatUserConfig = {
     },
     merlinTestnet: {
       url: 'https://testnet-rpc.merlinchain.io',
-      timeout: 200000000,
+      timeout: 20000000,
       accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || ''],
     },
     merlinMainnet: {
@@ -40,14 +40,16 @@ const config: HardhatUserConfig = {
       accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || ''],
     },
     sepolia: {
-      url: 'https://sepolia.drpc.org',
+      url: `https://sepolia.infura.io/v3/${process.env.SEPOLIA_INFURA_KEY}`,
       timeout: 200000000,
-      accounts: [process.env.SEPOLIA_PRIVATE_KEY || '',]
+      accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || '',]
     }
   },
   etherscan: {
     apiKey: {
-      merlinTestnet: "no-api-key-needed"
+      merlinTestnet: "no-api-key-needed",
+      merlinMainnet: "no-api-key-needed",
+      sepolia: process.env.SEPOLIA_ETHERSCAN_API_KEY!,
     },
     customChains: [
       {

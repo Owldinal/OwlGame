@@ -40,9 +40,19 @@ func init() {
 	}
 
 	backendPrivateKey, err = crypto.HexToECDSA(config.C.BackendWalletPrivateKey)
-	if err != nil {
-		panic(err)
-	}
+
+	//ecdsaPublicKey, ok := backendPrivateKey.Public().(*ecdsa.PublicKey)
+	//if !ok {
+	//	log.Fatal("error casting public key to ECDSA")
+	//}
+	//// 打印公钥的十六进制表示
+	//publicKeyBytes := elliptic.Marshal(ecdsaPublicKey.Curve, ecdsaPublicKey.X, ecdsaPublicKey.Y)
+	//fmt.Printf("Public key (hex): %x\n", publicKeyBytes)
+	//address := crypto.PubkeyToAddress(*ecdsaPublicKey).Hex()
+	//fmt.Printf("Public key to address: %s\n", address)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 func GenerateHashAndSignForMint(wallet string) (response interface{}, code model.ResponseCode, msg string) {
