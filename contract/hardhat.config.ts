@@ -56,16 +56,16 @@ const config: HardhatUserConfig = {
         network: "merlinTestnet",
         chainId: 686868,
         urls: {
-          apiURL: "https://testnet-scan.merlinchain.io/api",
-          browserURL: "https://testnet-scan.merlinchain.io"
+          apiURL: "https://testnet-scan-v1.merlinchain.io/api",
+          browserURL: "https://testnet-scan-v1.merlinchain.io"
         }
       },
       {
         network: "merlinMainnet",
         chainId: 4200,
         urls: {
-          apiURL: "https://scan.merlinchain.io/api",
-          browserURL: "https://scan.merlinchain.io"
+          apiURL: "https://scan-v1.merlinchain.io/api",
+          browserURL: "https://scan-v1.merlinchain.io"
         }
       }
     ]

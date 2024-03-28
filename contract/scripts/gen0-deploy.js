@@ -10,7 +10,7 @@ async function main() {
 	let owlTokenAddress, boxGen0Address;
 	let owlTokenContract, boxGen0Contract;
 
-	owlTokenAddress = "0x8553aFc2688B9dA9deb7AC931144BcCbe7299814";
+	owlTokenAddress = "0x5cf806FE094c457D993c89B2A3d599d50d4cbBF4";
 	// boxGen0Address = "0xE82671921e9f6da6F11f4Fb616860d6CD342E790";
 
 	if (owlTokenAddress) {

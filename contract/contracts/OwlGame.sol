@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
-import "./MysteryBoxGen0.sol";
+import "./Owldinal.sol";
 import "./MysteryBoxGen1.sol";
 import "./Utils.sol";
 
@@ -51,7 +51,7 @@ contract OwlGame is AccessControl {
     }
 
     ERC20Burnable public owlToken;
-    MysteryBoxGen0 public boxGen0Contract;
+    Owldinal public boxGen0Contract;
     MysteryBoxGen1 public boxGen1Contract;
     uint256 public constant MINT_PRICE = 100000;
     uint32 public constant MINT_REBATE = 10000;
@@ -155,6 +155,11 @@ contract OwlGame is AccessControl {
                 boxGen0Contract.ownerOf(tokenId) == msg.sender,
                 "Not owner"
             );
+
+            require(
+                owlStakingMap[msg.sender].length < 3,
+                "Owldinal can stake a maximum of three."
+            );
         } else {
             require(
                 boxGen1Contract.ownerOf(tokenId) == msg.sender,
@@ -174,7 +179,6 @@ contract OwlGame is AccessControl {
                 stakingTime: uint64(block.timestamp),
                 buffedTargetIds: new uint256[](0)
             });
-            // TODO limit3
         } else {
             BoxType boxType = boxGen1Contract.getBoxType(tokenId);
             uint256[] storage stakingOwlIds = owlStakingMap[msg.sender];

@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./Utils.sol";
 
-contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
+contract Owldinal is ERC721URIStorage, AccessControl, ReentrancyGuard {
     address private immutable _idOneOwner;
     address private immutable _defender;
     IERC20 private immutable _voyaToken;
@@ -1044,7 +1044,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         address voyaTokenAddr,
         address idOneOwnerAddr,
         address defenderAddr
-    ) ERC721("MysteryBoxGen0", "MBG0") {
+    ) ERC721("Owldinal", "Ow") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         whiteListEndedBlock = endedBlock;
         _voyaToken = IERC20(voyaTokenAddr);
@@ -1052,20 +1052,22 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         _defender = defenderAddr;
     }
 
-    function checkCanMint(address addr) external view returns (bool canMint) {
+    function checkCanMint(
+        address addr
+    ) external view returns (bool canMint, uint256 mintType) {
         if (hasMinted[addr]) {
-            return false;
+            return (false, 0);
         }
 
         // check if can mint token one
         if (addr == _idOneOwner && _ownerOf(1) == address(0)) {
-            return (true);
+            return (true, 3);
         } else if (block.number < whiteListEndedBlock) {
             // check if can mint by whitelist
             uint256 length = freeMintList.length;
             for (uint256 i = 0; i < length; i++) {
                 if (freeMintList[i] == addr) {
-                    return true;
+                    return (true, 1);
                 }
             }
         }
@@ -1075,10 +1077,10 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
             remainVoyaCount > 0 &&
             _voyaToken.balanceOf(addr) >= MINT_VOYA_THRESHOLD
         ) {
-            return true;
+            return (true, 2);
         }
 
-        return false;
+        return (false, 0);
     }
 
     function validSignature(
@@ -1194,7 +1196,7 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
         require(_availableTokenUris.length > 0, "No available token uris");
 
         if (tokenId == 1) {
-            return "1.json";
+            return "1";
         } else {
             uint256 length = _availableTokenUris.length;
             uint256 index = Utils.generateRandomNumber() % length;
@@ -1203,12 +1205,13 @@ contract MysteryBoxGen0 is ERC721URIStorage, AccessControl, ReentrancyGuard {
             _availableTokenUris[index] = _availableTokenUris[length - 1];
             _availableTokenUris.pop();
 
-            return string(abi.encodePacked(Strings.toString(result), ".json"));
+            return Strings.toString(result);
         }
     }
 
     function _baseURI() internal pure override returns (string memory) {
-        return "https://base.uri/";
+        return
+            "https://ipfs.io/ipfs/Qmdj2MF9Lysu4WeaGG4sVixgvFS8rFxEeoPFaWQpGwqwFb/";
     }
 
     function _validMint(bytes memory signature) internal view {
