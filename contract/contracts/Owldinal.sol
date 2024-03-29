@@ -22,7 +22,6 @@ contract Owldinal is ERC721URIStorage, AccessControl, ReentrancyGuard {
 
     uint256 public tokenIdCounter = 1;
     mapping(address => bool) private hasMinted;
-    mapping(uint256 => uint256) private boxOpenedBlockNumber;
 
     uint256 public remainVoyaCount = 900;
     uint256 public whiteListEndedBlock;
@@ -1036,8 +1035,12 @@ contract Owldinal is ERC721URIStorage, AccessControl, ReentrancyGuard {
     ];
 
     // Events
-    event MintBox(address indexed user, uint256 boxId, uint256 mintType); // minttype: 1=whitelist, 2=voya, 3=tokenOne
-    event OpenBox(address indexed user, uint256 boxId, string url);
+    event MintBox(
+        address indexed user,
+        uint256 boxId,
+        uint256 mintType,
+        string url
+    ); // minttype: 1=whitelist, 2=voya, 3=tokenOne
 
     constructor(
         uint256 endedBlock,
@@ -1106,7 +1109,11 @@ contract Owldinal is ERC721URIStorage, AccessControl, ReentrancyGuard {
         if (msg.sender == _idOneOwner) {
             _safeMint(msg.sender, 1);
             hasMinted[msg.sender] = true;
-            emit MintBox(msg.sender, 1, 3);
+
+            string memory uri = _generateTokenURI(tokenIdCounter);
+            _setTokenURI(tokenIdCounter, uri);
+
+            emit MintBox(msg.sender, 1, 3, tokenURI(tokenIdCounter));
             return (1, 3);
         }
 
@@ -1127,8 +1134,15 @@ contract Owldinal is ERC721URIStorage, AccessControl, ReentrancyGuard {
                 ++tokenIdCounter;
                 _safeMint(msg.sender, tokenIdCounter);
                 hasMinted[msg.sender] = true;
+                string memory uri = _generateTokenURI(tokenIdCounter);
+                _setTokenURI(tokenIdCounter, uri);
 
-                emit MintBox(msg.sender, tokenIdCounter, 1);
+                emit MintBox(
+                    msg.sender,
+                    tokenIdCounter,
+                    1,
+                    tokenURI(tokenIdCounter)
+                );
                 return (tokenIdCounter, 1);
             }
         }
@@ -1140,26 +1154,19 @@ contract Owldinal is ERC721URIStorage, AccessControl, ReentrancyGuard {
                 ++tokenIdCounter;
                 hasMinted[msg.sender] = true;
                 _safeMint(msg.sender, tokenIdCounter);
-                emit MintBox(msg.sender, tokenIdCounter, 2);
+                string memory uri = _generateTokenURI(tokenIdCounter);
+                _setTokenURI(tokenIdCounter, uri);
+                emit MintBox(
+                    msg.sender,
+                    tokenIdCounter,
+                    2,
+                    tokenURI(tokenIdCounter)
+                );
                 return (tokenIdCounter, 2);
             }
         }
 
         revert("Not eligible to mint");
-    }
-
-    function openBox(uint256 tokenId) external nonReentrant {
-        require(ownerOf(tokenId) == msg.sender, "You are not owner");
-        require(
-            boxOpenedBlockNumber[tokenId] == 0,
-            "Box has already been opened"
-        );
-
-        boxOpenedBlockNumber[tokenId] = block.number;
-        string memory uri = _generateTokenURI(tokenId);
-        _setTokenURI(tokenId, uri);
-
-        emit OpenBox(msg.sender, tokenId, uri);
     }
 
     // admin
@@ -1211,7 +1218,7 @@ contract Owldinal is ERC721URIStorage, AccessControl, ReentrancyGuard {
 
     function _baseURI() internal pure override returns (string memory) {
         return
-            "https://ipfs.io/ipfs/Qmdj2MF9Lysu4WeaGG4sVixgvFS8rFxEeoPFaWQpGwqwFb/";
+            "https://ipfs.io/ipfs/QmUJuZpBdkdjFYzRNNSsAG58Zr2eLKFZMqUKfVu33FF6Wt/";
     }
 
     function _validMint(bytes memory signature) internal view {

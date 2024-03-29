@@ -23,11 +23,11 @@ async function main() {
 	}
 
 	if (boxGen0Address) {
-		boxGen0Contract = await hre.ethers.getContractFactory("MysteryBoxGen0").then((c) => c.attach(boxGen0Address));
+		boxGen0Contract = await hre.ethers.getContractFactory("Owldinal").then((c) => c.attach(boxGen0Address));
 		console.log(`BoxGen0 contract connected to : ${owlTokenAddress}`);
 	} else {
 		const boxGen0Params = [10000000, owlTokenAddress, deployer.address, backendAddress];
-		[boxGen0Contract, boxGen0Address] = await deploy("MysteryBoxGen0", boxGen0Params);
+		[boxGen0Contract, boxGen0Address] = await deploy("Owldinal", boxGen0Params);
 		console.log(`BoxGen0 contract deployed to : ${boxGen0Address}\nParams = ${boxGen0Params.join(" ")}`);
 		console.log(`npx hardhat verify --network merlinTestnet ${boxGen0Address} ${boxGen0Params.join(" ")}`);
 	}
