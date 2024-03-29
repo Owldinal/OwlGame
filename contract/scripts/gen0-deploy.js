@@ -10,7 +10,7 @@ async function main() {
 	let owlTokenAddress, boxGen0Address;
 	let owlTokenContract, boxGen0Contract;
 
-	owlTokenAddress = "0x5cf806FE094c457D993c89B2A3d599d50d4cbBF4";
+	owlTokenAddress = "0x900Fe67635C23191608bDf4912A2fFe1ce4589c5";
 	// boxGen0Address = "0xE82671921e9f6da6F11f4Fb616860d6CD342E790";
 
 	if (owlTokenAddress) {
@@ -23,11 +23,11 @@ async function main() {
 	}
 
 	if (boxGen0Address) {
-		boxGen0Contract = await hre.ethers.getContractFactory("Owldinal").then((c) => c.attach(boxGen0Address));
+		boxGen0Contract = await hre.ethers.getContractFactory("OwlTest").then((c) => c.attach(boxGen0Address));
 		console.log(`BoxGen0 contract connected to : ${owlTokenAddress}`);
 	} else {
 		const boxGen0Params = [10000000, owlTokenAddress, deployer.address, backendAddress];
-		[boxGen0Contract, boxGen0Address] = await deploy("Owldinal", boxGen0Params);
+		[boxGen0Contract, boxGen0Address] = await deploy("OwlTest", boxGen0Params);
 		console.log(`BoxGen0 contract deployed to : ${boxGen0Address}\nParams = ${boxGen0Params.join(" ")}`);
 		console.log(`npx hardhat verify --network merlinTestnet ${boxGen0Address} ${boxGen0Params.join(" ")}`);
 	}

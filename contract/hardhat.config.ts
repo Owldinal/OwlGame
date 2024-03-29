@@ -37,7 +37,7 @@ const config: HardhatUserConfig = {
       url: 'https://rpc.merlinchain.io',
       timeout: 200000000,
       gasPrice: 50000000,
-      accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || ''],
+      accounts: [process.env.MERLIN_MAIN_PRIVATE_KEY || ''],
     },
     sepolia: {
       url: `https://sepolia.infura.io/v3/${process.env.SEPOLIA_INFURA_KEY}`,
