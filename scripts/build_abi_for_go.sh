@@ -1,7 +1,9 @@
 #!/bin/bash
 
 ARTIFACTS_DIR="./contract/artifacts/contracts"
-OUTPUT_DIR="./indexer/abi"
+OUTPUT_DIR="./indexer/abigen"
+
+mkdir -p $OUTPUT_DIR
 
 for artifact in $(find $ARTIFACTS_DIR -name "*.json" ! -name "*.dbg.json"); do
 	abi=$(cat $artifact | jq '.abi')
@@ -16,8 +18,8 @@ for artifact in $(find $ARTIFACTS_DIR -name "*.json" ! -name "*.dbg.json"); do
 
 	echo "ABI saved for $contract_name at: $OUTPUT_DIR/$pascal_case.abi"
 
-	echo "abigen --abi=$OUTPUT_DIR/$pascal_case.abi --out=$OUTPUT_DIR/${snake_case}.go --pkg=abi --type=$pascal_case"
-	abigen --abi=$OUTPUT_DIR/$pascal_case.abi --out=$OUTPUT_DIR/${snake_case}.go --pkg=abi --type=$pascal_case
+	echo "abigen --abi=$OUTPUT_DIR/$pascal_case.abi --out=$OUTPUT_DIR/${snake_case}.go --pkg=abigen --type=$pascal_case"
+	abigen --abi=$OUTPUT_DIR/$pascal_case.abi --out=$OUTPUT_DIR/${snake_case}.go --pkg=abigen --type=$pascal_case
 
 	echo "Go binding generated for $pascal_case at: $OUTPUT_DIR/${snake_case}.go"
 done
