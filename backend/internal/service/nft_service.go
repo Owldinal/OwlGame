@@ -16,7 +16,7 @@ import (
 
 var (
 	boxGen0ContractAddress common.Address
-	boxGen0Contract        *abigen.MysteryBoxGen0
+	boxGen0Contract        *abigen.Owldinal
 	signatureArguments     abi.Arguments
 	backendPrivateKey      *ecdsa.PrivateKey
 )
@@ -24,7 +24,7 @@ var (
 func init() {
 	boxGen0ContractAddress = common.HexToAddress(config.C.NftOwlAddr)
 	var err error
-	boxGen0Contract, err = abigen.NewMysteryBoxGen0(boxGen0ContractAddress, eth.Client)
+	boxGen0Contract, err = abigen.NewOwldinal(boxGen0ContractAddress, eth.Client)
 	if err != nil {
 		panic(err)
 	}

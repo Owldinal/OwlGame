@@ -10,19 +10,13 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./OwlGame.sol";
 import "./Utils.sol";
 
-interface IMysteryBoxGen1 {
-    function openBox(uint256 tokenId, bool hasBuff) external returns (BoxType);
-
-    function getBoxType(uint256 tokenId) external view returns (BoxType);
-}
-
 enum BoxType {
     UNOPENED, // not use.
     ELF,
     FRUIT
 }
 
-contract MysteryBoxGen1 is ERC721, AccessControl, IMysteryBoxGen1 {
+contract MysteryBoxGen1 is ERC721, AccessControl {
     bytes32 public constant GAME_CONTRACT_ROLE =
         keccak256("GAME_CONTRACT_ROLE");
 
@@ -82,9 +76,7 @@ contract MysteryBoxGen1 is ERC721, AccessControl, IMysteryBoxGen1 {
         return boxTypes[tokenId] != BoxType.UNOPENED;
     }
 
-    function getBoxType(
-        uint256 tokenId
-    ) external view override returns (BoxType) {
+    function getBoxType(uint256 tokenId) external view returns (BoxType) {
         return boxTypes[tokenId];
     }
 

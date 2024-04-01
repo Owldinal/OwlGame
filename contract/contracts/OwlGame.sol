@@ -87,6 +87,16 @@ contract OwlGame is AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    function initialize(
+        address owlTokenAddr,
+        address payable owldinalNftAddr,
+        address mysteryBoxAddr
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        owlToken = ERC20Burnable(owlTokenAddr);
+        boxGen0Contract = Owldinal(owldinalNftAddr);
+        boxGen1Contract = MysteryBoxGen1(mysteryBoxAddr);
+    }
+
     function addPrize(uint256 prizeAmount) external {
         require(
             owlToken.transferFrom(msg.sender, address(this), prizeAmount),
