@@ -13,7 +13,8 @@ import "./Utils.sol";
 enum BoxType {
     UNOPENED, // not use.
     ELF,
-    FRUIT
+    FRUIT,
+    BURNED
 }
 
 contract MysteryBoxGen1 is ERC721, AccessControl {
@@ -25,9 +26,9 @@ contract MysteryBoxGen1 is ERC721, AccessControl {
 
     uint256 private _tokenIdCounter;
 
-    mapping(uint256 => BoxType) public boxTypes;
+    mapping(uint256 => BoxType) public tokenBoxTypes;
 
-    event MintBox(address indexed user, uint256 boxId);
+    event MintBox(address indexed user, uint256 tokenId);
     event OpenBox(address indexed user, uint256 tokenId, BoxType boxType);
 
     constructor(
@@ -55,29 +56,30 @@ contract MysteryBoxGen1 is ERC721, AccessControl {
         require(ownerOf(tokenId) == msg.sender, "You are not the owner");
         require(!isBoxOpened(tokenId), "Token has been opened");
         uint256 randomResult = Utils.generateRandomNumber() % 100;
-        uint256 isElf = 10;
-        uint256 isFruit = hasBuff ? 89 : 80;
+        uint256 elfProbabilityThreshold = 10;
+        uint256 fruitProbabilityThreshold = hasBuff ? 89 : 80;
 
-        if (randomResult < isElf) {
-            boxTypes[tokenId] = BoxType.ELF;
-        } else if (randomResult < (isElf + isFruit)) {
-            boxTypes[tokenId] = BoxType.FRUIT;
+        if (randomResult < elfProbabilityThreshold) {
+            tokenBoxTypes[tokenId] = BoxType.ELF;
+        } else if (
+            randomResult < (elfProbabilityThreshold + fruitProbabilityThreshold)
+        ) {
+            tokenBoxTypes[tokenId] = BoxType.FRUIT;
         } else {
             _burn(tokenId);
-            return BoxType.UNOPENED;
+            return BoxType.BURNED;
         }
-        // gameContract.stakeNFT(msg.sender, tokenId);
-        emit OpenBox(msg.sender, tokenId, boxTypes[tokenId]);
+        emit OpenBox(msg.sender, tokenId, tokenBoxTypes[tokenId]);
 
-        return boxTypes[tokenId];
+        return tokenBoxTypes[tokenId];
     }
 
     function isBoxOpened(uint256 tokenId) public view returns (bool) {
-        return boxTypes[tokenId] != BoxType.UNOPENED;
+        return tokenBoxTypes[tokenId] != BoxType.UNOPENED;
     }
 
     function getBoxType(uint256 tokenId) external view returns (BoxType) {
-        return boxTypes[tokenId];
+        return tokenBoxTypes[tokenId];
     }
 
     // The following functions are overrides required by Solidity.
