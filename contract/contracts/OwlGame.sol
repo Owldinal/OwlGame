@@ -5,12 +5,13 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "./Owldinal.sol";
-import "./MysteryBoxGen1.sol";
+import "./OwldinalGenOneBox.sol";
 import "./Utils.sol";
 
-contract OwlGame is AccessControl {
+contract OwlGame is AccessControl, ReentrancyGuard {
     struct OwlStakingInfo {
         uint256 tokenId;
         address owner;
@@ -38,14 +39,31 @@ contract OwlGame is AccessControl {
         uint256 totalRebateEarned;
         uint256 rebatePendingWithdrawal;
         uint256 unlockedRebateToClaim;
-        uint16 mintedBoxCount;
+        uint256 mintedBoxCount;
     }
+
+    // event MintBox(address indexed user, uint256 tokenId);
+    // event OpenBox(address indexed user, uint256 tokenId, BoxType boxType);
+    event JoinGame(address indexed user);
+    event BindInvitation(address indexed invitee, address inviter);
+    event MintBox(address indexed user, uint256 count, uint256[] tokenIdList);
+    event StakeOwldinalNft(address indexed user, uint256[] tokenId);
+    event StakeMysteryBox(address indexed user, uint256[] tokenId);
+    event UnstakeOwldinalNft(address indexed user, uint256[] tokenId);
+    // This event cannot accept batch parameters, otherwise it would be impossible to
+    // distinguish the rewards for each specific token.
+    event UnstakeMysteryBox(
+        address indexed user,
+        uint256 tokenId,
+        BoxType boxType,
+        uint256 rewards
+    );
 
     bytes32 public constant SERVER_ROLE = keccak256("SERVER_ROLE");
 
     ERC20Burnable public owlToken;
     Owldinal public owldinalNftContract;
-    MysteryBoxGen1 public mysteryBoxContract;
+    OwldinalGenOneBox public mysteryBoxContract;
 
     // The price that needs to be spent for each mint.
     uint256 public constant MINT_PRICE = 100000;
@@ -73,6 +91,7 @@ contract OwlGame is AccessControl {
 
     // inviter address -> invitees
     mapping(address => address[]) inviterToInviteesMap;
+    // invitees address -> inviter
     mapping(address => address) inviteeToInviterMap;
 
     // invite code -> inviter (find invter from code)
@@ -99,7 +118,7 @@ contract OwlGame is AccessControl {
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         owlToken = ERC20Burnable(owlTokenAddr);
         owldinalNftContract = Owldinal(owldinalNftAddr);
-        mysteryBoxContract = MysteryBoxGen1(mysteryBoxAddr);
+        mysteryBoxContract = OwldinalGenOneBox(mysteryBoxAddr);
     }
 
     function addPrize(
@@ -120,87 +139,123 @@ contract OwlGame is AccessControl {
 
     // endregion ---- Admin ----
 
-    function mintGen1Box(uint32 inviteCode) external {
+    // region ---- Player ----
+
+    // Handles the binding of referral relationships. Given an invite code, this function
+    // finds the associated wallet address and sets the caller's wallet address as the invitee
+    // in the relationship. It returns the inviter's wallet address upon successful binding.
+    function handleInviteCode(
+        uint32 inviteCode
+    ) external returns (address inviter) {
+        address sender = msg.sender;
+
+        // check if is first in game
+        bool isFirstInGame = inviterToInviteCodeMap[sender] == 0;
         require(
-            owlToken.transferFrom(msg.sender, address(this), MINT_PRICE),
+            isFirstInGame,
+            "Players who have already participated in the game cannot be invited."
+        );
+
+        // check invite code
+        inviter = inviteCodeToInviterMap[inviteCode];
+        require(inviter != address(0), "failed to find this invite code");
+        inviterToInviteesMap[inviter].push(sender);
+        inviteeToInviterMap[sender] = inviter;
+
+        // generate invite code
+        uint32 newInviteCode = _generateInviteCode();
+        inviteCodeToInviterMap[newInviteCode] = sender;
+        inviterToInviteCodeMap[sender] = newInviteCode;
+
+        emit JoinGame(sender);
+        emit BindInvitation(sender, inviter);
+    }
+
+    function mintMysteryBox(
+        uint256 count
+    ) external nonReentrant returns (uint256[] memory tokenIdList) {
+        require(count > 0, "Count should larger than 0");
+
+        uint256 mintPrice = MINT_PRICE * count;
+        require(
+            owlToken.transferFrom(msg.sender, address(this), mintPrice),
             "Transfer failed"
         );
 
         _handleFirstInGame(msg.sender);
-        address inviter = _handleInviter(msg.sender, inviteCode);
+        address inviter = inviteeToInviterMap[msg.sender];
 
-        uint256 prizeAmount = MINT_PRICE / 2;
+        // 50% of the cost incurred during each minting operation is allocated to the reward pool.
+        uint256 prizeAmount = mintPrice / 2;
         prizePool = prizePool + prizeAmount;
 
-        uint256 burnAmount = MINT_PRICE - prizeAmount;
-        if (inviter != address(0)) {
-            burnAmount = burnAmount - MINT_REBATE;
-
-            uint256 rebateAmount = MINT_REBATE;
-            Rebate storage inviterRebate = inviterRebateMap[inviter];
-            inviterRebate.totalRebateEarned =
-                inviterRebate.totalRebateEarned +
-                rebateAmount;
-            inviterRebate.rebatePendingWithdrawal =
-                inviterRebate.rebatePendingWithdrawal +
-                rebateAmount;
-        }
-
-        owlToken.burn(burnAmount);
-        mysteryBoxContract.mintBox(msg.sender);
-
-        // add unlocakableRewardCount;
-        Rebate storage playerRebate = inviterRebateMap[msg.sender];
-        playerRebate.mintedBoxCount = playerRebate.mintedBoxCount + 1;
-        uint256 addUnlockedAmount = 0;
-        if (playerRebate.mintedBoxCount <= 10) {
-            addUnlockedAmount = 30000;
-        } else if (playerRebate.mintedBoxCount <= 50) {
-            addUnlockedAmount = 55000;
-        } else if (playerRebate.mintedBoxCount <= 100) {
-            addUnlockedAmount = 70000;
+        uint256 burnAmount;
+        if (inviter == address(0)) {
+            // If the minter's address does not have an inviter, 50% of the minting cost is burned
+            burnAmount = mintPrice - prizeAmount;
         } else {
-            addUnlockedAmount = 85000;
+            // If the minter's address has an inviter, 40% of the minting cost is burned,
+            // and 10% are rewarded back to the inviter.
+            uint256 rebateAmount = MINT_REBATE * count;
+            burnAmount = mintPrice - prizeAmount - rebateAmount;
+
+            Rebate storage inviterRebate = inviterRebateMap[inviter];
+            inviterRebate.totalRebateEarned += rebateAmount;
+            inviterRebate.rebatePendingWithdrawal += rebateAmount;
         }
-        playerRebate.unlockedRebateToClaim =
-            playerRebate.unlockedRebateToClaim +
-            addUnlockedAmount;
+
+        // get owldinal buff level
+        uint256[] storage stakingOwlIds = stakedOwldinalsByOwner[msg.sender];
+        uint256 buffLevel = stakingOwlIds.length;
+
+        // burn cost and do mint, mystery box will open directly (maybe burned)
+        owlToken.burn(burnAmount);
+        tokenIdList = mysteryBoxContract.mintAndOpenBoxes(
+            msg.sender,
+            count,
+            buffLevel > 0
+        );
+        // tokenIdList = new uint256[](count);
+        // for (uint256 i = 0; i < count; i++) {
+        //     tokenIdList[i] = mysteryBoxContract.mintBox(msg.sender);
+        // }
+
+        // handle unlockable rebate as inviter
+        Rebate storage playerRebate = inviterRebateMap[msg.sender];
+        uint256 addUnlockedAmount = _calculateUnlockRebateAmountByMint(
+            count,
+            playerRebate.mintedBoxCount
+        );
+        playerRebate.mintedBoxCount += count;
+        playerRebate.unlockedRebateToClaim += addUnlockedAmount;
+
+        return tokenIdList;
     }
 
-    // 1. Stake owl token or boxGen1 token. If gen1 is not unboxed, it will be unboxed directly.
-    // 2. If player are participating in the game for the first time, player can input the "invite code"
-    // field to establish an invitation relationship.
-    function stakeBox(
-        uint256 tokenId,
-        bool isOwldinalNft,
-        uint32 inviteCode
-    ) external {
-        if (isOwldinalNft) {
+    function stakeOwldinalNft(uint256[] calldata tokenIdList) external {
+        require(tokenIdList.length > 0, "Param is empty");
+        // check a maximum of 3 Owldinal NFTs can be staked.
+        require(
+            stakedOwldinalsByOwner[msg.sender].length + tokenIdList.length <= 3,
+            "Owldinal can stake a maximum of three."
+        );
+
+        _handleFirstInGame(msg.sender);
+
+        // check all the token is owner's
+        for (uint256 i = 0; i < tokenIdList.length; i++) {
+            uint256 tokenId = tokenIdList[i];
             require(
                 owldinalNftContract.ownerOf(tokenId) == msg.sender,
                 "Not owner"
             );
 
-            require(
-                stakedOwldinalsByOwner[msg.sender].length < 3,
-                "Owldinal can stake a maximum of three."
-            );
-        } else {
-            require(
-                mysteryBoxContract.ownerOf(tokenId) == msg.sender,
-                "Not owner"
-            );
-        }
-        _handleFirstInGame(msg.sender);
-        _handleInviter(msg.sender, inviteCode);
-
-        // start stake
-        if (isOwldinalNft) {
             owldinalNftContract.transferFrom(
                 msg.sender,
                 address(this),
                 tokenId
             );
+
             stakedOwldinalsByOwner[msg.sender].push(tokenId);
             owlInfoMap[tokenId] = OwlStakingInfo({
                 tokenId: tokenId,
@@ -208,28 +263,36 @@ contract OwlGame is AccessControl {
                 stakingTime: uint64(block.timestamp),
                 buffedTargetIds: new uint256[](0)
             });
-        } else {
-            BoxType boxType = mysteryBoxContract.getBoxType(tokenId);
+        }
+
+        emit StakeOwldinalNft(msg.sender, tokenIdList);
+    }
+
+    function stakeMysteryBox(uint256[] calldata tokenIdList) external {
+        require(tokenIdList.length > 0, "Param is empty");
+        // check a maximum of 3 Owldinal NFTs can be staked.
+        _handleFirstInGame(msg.sender);
+
+        // check all the token is owner's
+        for (uint256 i = 0; i < tokenIdList.length; i++) {
+            uint256 tokenId = tokenIdList[i];
+            require(
+                mysteryBoxContract.ownerOf(tokenId) == msg.sender,
+                "Not owner"
+            );
+
+            mysteryBoxContract.transferFrom(msg.sender, address(this), tokenId);
+            // update owl buffer
             uint256[] storage stakingOwlIds = stakedOwldinalsByOwner[
                 msg.sender
             ];
             uint16 buffLevel = uint16(stakingOwlIds.length);
-            if (boxType == BoxType.UNOPENED) {
-                boxType = mysteryBoxContract.openBox(tokenId, buffLevel > 0);
-                require(
-                    boxType != BoxType.BURNED,
-                    "You mystery box has been destoryed"
-                );
+            for (uint256 j = 0; j < stakingOwlIds.length; j++) {
+                owlInfoMap[stakingOwlIds[j]].buffedTargetIds.push(tokenId);
+                buffingOwlsByMysteryBox[tokenId].push(stakingOwlIds[j]);
             }
 
-            mysteryBoxContract.transferFrom(msg.sender, address(this), tokenId);
-
-            // update owl buff target when staking elf/fruit
-            for (uint256 i = 0; i < stakingOwlIds.length; i++) {
-                owlInfoMap[stakingOwlIds[i]].buffedTargetIds.push(tokenId);
-                buffingOwlsByMysteryBox[tokenId].push(stakingOwlIds[i]);
-            }
-
+            BoxType boxType = mysteryBoxContract.getBoxType(tokenId);
             tokenInfoMap[tokenId] = TokenStakingInfo({
                 tokenId: tokenId,
                 owner: msg.sender,
@@ -245,76 +308,165 @@ contract OwlGame is AccessControl {
                 elfIdList.push(tokenId);
             }
         }
+
+        emit StakeMysteryBox(msg.sender, tokenIdList);
     }
 
-    function unstakeOwl(uint256 tokenId) external {
-        require(owlInfoMap[tokenId].owner == msg.sender, "Not owner");
-        require(
-            owlInfoMap[tokenId].buffedTargetIds.length == 0,
-            "this owl token still in use"
-        );
+    function unstakeOwldinalNft(uint256[] calldata tokenIdList) external {
+        require(tokenIdList.length > 0, "Param is empty");
+        for (uint256 i = 0; i < tokenIdList.length; i++) {
+            uint256 tokenId = tokenIdList[i];
+            require(owlInfoMap[tokenId].owner == msg.sender, "Not owner");
+            require(
+                owlInfoMap[tokenId].buffedTargetIds.length == 0,
+                "this owl token still in use"
+            );
 
-        owldinalNftContract.transferFrom(address(this), msg.sender, tokenId);
-        delete owlInfoMap[tokenId];
-        uint256[] storage ids = stakedOwldinalsByOwner[msg.sender];
-        Utils.removeValue(ids, tokenId);
+            owldinalNftContract.transferFrom(
+                address(this),
+                msg.sender,
+                tokenId
+            );
+            delete owlInfoMap[tokenId];
+            uint256[] storage ids = stakedOwldinalsByOwner[msg.sender];
+            Utils.removeValue(ids, tokenId);
+        }
     }
 
-    function unstakeToken(uint256 tokenId) external {
-        require(tokenInfoMap[tokenId].owner == msg.sender, "Not owner");
-        TokenStakingInfo storage tokenInfo = tokenInfoMap[tokenId];
+    function claimAndUnstakeMysteryBox(
+        uint256[] calldata tokenIdList
+    ) external {
+        require(tokenIdList.length > 0, "Param is empty");
 
-        if (tokenInfo.reward > 0) {
-            if (tokenInfo.boxType == BoxType.FRUIT) {
-                uint256 rewardsCanClaim = (tokenInfo.reward *
-                    (tokenInfo.buffLevel >= 3 ? 85 : 75)) / 100;
-                uint256 rewardsForElf = tokenInfo.reward - rewardsCanClaim;
+        uint256 totalRewardsCanClaim = 0;
+        uint256 totalRewardsForElf = 0;
+        uint256 totalRewardsToBurn = 0;
 
-                owlToken.transfer(tokenInfo.owner, rewardsCanClaim);
+        for (uint256 i = 0; i < tokenIdList.length; i++) {
+            uint256 tokenId = tokenIdList[i];
+            require(tokenInfoMap[tokenId].owner == msg.sender, "Not owner");
 
-                uint256 eachElfRewards = rewardsForElf / elfIdList.length;
-                for (uint256 i = 0; i < elfIdList.length; i++) {
-                    tokenInfoMap[elfIdList[i]].reward =
-                        tokenInfoMap[elfIdList[i]].reward +
-                        eachElfRewards;
+            TokenStakingInfo storage tokenInfo = tokenInfoMap[tokenId];
+
+            // calculate rewards
+            if (tokenInfo.reward > 0) {
+                if (tokenInfo.boxType == BoxType.FRUIT) {
+                    uint256 rewardsCanClaim = (tokenInfo.reward *
+                        (tokenInfo.buffLevel >= 3 ? 85 : 75)) / 100;
+                    uint256 rewardsForElf = tokenInfo.reward - rewardsCanClaim;
+
+                    totalRewardsCanClaim += rewardsCanClaim;
+                    totalRewardsForElf += rewardsForElf;
+
+                    emit UnstakeMysteryBox(
+                        msg.sender,
+                        tokenId,
+                        tokenInfo.boxType,
+                        rewardsCanClaim
+                    );
+                } else {
+                    // tokenInfo.boxType == BoxType.ELF
+                    uint256 rewardsCanClaim = (tokenInfo.reward *
+                        (tokenInfo.buffLevel >= 2 ? 90 : 85)) / 100;
+                    uint256 rewardsToBurn = tokenInfo.reward - rewardsCanClaim;
+                    totalRewardsCanClaim += rewardsCanClaim;
+                    totalRewardsToBurn += rewardsToBurn;
+
+                    emit UnstakeMysteryBox(
+                        msg.sender,
+                        tokenId,
+                        tokenInfo.boxType,
+                        rewardsCanClaim
+                    );
                 }
             } else {
-                uint256 rewardsCanClaim = (tokenInfo.reward *
-                    (tokenInfo.buffLevel >= 2 ? 90 : 85)) / 100;
-                uint256 rewardsToBurn = tokenInfo.reward - rewardsCanClaim;
-
-                owlToken.transfer(tokenInfo.owner, rewardsCanClaim);
-                owlToken.burn(rewardsToBurn);
+                emit UnstakeMysteryBox(
+                    msg.sender,
+                    tokenId,
+                    tokenInfo.boxType,
+                    0
+                );
             }
+
+            // unstake nfts
+            mysteryBoxContract.transferFrom(
+                address(this),
+                tokenInfo.owner,
+                tokenId
+            );
+
+            // remove from owl's buff list
+            if (buffingOwlsByMysteryBox[tokenId].length > 0) {
+                for (
+                    uint256 j = 0;
+                    j < buffingOwlsByMysteryBox[tokenId].length;
+                    j++
+                ) {
+                    uint256 owlId = buffingOwlsByMysteryBox[tokenId][j];
+                    Utils.removeValue(
+                        owlInfoMap[owlId].buffedTargetIds,
+                        tokenId
+                    );
+                }
+                delete buffingOwlsByMysteryBox[tokenId];
+            }
+
+            // remove from token info
+            if (tokenInfo.boxType == BoxType.FRUIT) {
+                Utils.removeValue(fruitIdList, tokenId);
+            } else {
+                Utils.removeValue(elfIdList, tokenId);
+            }
+            delete tokenInfoMap[tokenId];
         }
 
-        mysteryBoxContract.transferFrom(
-            address(this),
-            tokenInfo.owner,
-            tokenId
+        // handle rewards
+        if (totalRewardsCanClaim > 0) {
+            owlToken.transfer(msg.sender, totalRewardsCanClaim);
+        }
+        if (totalRewardsToBurn > 0) {
+            owlToken.burn(totalRewardsToBurn);
+        }
+        if (totalRewardsForElf > 0) {
+            uint256 eachElfRewards = totalRewardsForElf / elfIdList.length;
+            for (uint256 i = 0; i < elfIdList.length; i++) {
+                tokenInfoMap[elfIdList[i]].reward += eachElfRewards;
+            }
+        }
+    }
+
+    function claimInviterReward() external {
+        Rebate storage rebate = inviterRebateMap[msg.sender];
+        require(rebate.rebatePendingWithdrawal > 0, "no reward can be claimed");
+        require(
+            rebate.unlockedRebateToClaim > 0,
+            "need more minted box for claim inviter reward"
         );
 
-        // remove from owl's buff list
-        if (buffingOwlsByMysteryBox[tokenId].length > 0) {
-            for (
-                uint256 i = 0;
-                i < buffingOwlsByMysteryBox[tokenId].length;
-                i++
-            ) {
-                uint256 owlId = buffingOwlsByMysteryBox[tokenId][i];
-                Utils.removeValue(owlInfoMap[owlId].buffedTargetIds, tokenId);
-            }
-            delete buffingOwlsByMysteryBox[tokenId];
-        }
-
-        // remove from token info
-        if (tokenInfo.boxType == BoxType.FRUIT) {
-            Utils.removeValue(fruitIdList, tokenId);
+        // It should be noted that the unlock provided by each mint is calculated as a percentage (for example,
+        // the maximum reward is that one mint will unlock 850% of the rebate), so be careful to divide by 100
+        // when using it.
+        uint256 withdrawAmount;
+        if (rebate.rebatePendingWithdrawal > rebate.unlockedRebateToClaim) {
+            withdrawAmount = rebate.unlockedRebateToClaim;
+            owlToken.transfer(msg.sender, withdrawAmount);
+            rebate.unlockedRebateToClaim = 0;
+            rebate.rebatePendingWithdrawal =
+                rebate.rebatePendingWithdrawal -
+                withdrawAmount;
         } else {
-            Utils.removeValue(elfIdList, tokenId);
+            withdrawAmount = rebate.rebatePendingWithdrawal;
+            owlToken.transfer(msg.sender, withdrawAmount);
+            rebate.rebatePendingWithdrawal = 0;
+            rebate.unlockedRebateToClaim =
+                rebate.unlockedRebateToClaim -
+                rebate.rebatePendingWithdrawal;
         }
-        delete tokenInfoMap[tokenId];
     }
+
+    // endregion ---- Player ----
+
+    // region ---- Server ----
 
     // After staking, Owl rewards are distributed every 4 hours.
     function updateAllFruitRewards() external onlyRole(SERVER_ROLE) {
@@ -359,34 +511,7 @@ contract OwlGame is AccessControl {
         prizePool -= totalRewards;
     }
 
-    function claimInviterReward() external {
-        Rebate storage rebate = inviterRebateMap[msg.sender];
-        require(rebate.rebatePendingWithdrawal > 0, "no reward can be claimed");
-        require(
-            rebate.unlockedRebateToClaim > 0,
-            "need more minted box for claim inviter reward"
-        );
-
-        // It should be noted that the unlock provided by each mint is calculated as a percentage (for example,
-        // the maximum reward is that one mint will unlock 850% of the rebate), so be careful to divide by 100
-        // when using it.
-        uint256 withdrawAmount;
-        if (rebate.rebatePendingWithdrawal > rebate.unlockedRebateToClaim) {
-            withdrawAmount = rebate.unlockedRebateToClaim;
-            owlToken.transfer(msg.sender, withdrawAmount);
-            rebate.unlockedRebateToClaim = 0;
-            rebate.rebatePendingWithdrawal =
-                rebate.rebatePendingWithdrawal -
-                withdrawAmount;
-        } else {
-            withdrawAmount = rebate.rebatePendingWithdrawal;
-            owlToken.transfer(msg.sender, withdrawAmount);
-            rebate.rebatePendingWithdrawal = 0;
-            rebate.unlockedRebateToClaim =
-                rebate.unlockedRebateToClaim -
-                rebate.rebatePendingWithdrawal;
-        }
-    }
+    // endregion ---- Server ----
 
     // if player is first in game, then generate a invite code for player.
     function _handleFirstInGame(address sender) private {
@@ -396,6 +521,8 @@ contract OwlGame is AccessControl {
             inviteCodeToInviterMap[newInviteCode] = sender;
             inviterToInviteCodeMap[sender] = newInviteCode;
         }
+
+        emit JoinGame(sender);
     }
 
     function _handleInviter(
@@ -482,6 +609,29 @@ contract OwlGame is AccessControl {
         }
 
         return fruitRewardsProportion;
+    }
+
+    // Each mint of a mystery box unlocks a specific rebate reward k based on the following conditions:
+    // - When n <= 10, the k is 30,000 for each n.
+    // - When 10 < n <= 50, the k is 55,000 for each n.
+    // - When 50 < n <= 100, the k is 70,000 for each n.
+    // - When n > 100, the k is 85,000 for each n.
+    function _calculateUnlockRebateAmountByMint(
+        uint256 mintBoxCount,
+        uint256 prevMintedBoxCount
+    ) internal pure returns (uint256 amount) {
+        uint256 totalMintCount = mintBoxCount + prevMintedBoxCount;
+        if (totalMintCount <= 10) {
+            amount = 30000 * mintBoxCount;
+        } else if (totalMintCount <= 50) {
+            amount = 55000 * mintBoxCount;
+        } else if (totalMintCount <= 100) {
+            amount = 70000 * mintBoxCount;
+        } else {
+            amount = 85000 * mintBoxCount;
+        }
+
+        return amount;
     }
 
     function _encodeInviteCode(
