@@ -105,6 +105,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     // prize pool
     uint256 public prizePool;
 
+    bool public isMoonBoostEnable;
+    address[] private moonBoostWhiteList = [address(0xAABB)];
+
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -135,6 +138,10 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         uint256 proportion
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         globalFruitRewardsProportion = proportion;
+    }
+
+    function setMoonBoost(bool isEnable) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        isMoonBoostEnable = isEnable;
     }
 
     // endregion ---- Admin ----
@@ -342,6 +349,16 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         uint256 totalRewardsForElf = 0;
         uint256 totalRewardsToBurn = 0;
 
+        bool hasMoonBoost = false;
+        if (isMoonBoostEnable) {
+            for (uint256 i = 0; i < moonBoostWhiteList.length; i++) {
+                if (msg.sender == moonBoostWhiteList[i]) {
+                    hasMoonBoost = true;
+                    break;
+                }
+            }
+        }
+
         for (uint256 i = 0; i < tokenIdList.length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(tokenInfoMap[tokenId].owner == msg.sender, "Not owner");
@@ -351,8 +368,17 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             // calculate rewards
             if (tokenInfo.reward > 0) {
                 if (tokenInfo.boxType == BoxType.FRUIT) {
+                    uint256 rewardProportion;
+                    if (hasMoonBoost) {
+                        rewardProportion = 88;
+                    } else if (tokenInfo.buffLevel >= 3) {
+                        rewardProportion = 85;
+                    } else {
+                        rewardProportion = 75;
+                    }
+
                     uint256 rewardsCanClaim = (tokenInfo.reward *
-                        (tokenInfo.buffLevel >= 3 ? 85 : 75)) / 100;
+                        rewardProportion) / 100;
                     uint256 rewardsForElf = tokenInfo.reward - rewardsCanClaim;
 
                     totalRewardsCanClaim += rewardsCanClaim;
@@ -366,8 +392,16 @@ contract OwlGame is AccessControl, ReentrancyGuard {
                     );
                 } else {
                     // tokenInfo.boxType == BoxType.ELF
+                    uint256 rewardProportion;
+                    if (hasMoonBoost) {
+                        rewardProportion = 93;
+                    } else if (tokenInfo.buffLevel >= 2) {
+                        rewardProportion = 90;
+                    } else {
+                        rewardProportion = 85;
+                    }
                     uint256 rewardsCanClaim = (tokenInfo.reward *
-                        (tokenInfo.buffLevel >= 2 ? 90 : 85)) / 100;
+                        rewardProportion) / 100;
                     uint256 rewardsToBurn = tokenInfo.reward - rewardsCanClaim;
                     totalRewardsCanClaim += rewardsCanClaim;
                     totalRewardsToBurn += rewardsToBurn;
