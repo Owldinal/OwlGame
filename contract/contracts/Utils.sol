@@ -5,10 +5,12 @@ pragma solidity ^0.8.0;
 library Utils {
     function generateRandomNumber() internal view returns (uint256 rand) {
         uint256 blocknumber = block.number;
+        uint256 mod = blocknumber > 255 ? 255 : blocknumber - 1;
         uint256 random_gap = uint256(
             keccak256(abi.encodePacked(blockhash(blocknumber - 1), msg.sender))
-        ) % 255;
+        ) % mod;
         uint256 random_block = blocknumber - 1 - random_gap;
+
         bytes32 sha = keccak256(
             abi.encodePacked(
                 blockhash(random_block),
