@@ -27,14 +27,13 @@ type Config struct {
 	LogOutput  string `env:"LOG_OUTPUT" envDefault:"console"` // "file" or "console"
 	LogFile    string `env:"LOG_FILE" envDefault:"app.log"`   // Only required if LogOutput is set to "file"
 
-	NodeUrl    string `env:"NODE_URL" envDefault:""`
-	NftOwlAddr string `env:"NFT_OWL_ADDR" envDefault:""`
+	NodeUrl         string `env:"NODE_URL" envDefault:""`
+	EventStartBlock int64  `env:"EVENT_START_BLOCK" envDefault:"0"`
 
-	OwlTokenAddr string `env:"OWL_TOKEN_ADDR" envDefault:""`
-	NftFairyAddr string `env:"NFT_FAIRY_ADDR" envDefault:""`
-	NftFruitAddr string `env:"NFT_FRUIT_ADDR" envDefault:""`
-	BlindboxAddr string `env:"BLINDBOX_ADDR" envDefault:""`
-	OwlGameAddr  string `env:"OWL_GAME_ADDR" envDefault:""`
+	NftOwlAddr        string `env:"NFT_OWL_ADDR" envDefault:""`
+	OwlTokenAddr      string `env:"OWL_TOKEN_ADDR" envDefault:""`
+	NftMysteryBoxAddr string `env:"NFT_MYSTERY_BOX_ADDR" envDefault:""`
+	OwlGameAddr       string `env:"OWL_GAME_ADDR" envDefault:""`
 }
 
 func init() {
