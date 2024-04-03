@@ -1190,14 +1190,14 @@ contract Owldinal is ERC721URIStorage, AccessControl, ReentrancyGuard {
     }
 
     function mintByAdmin(
-        bytes memory signature
+        // bytes memory signature
     )
         external
         nonReentrant
         onlyRole(DEFAULT_ADMIN_ROLE)
         returns (uint256 tokenId)
     {
-        _validMint(signature);
+        // _validMint(signature);
         ++tokenIdCounter;
         _safeMint(msg.sender, tokenIdCounter);
         emit MintBox(msg.sender, tokenIdCounter, 3, tokenURI(tokenIdCounter));

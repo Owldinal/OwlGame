@@ -44,9 +44,10 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     // event MintBox(address indexed user, uint256 tokenId);
     // event OpenBox(address indexed user, uint256 tokenId, BoxType boxType);
+    event PrizePoolIncreased(uint256 amount);
+    event PrizePoolDecreased(uint256 amount);
     event JoinGame(address indexed user);
     event BindInvitation(address indexed invitee, address inviter);
-    event MintBox(address indexed user, uint256 count, uint256[] tokenIdList);
     event StakeOwldinalNft(address indexed user, uint256[] tokenId);
     event StakeMysteryBox(address indexed user, uint256[] tokenId);
     event UnstakeOwldinalNft(address indexed user, uint256[] tokenId);
@@ -58,6 +59,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         BoxType boxType,
         uint256 rewards
     );
+    event ClaimInviterReward(address indexed user, uint256 withdrawAmount);
 
     bytes32 public constant SERVER_ROLE = keccak256("SERVER_ROLE");
 
@@ -132,6 +134,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             "Transfer failed"
         );
         prizePool = prizePool + prizeAmount;
+        emit PrizePoolIncreased(prizeAmount);
     }
 
     function setGlobalFruitRewardsProportion(
@@ -222,10 +225,6 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             count,
             buffLevel > 0
         );
-        // tokenIdList = new uint256[](count);
-        // for (uint256 i = 0; i < count; i++) {
-        //     tokenIdList[i] = mysteryBoxContract.mintBox(msg.sender);
-        // }
 
         // handle unlockable rebate as inviter
         Rebate storage playerRebate = inviterRebateMap[msg.sender];
@@ -235,6 +234,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         );
         playerRebate.mintedBoxCount += count;
         playerRebate.unlockedRebateToClaim += addUnlockedAmount;
+
+        emit PrizePoolIncreased(prizeAmount);
 
         return tokenIdList;
     }
@@ -339,6 +340,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             uint256[] storage ids = stakedOwldinalsByOwner[msg.sender];
             Utils.removeValue(ids, tokenId);
         }
+
+        emit UnstakeOwldinalNft(msg.sender, tokenIdList);
     }
 
     function claimAndUnstakeMysteryBox(
@@ -486,19 +489,16 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         uint256 withdrawAmount;
         if (rebate.rebatePendingWithdrawal > rebate.unlockedRebateToClaim) {
             withdrawAmount = rebate.unlockedRebateToClaim;
-            owlToken.transfer(msg.sender, withdrawAmount);
             rebate.unlockedRebateToClaim = 0;
-            rebate.rebatePendingWithdrawal =
-                rebate.rebatePendingWithdrawal -
-                withdrawAmount;
+            rebate.rebatePendingWithdrawal -= withdrawAmount;
         } else {
             withdrawAmount = rebate.rebatePendingWithdrawal;
-            owlToken.transfer(msg.sender, withdrawAmount);
             rebate.rebatePendingWithdrawal = 0;
-            rebate.unlockedRebateToClaim =
-                rebate.unlockedRebateToClaim -
-                rebate.rebatePendingWithdrawal;
+            rebate.unlockedRebateToClaim -= withdrawAmount;
         }
+
+        owlToken.transfer(msg.sender, withdrawAmount);
+        emit ClaimInviterReward(msg.sender, withdrawAmount);
     }
 
     // endregion ---- Player ----
@@ -546,6 +546,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         }
 
         prizePool -= totalRewards;
+        emit PrizePoolDecreased(totalRewards);
     }
 
     // endregion ---- Server ----
