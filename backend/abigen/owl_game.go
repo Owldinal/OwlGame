@@ -30,7 +30,7 @@ var (
 
 // OwlGameMetaData contains all meta data concerning the OwlGame contract.
 var OwlGameMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ReentrancyGuardReentrantCall\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"invitee\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"inviter\",\"type\":\"address\"}],\"name\":\"BindInvitation\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"JoinGame\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"MintBox\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"tokenId\",\"type\":\"uint256[]\"}],\"name\":\"StakeMysteryBox\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"tokenId\",\"type\":\"uint256[]\"}],\"name\":\"StakeOwldinalNft\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"enumBoxType\",\"name\":\"boxType\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"rewards\",\"type\":\"uint256\"}],\"name\":\"UnstakeMysteryBox\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"tokenId\",\"type\":\"uint256[]\"}],\"name\":\"UnstakeOwldinalNft\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FRUIT_REWARD_INTERVAL\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MINT_PRICE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MINT_REBATE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SERVER_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"prizeAmount\",\"type\":\"uint256\"}],\"name\":\"addPrize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"claimAndUnstakeMysteryBox\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimInviterReward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"inviteCode\",\"type\":\"uint32\"}],\"name\":\"handleInviteCode\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"inviter\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owlTokenAddr\",\"type\":\"address\"},{\"internalType\":\"addresspayable\",\"name\":\"owldinalNftAddr\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"mysteryBoxAddr\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isMoonBoostEnable\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"mintMysteryBox\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"mysteryBoxContract\",\"outputs\":[{\"internalType\":\"contractOwldinalGenOneBox\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owlToken\",\"outputs\":[{\"internalType\":\"contractERC20Burnable\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owldinalNftContract\",\"outputs\":[{\"internalType\":\"contractOwldinal\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"prizePool\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proportion\",\"type\":\"uint256\"}],\"name\":\"setGlobalFruitRewardsProportion\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"isEnable\",\"type\":\"bool\"}],\"name\":\"setMoonBoost\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"stakeMysteryBox\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"stakeOwldinalNft\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"unstakeOwldinalNft\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"updateAllFruitRewards\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ReentrancyGuardReentrantCall\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"invitee\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"inviter\",\"type\":\"address\"}],\"name\":\"BindInvitation\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"withdrawAmount\",\"type\":\"uint256\"}],\"name\":\"ClaimInviterReward\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"JoinGame\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"PrizePoolDecreased\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"PrizePoolIncreased\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"tokenId\",\"type\":\"uint256[]\"}],\"name\":\"StakeMysteryBox\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"tokenId\",\"type\":\"uint256[]\"}],\"name\":\"StakeOwldinalNft\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"enumBoxType\",\"name\":\"boxType\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"rewards\",\"type\":\"uint256\"}],\"name\":\"UnstakeMysteryBox\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"tokenId\",\"type\":\"uint256[]\"}],\"name\":\"UnstakeOwldinalNft\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"FRUIT_REWARD_INTERVAL\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MINT_PRICE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MINT_REBATE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SERVER_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"prizeAmount\",\"type\":\"uint256\"}],\"name\":\"addPrize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"claimAndUnstakeMysteryBox\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimInviterReward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"inviteCode\",\"type\":\"uint32\"}],\"name\":\"handleInviteCode\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"inviter\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owlTokenAddr\",\"type\":\"address\"},{\"internalType\":\"addresspayable\",\"name\":\"owldinalNftAddr\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"mysteryBoxAddr\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isMoonBoostEnable\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"mintMysteryBox\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"mysteryBoxContract\",\"outputs\":[{\"internalType\":\"contractOwldinalGenOneBox\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owlToken\",\"outputs\":[{\"internalType\":\"contractERC20Burnable\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owldinalNftContract\",\"outputs\":[{\"internalType\":\"contractOwldinal\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"prizePool\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proportion\",\"type\":\"uint256\"}],\"name\":\"setGlobalFruitRewardsProportion\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"isEnable\",\"type\":\"bool\"}],\"name\":\"setMoonBoost\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"stakeMysteryBox\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"stakeOwldinalNft\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256[]\",\"name\":\"tokenIdList\",\"type\":\"uint256[]\"}],\"name\":\"unstakeOwldinalNft\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"updateAllFruitRewards\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // OwlGameABI is the input ABI used to generate the binding from.
@@ -1042,6 +1042,151 @@ func (_OwlGame *OwlGameFilterer) ParseBindInvitation(log types.Log) (*OwlGameBin
 	return event, nil
 }
 
+// OwlGameClaimInviterRewardIterator is returned from FilterClaimInviterReward and is used to iterate over the raw logs and unpacked data for ClaimInviterReward events raised by the OwlGame contract.
+type OwlGameClaimInviterRewardIterator struct {
+	Event *OwlGameClaimInviterReward // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *OwlGameClaimInviterRewardIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(OwlGameClaimInviterReward)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(OwlGameClaimInviterReward)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *OwlGameClaimInviterRewardIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *OwlGameClaimInviterRewardIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// OwlGameClaimInviterReward represents a ClaimInviterReward event raised by the OwlGame contract.
+type OwlGameClaimInviterReward struct {
+	User           common.Address
+	WithdrawAmount *big.Int
+	Raw            types.Log // Blockchain specific contextual infos
+}
+
+// FilterClaimInviterReward is a free log retrieval operation binding the contract event 0x1b066a4c1595fdf3bf1c300bca29f51f237bbc15ee85e815b39befc1bc630cfc.
+//
+// Solidity: event ClaimInviterReward(address indexed user, uint256 withdrawAmount)
+func (_OwlGame *OwlGameFilterer) FilterClaimInviterReward(opts *bind.FilterOpts, user []common.Address) (*OwlGameClaimInviterRewardIterator, error) {
+
+	var userRule []interface{}
+	for _, userItem := range user {
+		userRule = append(userRule, userItem)
+	}
+
+	logs, sub, err := _OwlGame.contract.FilterLogs(opts, "ClaimInviterReward", userRule)
+	if err != nil {
+		return nil, err
+	}
+	return &OwlGameClaimInviterRewardIterator{contract: _OwlGame.contract, event: "ClaimInviterReward", logs: logs, sub: sub}, nil
+}
+
+// WatchClaimInviterReward is a free log subscription operation binding the contract event 0x1b066a4c1595fdf3bf1c300bca29f51f237bbc15ee85e815b39befc1bc630cfc.
+//
+// Solidity: event ClaimInviterReward(address indexed user, uint256 withdrawAmount)
+func (_OwlGame *OwlGameFilterer) WatchClaimInviterReward(opts *bind.WatchOpts, sink chan<- *OwlGameClaimInviterReward, user []common.Address) (event.Subscription, error) {
+
+	var userRule []interface{}
+	for _, userItem := range user {
+		userRule = append(userRule, userItem)
+	}
+
+	logs, sub, err := _OwlGame.contract.WatchLogs(opts, "ClaimInviterReward", userRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(OwlGameClaimInviterReward)
+				if err := _OwlGame.contract.UnpackLog(event, "ClaimInviterReward", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseClaimInviterReward is a log parse operation binding the contract event 0x1b066a4c1595fdf3bf1c300bca29f51f237bbc15ee85e815b39befc1bc630cfc.
+//
+// Solidity: event ClaimInviterReward(address indexed user, uint256 withdrawAmount)
+func (_OwlGame *OwlGameFilterer) ParseClaimInviterReward(log types.Log) (*OwlGameClaimInviterReward, error) {
+	event := new(OwlGameClaimInviterReward)
+	if err := _OwlGame.contract.UnpackLog(event, "ClaimInviterReward", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
 // OwlGameJoinGameIterator is returned from FilterJoinGame and is used to iterate over the raw logs and unpacked data for JoinGame events raised by the OwlGame contract.
 type OwlGameJoinGameIterator struct {
 	Event *OwlGameJoinGame // Event containing the contract specifics and raw log
@@ -1186,9 +1331,9 @@ func (_OwlGame *OwlGameFilterer) ParseJoinGame(log types.Log) (*OwlGameJoinGame,
 	return event, nil
 }
 
-// OwlGameMintBoxIterator is returned from FilterMintBox and is used to iterate over the raw logs and unpacked data for MintBox events raised by the OwlGame contract.
-type OwlGameMintBoxIterator struct {
-	Event *OwlGameMintBox // Event containing the contract specifics and raw log
+// OwlGamePrizePoolDecreasedIterator is returned from FilterPrizePoolDecreased and is used to iterate over the raw logs and unpacked data for PrizePoolDecreased events raised by the OwlGame contract.
+type OwlGamePrizePoolDecreasedIterator struct {
+	Event *OwlGamePrizePoolDecreased // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1202,7 +1347,7 @@ type OwlGameMintBoxIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *OwlGameMintBoxIterator) Next() bool {
+func (it *OwlGamePrizePoolDecreasedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1211,7 +1356,7 @@ func (it *OwlGameMintBoxIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(OwlGameMintBox)
+			it.Event = new(OwlGamePrizePoolDecreased)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1226,7 +1371,7 @@ func (it *OwlGameMintBoxIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(OwlGameMintBox)
+		it.Event = new(OwlGamePrizePoolDecreased)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1242,53 +1387,41 @@ func (it *OwlGameMintBoxIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *OwlGameMintBoxIterator) Error() error {
+func (it *OwlGamePrizePoolDecreasedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *OwlGameMintBoxIterator) Close() error {
+func (it *OwlGamePrizePoolDecreasedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// OwlGameMintBox represents a MintBox event raised by the OwlGame contract.
-type OwlGameMintBox struct {
-	User        common.Address
-	Count       *big.Int
-	TokenIdList []*big.Int
-	Raw         types.Log // Blockchain specific contextual infos
+// OwlGamePrizePoolDecreased represents a PrizePoolDecreased event raised by the OwlGame contract.
+type OwlGamePrizePoolDecreased struct {
+	Amount *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterMintBox is a free log retrieval operation binding the contract event 0x5eeee15fc3d1bbb633c5f9da8b35dee9cc2ec05de411561d906a58d069d41beb.
+// FilterPrizePoolDecreased is a free log retrieval operation binding the contract event 0xf0870791f79c9e860000c2e3005d55ab8944ec1a18a6b61d4ad60ce184654f42.
 //
-// Solidity: event MintBox(address indexed user, uint256 count, uint256[] tokenIdList)
-func (_OwlGame *OwlGameFilterer) FilterMintBox(opts *bind.FilterOpts, user []common.Address) (*OwlGameMintBoxIterator, error) {
+// Solidity: event PrizePoolDecreased(uint256 amount)
+func (_OwlGame *OwlGameFilterer) FilterPrizePoolDecreased(opts *bind.FilterOpts) (*OwlGamePrizePoolDecreasedIterator, error) {
 
-	var userRule []interface{}
-	for _, userItem := range user {
-		userRule = append(userRule, userItem)
-	}
-
-	logs, sub, err := _OwlGame.contract.FilterLogs(opts, "MintBox", userRule)
+	logs, sub, err := _OwlGame.contract.FilterLogs(opts, "PrizePoolDecreased")
 	if err != nil {
 		return nil, err
 	}
-	return &OwlGameMintBoxIterator{contract: _OwlGame.contract, event: "MintBox", logs: logs, sub: sub}, nil
+	return &OwlGamePrizePoolDecreasedIterator{contract: _OwlGame.contract, event: "PrizePoolDecreased", logs: logs, sub: sub}, nil
 }
 
-// WatchMintBox is a free log subscription operation binding the contract event 0x5eeee15fc3d1bbb633c5f9da8b35dee9cc2ec05de411561d906a58d069d41beb.
+// WatchPrizePoolDecreased is a free log subscription operation binding the contract event 0xf0870791f79c9e860000c2e3005d55ab8944ec1a18a6b61d4ad60ce184654f42.
 //
-// Solidity: event MintBox(address indexed user, uint256 count, uint256[] tokenIdList)
-func (_OwlGame *OwlGameFilterer) WatchMintBox(opts *bind.WatchOpts, sink chan<- *OwlGameMintBox, user []common.Address) (event.Subscription, error) {
+// Solidity: event PrizePoolDecreased(uint256 amount)
+func (_OwlGame *OwlGameFilterer) WatchPrizePoolDecreased(opts *bind.WatchOpts, sink chan<- *OwlGamePrizePoolDecreased) (event.Subscription, error) {
 
-	var userRule []interface{}
-	for _, userItem := range user {
-		userRule = append(userRule, userItem)
-	}
-
-	logs, sub, err := _OwlGame.contract.WatchLogs(opts, "MintBox", userRule)
+	logs, sub, err := _OwlGame.contract.WatchLogs(opts, "PrizePoolDecreased")
 	if err != nil {
 		return nil, err
 	}
@@ -1298,8 +1431,8 @@ func (_OwlGame *OwlGameFilterer) WatchMintBox(opts *bind.WatchOpts, sink chan<- 
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(OwlGameMintBox)
-				if err := _OwlGame.contract.UnpackLog(event, "MintBox", log); err != nil {
+				event := new(OwlGamePrizePoolDecreased)
+				if err := _OwlGame.contract.UnpackLog(event, "PrizePoolDecreased", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1320,12 +1453,146 @@ func (_OwlGame *OwlGameFilterer) WatchMintBox(opts *bind.WatchOpts, sink chan<- 
 	}), nil
 }
 
-// ParseMintBox is a log parse operation binding the contract event 0x5eeee15fc3d1bbb633c5f9da8b35dee9cc2ec05de411561d906a58d069d41beb.
+// ParsePrizePoolDecreased is a log parse operation binding the contract event 0xf0870791f79c9e860000c2e3005d55ab8944ec1a18a6b61d4ad60ce184654f42.
 //
-// Solidity: event MintBox(address indexed user, uint256 count, uint256[] tokenIdList)
-func (_OwlGame *OwlGameFilterer) ParseMintBox(log types.Log) (*OwlGameMintBox, error) {
-	event := new(OwlGameMintBox)
-	if err := _OwlGame.contract.UnpackLog(event, "MintBox", log); err != nil {
+// Solidity: event PrizePoolDecreased(uint256 amount)
+func (_OwlGame *OwlGameFilterer) ParsePrizePoolDecreased(log types.Log) (*OwlGamePrizePoolDecreased, error) {
+	event := new(OwlGamePrizePoolDecreased)
+	if err := _OwlGame.contract.UnpackLog(event, "PrizePoolDecreased", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// OwlGamePrizePoolIncreasedIterator is returned from FilterPrizePoolIncreased and is used to iterate over the raw logs and unpacked data for PrizePoolIncreased events raised by the OwlGame contract.
+type OwlGamePrizePoolIncreasedIterator struct {
+	Event *OwlGamePrizePoolIncreased // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *OwlGamePrizePoolIncreasedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(OwlGamePrizePoolIncreased)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(OwlGamePrizePoolIncreased)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *OwlGamePrizePoolIncreasedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *OwlGamePrizePoolIncreasedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// OwlGamePrizePoolIncreased represents a PrizePoolIncreased event raised by the OwlGame contract.
+type OwlGamePrizePoolIncreased struct {
+	Amount *big.Int
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// FilterPrizePoolIncreased is a free log retrieval operation binding the contract event 0x3c231f64b16483d16ca517ccd881f34f86dd04ccc1305e65b854fe82189b7625.
+//
+// Solidity: event PrizePoolIncreased(uint256 amount)
+func (_OwlGame *OwlGameFilterer) FilterPrizePoolIncreased(opts *bind.FilterOpts) (*OwlGamePrizePoolIncreasedIterator, error) {
+
+	logs, sub, err := _OwlGame.contract.FilterLogs(opts, "PrizePoolIncreased")
+	if err != nil {
+		return nil, err
+	}
+	return &OwlGamePrizePoolIncreasedIterator{contract: _OwlGame.contract, event: "PrizePoolIncreased", logs: logs, sub: sub}, nil
+}
+
+// WatchPrizePoolIncreased is a free log subscription operation binding the contract event 0x3c231f64b16483d16ca517ccd881f34f86dd04ccc1305e65b854fe82189b7625.
+//
+// Solidity: event PrizePoolIncreased(uint256 amount)
+func (_OwlGame *OwlGameFilterer) WatchPrizePoolIncreased(opts *bind.WatchOpts, sink chan<- *OwlGamePrizePoolIncreased) (event.Subscription, error) {
+
+	logs, sub, err := _OwlGame.contract.WatchLogs(opts, "PrizePoolIncreased")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(OwlGamePrizePoolIncreased)
+				if err := _OwlGame.contract.UnpackLog(event, "PrizePoolIncreased", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParsePrizePoolIncreased is a log parse operation binding the contract event 0x3c231f64b16483d16ca517ccd881f34f86dd04ccc1305e65b854fe82189b7625.
+//
+// Solidity: event PrizePoolIncreased(uint256 amount)
+func (_OwlGame *OwlGameFilterer) ParsePrizePoolIncreased(log types.Log) (*OwlGamePrizePoolIncreased, error) {
+	event := new(OwlGamePrizePoolIncreased)
+	if err := _OwlGame.contract.UnpackLog(event, "PrizePoolIncreased", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
