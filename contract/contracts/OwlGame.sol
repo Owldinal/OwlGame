@@ -110,8 +110,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     bool public isMoonBoostEnable;
     address[] private moonBoostWhiteList = [address(0xAABB)];
 
-    constructor() {
+    constructor(address server) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(SERVER_ROLE, server);
     }
 
     // region ---- Admin ----
@@ -133,7 +134,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             owlToken.transferFrom(msg.sender, address(this), prizeAmount),
             "Transfer failed"
         );
-        prizePool = prizePool + prizeAmount;
+        prizePool += prizeAmount;
         emit PrizePoolIncreased(prizeAmount);
     }
 
@@ -467,7 +468,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         if (totalRewardsToBurn > 0) {
             owlToken.burn(totalRewardsToBurn);
         }
-        if (totalRewardsForElf > 0) {
+        if (totalRewardsForElf > 0 && elfIdList.length > 0) {
             uint256 eachElfRewards = totalRewardsForElf / elfIdList.length;
             for (uint256 i = 0; i < elfIdList.length; i++) {
                 tokenInfoMap[elfIdList[i]].reward += eachElfRewards;
@@ -515,7 +516,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         for (uint256 i = 0; i < fruitIdList.length; i++) {
             uint256 fruitId = fruitIdList[i];
             TokenStakingInfo storage fruit = tokenInfoMap[fruitId];
-            if ((block.timestamp - fruit.stakingTime) > FRUIT_REWARD_INTERVAL) {
+            if (
+                (block.timestamp - fruit.stakingTime) >= FRUIT_REWARD_INTERVAL
+            ) {
                 rewardFruitCount++;
             }
         }
@@ -524,7 +527,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         for (uint256 i = 0; i < fruitIdList.length; i++) {
             uint256 fruitId = fruitIdList[i];
             TokenStakingInfo storage fruit = tokenInfoMap[fruitId];
-            if ((block.timestamp - fruit.stakingTime) > FRUIT_REWARD_INTERVAL) {
+            if (
+                (block.timestamp - fruit.stakingTime) >= FRUIT_REWARD_INTERVAL
+            ) {
                 rewardFruitIdList[index] = fruitId;
                 index++;
             }
