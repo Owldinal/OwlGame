@@ -239,6 +239,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         return tokenIdList;
     }
 
+    // GAS=329550: tokenIdList.length=3
     function stakeOwldinalNft(uint256[] calldata tokenIdList) external {
         require(tokenIdList.length > 0, "Param is empty");
         // check a maximum of 3 Owldinal NFTs can be staked.
@@ -369,12 +370,13 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             if (tokenInfo.reward > 0) {
                 if (tokenInfo.boxType == BoxType.FRUIT) {
                     uint256 rewardProportion;
-                    if (hasMoonBoost) {
-                        rewardProportion = 88;
-                    } else if (tokenInfo.buffLevel >= 3) {
+                    if (tokenInfo.buffLevel >= 3) {
                         rewardProportion = 85;
                     } else {
                         rewardProportion = 75;
+                    }
+                    if (hasMoonBoost) {
+                        rewardProportion += 7;
                     }
 
                     uint256 rewardsCanClaim = (tokenInfo.reward *
@@ -393,12 +395,13 @@ contract OwlGame is AccessControl, ReentrancyGuard {
                 } else {
                     // tokenInfo.boxType == BoxType.ELF
                     uint256 rewardProportion;
-                    if (hasMoonBoost) {
-                        rewardProportion = 93;
-                    } else if (tokenInfo.buffLevel >= 2) {
+                    if (tokenInfo.buffLevel >= 2) {
                         rewardProportion = 90;
                     } else {
                         rewardProportion = 85;
+                    }
+                    if (hasMoonBoost) {
+                        rewardProportion += 7;
                     }
                     uint256 rewardsCanClaim = (tokenInfo.reward *
                         rewardProportion) / 100;
