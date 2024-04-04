@@ -7,7 +7,7 @@ import (
 	"owl-backend/internal/model"
 )
 
-func SaveOpenBoxEvent(event *abigen.OwldinalGenOneBoxOpenBox) error {
+func SaveOpenBoxEvent(event *abigen.OwldinalGenOneBoxMintBox) error {
 	item := model.OpenBoxEvent{
 		UserAddress: event.User.Hex(),
 		BoxID:       event.TokenId.Uint64(),

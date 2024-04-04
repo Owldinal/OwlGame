@@ -22,6 +22,13 @@ async function main() {
 
 	await deployOrConnect();
 
+	console.log(`
+NFT_OWL_ADDR=${owldinalNftAddress}
+OWL_TOKEN_ADDR=${owlTokenAddress}
+NFT_MYSTERY_BOX_ADDR=${genOneBoxAddress}
+OWL_GAME_ADDR=${owlGameAddress}
+	`);
+
 	// init contract config
 	const operations = [
 		await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress),
@@ -66,8 +73,12 @@ async function main() {
 	const tokenList5 = [];
 	const tokenList50 = [];
 
+	const fruitIds = [];
+	const elfIds = [];
+
 	for (i = 1; i < 111; i++) {
 		const owner = await genOneBoxContract.ownerOf(i);
+		const boxType = await genOneBoxContract.getBoxType(i);
 		if (owner == ownerAddress) {
 			if (tokenList5.length < 5) {
 				tokenList5.push(i);
@@ -76,8 +87,17 @@ async function main() {
 			} else {
 				break;
 			}
+
+			if (boxType == 1) {
+				elfIds.push(i);
+			} else if (boxType == 2) {
+				fruitIds.push(i);
+			}
 		}
 	}
+
+	console.log(JSON.stringify(elfIds));
+	console.log(JSON.stringify(fruitIds));
 
 	// Stake Token
 	await genOneBoxContract.connect(deployer).setApprovalForAll(owlGameAddress, true);

@@ -12,7 +12,6 @@ import (
 	"os/signal"
 	"owl-backend/abigen"
 	"owl-backend/internal/config"
-	"owl-backend/internal/service"
 	"owl-backend/pkg/log"
 	"syscall"
 )
@@ -119,22 +118,6 @@ func subscribeMintBox(contract *abigen.OwldinalGenOneBox) {
 	})
 }
 
-func subscribeOpenBox(contract *abigen.OwldinalGenOneBox) {
-	channel := make(chan *abigen.OwldinalGenOneBoxOpenBox)
-	sub, _ := contract.WatchOpenBox(&bind.WatchOpts{Context: context.Background()}, channel, nil)
-	eventSubscription := &EventSubscription[*abigen.OwldinalGenOneBoxOpenBox]{
-		subscription: sub,
-		eventChannel: channel,
-	}
-	eventSubscription.StartListening(func(event interface{}) {
-		if ev, ok := event.(*abigen.OwldinalGenOneBoxOpenBox); ok {
-			handleOpenBoxEvent(ev)
-		} else {
-			log.Warnf("Received unknown event type: %T", event)
-		}
-	})
-}
-
 func (es *EventSubscription[T]) StartListening(handleFunc func(event interface{})) {
 	go func() {
 		if es.subscription == nil {
@@ -163,12 +146,6 @@ func handleMintBoxEvent(event *abigen.OwldinalGenOneBoxMintBox) {
 	// save event to database
 	//service.SaveOpenBoxEvent(event)
 	log.Infof("%v, %v", event.User, *event.TokenId)
-}
-
-func handleOpenBoxEvent(event *abigen.OwldinalGenOneBoxOpenBox) {
-	// save event to database
-	service.SaveOpenBoxEvent(event)
-
 	// TODO: Organize data, merge with historical database records, and calculate totals...
 
 }

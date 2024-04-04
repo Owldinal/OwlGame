@@ -508,7 +508,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     // After staking, Owl rewards are distributed every 4 hours.
     function updateAllFruitRewards() external onlyRole(SERVER_ROLE) {
-        require(fruitIdList.length > 0, "No fruit need update rewards");
+        require(fruitIdList.length > 0, "No fruit need update rewards"); // TODO: use return instead
 
         // calculate how many fruit can get rewards. Loop twice to reduce the gas cost
         // brought by the length of rewardFruitIdList.
@@ -522,6 +522,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
                 rewardFruitCount++;
             }
         }
+
+        require(rewardFruitCount > 0, "No fruit need update rewards"); // TODO: use return instead
+
         uint256[] memory rewardFruitIdList = new uint256[](rewardFruitCount);
         uint256 index = 0;
         for (uint256 i = 0; i < fruitIdList.length; i++) {
