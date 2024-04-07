@@ -22,6 +22,28 @@ library Utils {
         return uint256(sha);
     }
 
+    function generateRandomNumberBySeed(
+        uint256 seed
+    ) internal view returns (uint256 rand) {
+        uint256 blocknumber = seed;
+        uint256 mod = blocknumber - 1;
+        uint256 random_gap = uint256(
+            keccak256(abi.encodePacked(blockhash(blocknumber - 1), msg.sender))
+        ) % mod;
+        uint256 random_block = blocknumber - 1 - random_gap;
+
+        bytes32 sha = keccak256(
+            abi.encodePacked(
+                blockhash(random_block),
+                seed,
+                msg.sender,
+                block.coinbase,
+                block.prevrandao
+            )
+        );
+        return uint256(sha);
+    }
+
     function removeValue(
         uint256[] storage array,
         uint256 valueToRemove

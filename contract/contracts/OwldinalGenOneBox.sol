@@ -41,42 +41,6 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
         gameContract = _gameContract;
     }
 
-    // function mintBox(
-    //     address owner
-    // ) external onlyRole(GAME_CONTRACT_ROLE) returns (uint256 tokenId) {
-    //     ++_tokenIdCounter;
-    //     tokenId = _tokenIdCounter;
-    //     _safeMint(owner, tokenId);
-
-    //     emit MintBox(owner, tokenId);
-    //     return tokenId;
-    // }
-
-    // function openBox(
-    //     uint256 tokenId,
-    //     bool hasBuff
-    // ) external onlyRole(GAME_CONTRACT_ROLE) returns (BoxType) {
-    //     require(ownerOf(tokenId) == msg.sender, "You are not the owner");
-    //     require(!isBoxOpened(tokenId), "Token has been opened");
-    //     uint256 randomResult = Utils.generateRandomNumber() % 100;
-    //     uint256 elfProbabilityThreshold = 10;
-    //     uint256 fruitProbabilityThreshold = hasBuff ? 89 : 80;
-
-    //     if (randomResult < elfProbabilityThreshold) {
-    //         tokenBoxTypes[tokenId] = BoxType.ELF;
-    //     } else if (
-    //         randomResult < (elfProbabilityThreshold + fruitProbabilityThreshold)
-    //     ) {
-    //         tokenBoxTypes[tokenId] = BoxType.FRUIT;
-    //     } else {
-    //         _burn(tokenId);
-    //         return BoxType.BURNED;
-    //     }
-    //     emit OpenBox(msg.sender, tokenId, tokenBoxTypes[tokenId]);
-
-    //     return tokenBoxTypes[tokenId];
-    // }
-
     function mintAndOpenBoxes(
         address owner,
         uint256 count,
@@ -87,6 +51,7 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
         returns (uint256[] memory tokenIdList)
     {
         tokenIdList = new uint256[](count);
+        uint256 seed = block.number;
         for (uint i = 0; i < count; i++) {
             ++_tokenIdCounter;
             uint256 tokenId = _tokenIdCounter;
@@ -94,7 +59,8 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
 
             tokenIdList[i] = tokenId;
 
-            uint256 randomResult = Utils.generateRandomNumber() % 100;
+            seed = Utils.generateRandomNumberBySeed(seed);
+            uint256 randomResult = seed % 100;
             uint256 elfProbabilityThreshold = 10;
             uint256 fruitProbabilityThreshold = hasBuff ? 89 : 80;
 
