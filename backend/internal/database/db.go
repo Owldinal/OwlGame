@@ -1,9 +1,13 @@
 package database
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"owl-backend/internal/config"
+	"strings"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -28,4 +32,44 @@ func init() {
 	}
 
 	fmt.Printf("%v mysql init successfully\n", time.Now())
+}
+
+type IdList []int
+
+func (idList *IdList) Scan(value interface{}) error {
+	if value == nil {
+		*idList = make(IdList, 0)
+		return nil
+	}
+
+	val, ok := value.(string)
+	if !ok {
+		return errors.New("buffingIds should be a string")
+	}
+
+	parts := strings.Split(val, ",")
+	*idList = make(IdList, 0, len(parts))
+	for _, part := range parts {
+		var intVal int
+		if part != "" {
+			if err := json.Unmarshal([]byte(part), &intVal); err != nil {
+				return err
+			}
+			*idList = append(*idList, intVal)
+		}
+	}
+	return nil
+}
+
+func (idList *IdList) Value() (driver.Value, error) {
+	if idList == nil {
+		return "", nil
+	}
+
+	// 将整数切片转换为逗号分隔的字符串
+	strValues := make([]string, len(*idList))
+	for i, intVal := range *idList {
+		strValues[i] = fmt.Sprintf("%d", intVal)
+	}
+	return strings.Join(strValues, ","), nil
 }

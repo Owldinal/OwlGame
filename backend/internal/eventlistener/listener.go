@@ -3,10 +3,9 @@ package eventlistener
 import (
 	"context"
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/event"
 	"math/big"
 	"os"
 	"os/signal"
@@ -16,66 +15,46 @@ import (
 	"syscall"
 )
 
-type EventSubscription[T any] struct {
-	subscription event.Subscription
-	eventChannel chan T
-}
-
 var (
-	owldinalNftMintBoxEventHash = common.HexToHash("0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230")
-
-	genOneBoxOpenBoxEventHash = common.HexToHash("0x51c074b76ba6958c8e2e5ea62ed9d335b98d5944e5e4e60349cfe2f65588eafc")
-	genOneBoxMintBoxEventHash = common.HexToHash("0x92b26e707b024019810eb9f81fb26ab92c318a8efdc77204f029ed774a4ca84b")
+	owldinalNftContract *abigen.Owldinal
+	genOneBoxContract   *abigen.OwldinalGenOneBox
+	owlGameContract     *abigen.OwlGame
 )
 
 func StartEventListening() error {
+	// Init client and contracts
 	client, err := ethclient.Dial(config.C.NodeUrl)
 	if err != nil {
 		log.Fatal("Failed to connect to the Ethereum client: %v", err)
 	}
 
 	owldinalNftAddr := common.HexToAddress(config.C.NftOwlAddr)
-	owldinalNftContract, err := abigen.NewOwldinal(owldinalNftAddr, client)
+	owldinalNftContract, err = abigen.NewOwldinal(owldinalNftAddr, client)
 	if err != nil {
-		log.Fatal("Failed to instantiate contract OwldinalNft: %v", err)
+		log.Fatal("Failed to instantiate contract OwldinalNft: ", err)
 	}
 
 	genOneBoxAddr := common.HexToAddress(config.C.NftMysteryBoxAddr)
-	genOneBoxContract, err := abigen.NewOwldinalGenOneBox(genOneBoxAddr, client)
+	genOneBoxContract, err = abigen.NewOwldinalGenOneBox(genOneBoxAddr, client)
 	if err != nil {
-		log.Fatal("Failed to instantiate contract GenOneBox: %v", err)
+		log.Fatal("Failed to instantiate contract GenOneBox: ", err)
 	}
 
-	// start subscribe new events
-	//subscribeOpenBox(genOneBoxContract)
-	subscribeMintOwldinalNft(owldinalNftContract)
-	subscribeMintBox(genOneBoxContract)
-
-	// process past contract events
-	eventQuery := ethereum.FilterQuery{
-		FromBlock: big.NewInt(config.C.EventStartBlock),
-		ToBlock:   nil,
-		Addresses: []common.Address{genOneBoxAddr, owldinalNftAddr},
+	owlGameAddr := common.HexToAddress(config.C.OwlGameAddr)
+	owlGameContract, err = abigen.NewOwlGame(owlGameAddr, client)
+	if err != nil {
+		log.Fatal("Failed to instantiate contract OwlGame: ", err)
 	}
-	logs, err := client.FilterLogs(context.Background(), eventQuery)
-	for _, vLog := range logs {
-		switch vLog.Topics[0] {
-		case genOneBoxMintBoxEventHash:
-			eventData, err := genOneBoxContract.ParseMintBox(vLog)
-			if err != nil {
-				log.Warnf("Failed to parse MintBox event: %v", err)
-				continue
-			}
-			handleMintBoxEvent(eventData)
-		case owldinalNftMintBoxEventHash:
-			eventData, err := owldinalNftContract.ParseMintBox(vLog)
-			if err != nil {
-				log.Warnf("Failed to parse MintBox event: %v", err)
-				continue
-			}
-			handleOwldinalMintBoxEvent(eventData)
-		}
 
+	contractAddress := []common.Address{genOneBoxAddr, owldinalNftAddr, owlGameAddr}
+	startBlock := big.NewInt(config.C.EventStartBlock)
+	eventProcessor := NewEventProcessor()
+	registerHandlers(eventProcessor)
+
+	handleHistoryEvents(client, contractAddress, startBlock, eventProcessor)
+	err = subscribeEvents(client, contractAddress, eventProcessor)
+	if err != nil {
+		log.Fatal("Failed to subscribe events: %v", err)
 	}
 
 	// Prevent main exit.
@@ -86,54 +65,88 @@ func StartEventListening() error {
 	return nil
 }
 
-func subscribeMintOwldinalNft(contract *abigen.Owldinal) {
-	channel := make(chan *abigen.OwldinalMintBox)
-	sub, _ := contract.WatchMintBox(&bind.WatchOpts{Context: context.Background()}, channel, nil)
-	eventSubscription := &EventSubscription[*abigen.OwldinalMintBox]{
-		subscription: sub,
-		eventChannel: channel,
+func subscribeEvents(
+	client *ethclient.Client,
+	addresses []common.Address,
+	processors *EventProcessor,
+) error {
+	subs := make([]*EventSubscription, 0, len(addresses))
+	for _, addr := range addresses {
+		logs := make(chan types.Log)
+		query := ethereum.FilterQuery{
+			Addresses: []common.Address{addr},
+		}
+		sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
+		if err != nil {
+			return err
+		}
+		subs = append(subs, &EventSubscription{subscription: sub, eventChannel: logs})
 	}
-	eventSubscription.StartListening(func(event interface{}) {
-		if ev, ok := event.(*abigen.OwldinalMintBox); ok {
-			handleOwldinalMintBoxEvent(ev)
-		} else {
-			log.Warnf("Received unknown event type: %T", event)
-		}
-	})
-}
 
-func subscribeMintBox(contract *abigen.OwldinalGenOneBox) {
-	channel := make(chan *abigen.OwldinalGenOneBoxMintBox)
-	sub, _ := contract.WatchMintBox(&bind.WatchOpts{Context: context.Background()}, channel, nil)
-	eventSubscription := &EventSubscription[*abigen.OwldinalGenOneBoxMintBox]{
-		subscription: sub,
-		eventChannel: channel,
-	}
-	eventSubscription.StartListening(func(event interface{}) {
-		if ev, ok := event.(*abigen.OwldinalGenOneBoxMintBox); ok {
-			handleMintBoxEvent(ev)
-		} else {
-			log.Warnf("Received unknown event type: %T", event)
-		}
-	})
-}
+	for _, sub := range subs {
+		go func(sub *EventSubscription) {
+			defer sub.subscription.Unsubscribe()
 
-func (es *EventSubscription[T]) StartListening(handleFunc func(event interface{})) {
-	go func() {
-		if es.subscription == nil {
-			return
-		}
-		defer es.subscription.Unsubscribe()
-		ch := es.eventChannel
-		for {
-			select {
-			case err := <-es.subscription.Err():
-				log.Fatal(err)
-			case e := <-ch:
-				handleFunc(e)
+			logsChan := sub.eventChannel.(chan types.Log)
+			for {
+				select {
+				case err := <-sub.subscription.Err():
+					log.Warnf("Subscription error: %v", err)
+					return
+				case vLog := <-logsChan:
+					if handler, exists := processors.handlers[vLog.Topics[0]]; exists {
+						if err := handler.Handle(vLog); err != nil {
+							log.Warnf("Failed to process log: %v", err)
+						}
+					} else {
+						//log.Warnf("No handler for event: %s", vLog.Topics[0].Hex())
+					}
+				}
 			}
+		}(sub)
+	}
+
+	return nil
+}
+
+func handleHistoryEvents(
+	client *ethclient.Client,
+	addresses []common.Address,
+	startBlock *big.Int,
+	processors *EventProcessor,
+) {
+	// process past contract events
+	eventQuery := ethereum.FilterQuery{
+		FromBlock: startBlock,
+		ToBlock:   nil,
+		Addresses: addresses,
+	}
+	logs, err := client.FilterLogs(context.Background(), eventQuery)
+	if err != nil {
+		log.Fatal("Failed to filter logs: %v", err)
+	}
+
+	for _, vLog := range logs {
+		if err := processors.ProcessLog(vLog); err != nil {
+			log.Warnf("Failed to process log: %v", err)
 		}
-	}()
+	}
+}
+
+func registerHandlers(eventProcessor *EventProcessor) {
+	//eventProcessor.RegisterHandler(genOneBoxMintBoxEventHash, &GenOneBoxMintBoxHandler{})
+	eventProcessor.RegisterHandler("0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230", &OwldinalNftMintBoxHandler{})
+}
+
+type OwldinalNftMintBoxHandler struct{}
+
+func (h *OwldinalNftMintBoxHandler) Handle(vlog types.Log) error {
+	event, err := owldinalNftContract.ParseMintBox(vlog)
+	if err != nil {
+		return err
+	}
+	handleOwldinalMintBoxEvent(event)
+	return nil
 }
 
 func handleOwldinalMintBoxEvent(event *abigen.OwldinalMintBox) {
@@ -142,10 +155,18 @@ func handleOwldinalMintBoxEvent(event *abigen.OwldinalMintBox) {
 	log.Infof("user = %v, box= %v", event.User, event.BoxId.Uint64())
 }
 
-func handleMintBoxEvent(event *abigen.OwldinalGenOneBoxMintBox) {
-	// save event to database
-	//service.SaveOpenBoxEvent(event)
-	log.Infof("%v, %v", event.User, *event.TokenId)
-	// TODO: Organize data, merge with historical database records, and calculate totals...
-
-}
+//type GenOneBoxMintBoxHandler struct{}
+//
+//func (h *GenOneBoxMintBoxHandler) Handle(vlog types.Log) error {
+//	event, err := owldinalNftContract.ParseMintBox(vlog)
+//	if err != nil {
+//		return err
+//	}
+//	handleOwldinalMintBoxEvent(event)
+//	return nil
+//}
+//func handleMintBoxEvent(event *abigen.OwldinalGenOneBoxMintBox) {
+//	save event to database
+//	service.SaveOpenBoxEvent(event)
+//
+//}

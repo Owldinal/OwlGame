@@ -1,6 +1,8 @@
 package main
 
-import "owl-backend/internal/eventlistener"
+import (
+	"owl-backend/internal/eventlistener"
+)
 
 func main() {
 	eventlistener.StartEventListening()
