@@ -253,7 +253,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         _handleFirstInGame(msg.sender);
 
         // check all the token is owner's
-        for (uint256 i = 0; i < tokenIdList.length; i++) {
+        uint256 length = tokenIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(
                 owldinalNftContract.ownerOf(tokenId) == msg.sender,
@@ -284,7 +285,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         _handleFirstInGame(msg.sender);
 
         // check all the token is owner's
-        for (uint256 i = 0; i < tokenIdList.length; i++) {
+        uint256 length = tokenIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(
                 mysteryBoxContract.ownerOf(tokenId) == msg.sender,
@@ -324,7 +326,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     function unstakeOwldinalNft(uint256[] calldata tokenIdList) external {
         require(tokenIdList.length > 0, "Param is empty");
-        for (uint256 i = 0; i < tokenIdList.length; i++) {
+        uint256 length = tokenIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(owlInfoMap[tokenId].owner == msg.sender, "Not owner");
             require(
@@ -356,7 +359,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
         bool hasMoonBoost = false;
         if (isMoonBoostEnable) {
-            for (uint256 i = 0; i < moonBoostWhiteList.length; i++) {
+            uint256 whiteListLength = moonBoostWhiteList.length;
+            for (uint256 i = 0; i < whiteListLength; i++) {
                 if (msg.sender == moonBoostWhiteList[i]) {
                     hasMoonBoost = true;
                     break;
@@ -364,7 +368,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             }
         }
 
-        for (uint256 i = 0; i < tokenIdList.length; i++) {
+        uint256 length = tokenIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(tokenInfoMap[tokenId].owner == msg.sender, "Not owner");
 
@@ -513,7 +518,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         // calculate how many fruit can get rewards. Loop twice to reduce the gas cost
         // brought by the length of rewardFruitIdList.
         uint256 rewardFruitCount = 0;
-        for (uint256 i = 0; i < fruitIdList.length; i++) {
+        uint256 length = fruitIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 fruitId = fruitIdList[i];
             TokenStakingInfo storage fruit = tokenInfoMap[fruitId];
             if (
@@ -527,7 +533,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
         uint256[] memory rewardFruitIdList = new uint256[](rewardFruitCount);
         uint256 index = 0;
-        for (uint256 i = 0; i < fruitIdList.length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             uint256 fruitId = fruitIdList[i];
             TokenStakingInfo storage fruit = tokenInfoMap[fruitId];
             if (
@@ -546,7 +552,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         uint256 eachFruitRewards = totalRewards / rewardFruitCount;
         require(eachFruitRewards > 0, "rewards should not be zero");
 
-        for (uint256 i = 0; i < rewardFruitIdList.length; i++) {
+        for (uint256 i = 0; i < rewardFruitCount; i++) {
             uint256 fruitId = rewardFruitIdList[i];
             TokenStakingInfo storage fruit = tokenInfoMap[fruitId];
             fruit.reward += eachFruitRewards;
