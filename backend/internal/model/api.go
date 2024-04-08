@@ -17,8 +17,8 @@ type ResponseData struct {
 }
 
 type PaginationRequest struct {
-	Page    int `json:"page"`
-	PerPage int `json:"per_page"`
+	Page    int `json:"page,omitempty" form:"page"`
+	PerPage int `json:"per_page,omitempty" form:"per_page"`
 }
 
 type PaginationResponse[T any] struct {
@@ -30,8 +30,8 @@ type PaginationResponse[T any] struct {
 }
 
 type CursorPaginationRequest struct {
-	Cursor int `json:"cursor"`
-	Limit  int `json:"limit"`
+	Cursor int `json:"cursor" form:"cursor"`
+	Limit  int `json:"limit" form:"limit"`
 }
 
 type CursorPaginationResponse[T any] struct {
@@ -54,8 +54,8 @@ type GetMintSignatureResponse struct {
 }
 
 type GetUserInfoRequest struct {
-	Wallet     string            `json:"wallet" binding:"required"`
-	Pagination PaginationRequest `json:"pagination,omitempty"`
+	Wallet string `json:"wallet" form:"wallet" binding:"required"`
+	PaginationRequest
 }
 
 type GetUserInfoResponse struct {
@@ -65,6 +65,7 @@ type GetUserInfoResponse struct {
 	BuffLevel   int         `json:"buff_level"`
 	ElfInfo     UserBoxInfo `json:"elf_info"`
 	FruitInfo   UserBoxInfo `json:"fruit_info"`
+	OwlInfo     UserBoxInfo `json:"owl_info"`
 
 	ReferralRewards struct {
 		Total     int64 `json:"total"`
@@ -78,9 +79,9 @@ type GetUserInfoResponse struct {
 }
 
 type UserBoxInfo struct {
-	Total          int64   `json:"total"`
-	Staked         int64   `json:"staked"`
+	Total          int     `json:"total"`
+	Staked         int     `json:"staked"`
 	Apr            float64 `json:"apr"`
-	StakedIdList   []int64 `json:"staked_id_list"`
-	UnstakedIdList []int64 `json:"unstaked_id_list"`
+	StakedIdList   []uint  `json:"staked_id_list"`
+	UnstakedIdList []uint  `json:"unstaked_id_list"`
 }
