@@ -88,14 +88,11 @@ func StartEventListening() error {
 	startBlock := big.NewInt(config.C.EventStartBlock)
 	eventProcessor := NewEventProcessor()
 	registerHandlers(eventProcessor)
-
-	// current block for poll event
-	currentBlock, err := getCurrentBlock(client)
+	header, err := getCurrentBlock(client)
 	if err != nil {
-		return err
+		log.Fatal("Failed to get the latest block header: %v", err)
 	}
-
-	handleHistoryEvents(client, startBlock, currentBlock, contractAddress, eventProcessor)
+	currentBlock := handleHistoryEvents(client, startBlock, header, contractAddress, eventProcessor)
 	// Poll the latest events starting from the newest block.
 	pollEvents(client, currentBlock, contractAddress, eventProcessor)
 
@@ -178,11 +175,10 @@ func handleHistoryEvents(
 	endBlock *big.Int,
 	addresses []common.Address,
 	processors *EventProcessor,
-) {
+) *big.Int {
 
 	// Merlin chain only supports pulling events for up to 1024 blocks at a time, so need to loop to fetch them.
 	maxBlocks := big.NewInt(1024)
-
 	for startBlock.Cmp(endBlock) < 0 {
 		nextBlock := big.NewInt(0).Add(startBlock, maxBlocks)
 		if nextBlock.Cmp(endBlock) > 0 {
@@ -207,7 +203,19 @@ func handleHistoryEvents(
 		}
 
 		startBlock = big.NewInt(0).Add(nextBlock, big.NewInt(1))
+
+		header, err := getCurrentBlock(client)
+		if err != nil {
+			log.Fatal("Failed to get the latest block header: %v", err)
+		}
+		// If the header is much larger than the endblock, it will result in subsequent subscriptions exceeding 1024
+		// blocks and thus throw an exception, so the endblock needs to be updated.
+		if header.Cmp(big.NewInt(0).Add(endBlock, big.NewInt(100))) > 0 {
+			endBlock = header
+		}
 	}
+
+	return startBlock
 }
 
 func pollEvents(client *ethclient.Client,
