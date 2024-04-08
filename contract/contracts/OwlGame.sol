@@ -46,7 +46,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     // event OpenBox(address indexed user, uint256 tokenId, BoxType boxType);
     event PrizePoolIncreased(uint256 amount);
     event PrizePoolDecreased(uint256 amount);
-    event JoinGame(address indexed user);
+    event JoinGame(address indexed user, uint32 inviteCode);
     event BindInvitation(address indexed invitee, address inviter);
     event StakeOwldinalNft(address indexed user, uint256[] tokenId);
     event StakeMysteryBox(address indexed user, uint256[] tokenId);
@@ -178,8 +178,14 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         inviteCodeToInviterMap[newInviteCode] = sender;
         inviterToInviteCodeMap[sender] = newInviteCode;
 
-        emit JoinGame(sender);
+        emit JoinGame(sender, newInviteCode);
         emit BindInvitation(sender, inviter);
+    }
+
+    function getInviteCode(
+        address inviter
+    ) external view returns (uint32 inviteCode) {
+        return inviterToInviteCodeMap[inviter];
     }
 
     function mintMysteryBox(
@@ -253,7 +259,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         _handleFirstInGame(msg.sender);
 
         // check all the token is owner's
-        for (uint256 i = 0; i < tokenIdList.length; i++) {
+        uint256 length = tokenIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(
                 owldinalNftContract.ownerOf(tokenId) == msg.sender,
@@ -284,7 +291,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         _handleFirstInGame(msg.sender);
 
         // check all the token is owner's
-        for (uint256 i = 0; i < tokenIdList.length; i++) {
+        uint256 length = tokenIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(
                 mysteryBoxContract.ownerOf(tokenId) == msg.sender,
@@ -324,7 +332,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     function unstakeOwldinalNft(uint256[] calldata tokenIdList) external {
         require(tokenIdList.length > 0, "Param is empty");
-        for (uint256 i = 0; i < tokenIdList.length; i++) {
+        uint256 length = tokenIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(owlInfoMap[tokenId].owner == msg.sender, "Not owner");
             require(
@@ -356,7 +365,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
         bool hasMoonBoost = false;
         if (isMoonBoostEnable) {
-            for (uint256 i = 0; i < moonBoostWhiteList.length; i++) {
+            uint256 whiteListLength = moonBoostWhiteList.length;
+            for (uint256 i = 0; i < whiteListLength; i++) {
                 if (msg.sender == moonBoostWhiteList[i]) {
                     hasMoonBoost = true;
                     break;
@@ -364,7 +374,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             }
         }
 
-        for (uint256 i = 0; i < tokenIdList.length; i++) {
+        uint256 length = tokenIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(tokenInfoMap[tokenId].owner == msg.sender, "Not owner");
 
@@ -513,7 +524,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         // calculate how many fruit can get rewards. Loop twice to reduce the gas cost
         // brought by the length of rewardFruitIdList.
         uint256 rewardFruitCount = 0;
-        for (uint256 i = 0; i < fruitIdList.length; i++) {
+        uint256 length = fruitIdList.length;
+        for (uint256 i = 0; i < length; i++) {
             uint256 fruitId = fruitIdList[i];
             TokenStakingInfo storage fruit = tokenInfoMap[fruitId];
             if (
@@ -527,7 +539,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
         uint256[] memory rewardFruitIdList = new uint256[](rewardFruitCount);
         uint256 index = 0;
-        for (uint256 i = 0; i < fruitIdList.length; i++) {
+        for (uint256 i = 0; i < length; i++) {
             uint256 fruitId = fruitIdList[i];
             TokenStakingInfo storage fruit = tokenInfoMap[fruitId];
             if (
@@ -546,7 +558,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         uint256 eachFruitRewards = totalRewards / rewardFruitCount;
         require(eachFruitRewards > 0, "rewards should not be zero");
 
-        for (uint256 i = 0; i < rewardFruitIdList.length; i++) {
+        for (uint256 i = 0; i < rewardFruitCount; i++) {
             uint256 fruitId = rewardFruitIdList[i];
             TokenStakingInfo storage fruit = tokenInfoMap[fruitId];
             fruit.reward += eachFruitRewards;
@@ -566,9 +578,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             uint32 newInviteCode = _generateInviteCode();
             inviteCodeToInviterMap[newInviteCode] = sender;
             inviterToInviteCodeMap[sender] = newInviteCode;
+            emit JoinGame(sender, newInviteCode);
         }
-
-        emit JoinGame(sender);
     }
 
     function _handleInviter(
@@ -594,12 +605,13 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     function _generateInviteCode() private view returns (uint32) {
         uint32 newCode;
         bool isUnique;
+        uint256 rand = block.number;
         do {
             newCode = 0;
-            uint256 rand = Utils.generateRandomNumber();
+            rand = Utils.generateRandomNumber();
             for (uint i = 0; i < 5; i++) {
-                uint8 charValue = uint8(rand % 26);
-                newCode |= (charValue << uint8(i * 5));
+                uint32 charValue = uint32(rand % 26);
+                newCode |= (charValue << uint32(i * 5));
                 rand = rand / 26;
             }
 
@@ -678,28 +690,5 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         }
 
         return amount;
-    }
-
-    function _encodeInviteCode(
-        string memory inviteCode
-    ) internal pure returns (uint32 encoded) {
-        require(bytes(inviteCode).length == 5, "Invalid invite code length");
-        for (uint i = 0; i < 5; i++) {
-            bytes1 char = bytes(inviteCode)[i];
-            uint8 charValue = uint8(char) - 0x41;
-            encoded |= (charValue << uint8(i * 5));
-        }
-    }
-
-    function _decodeInviteCode(
-        uint32 encoded
-    ) internal pure returns (string memory) {
-        bytes memory inviteCode = new bytes(5);
-        for (uint i = 0; i < 5; i++) {
-            uint8 charValue = uint8((encoded >> (i * 5)) & 0x1F);
-            inviteCode[i] = bytes1(charValue + 0x41);
-        }
-
-        return string(inviteCode);
     }
 }

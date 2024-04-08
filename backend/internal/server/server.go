@@ -37,5 +37,7 @@ func registerRouters(engine *gin.Engine) {
 		apiGroup.GET("/checkHealth", api.CheckHealth)
 
 		apiGroup.POST("/generateSignature", api.GetMintSignature)
+
+		apiGroup.GET("/user/info", api.GetUserInfo)
 	}
 }

@@ -1,0 +1,55 @@
+CREATE TABLE IF NOT EXISTS owldinal_nft_mint_box_events
+(
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash      CHAR(66)  NOT NULL,
+    log_index    BIGINT    NOT NULL,
+    block_number BIGINT    NOT NULL,
+    block_hash   CHAR(66)  NOT NULL,
+    user         CHAR(42)  NOT NULL,
+    box_id       BIGINT    NOT NULL,
+    mint_type    BIGINT    NOT NULL,
+    token_uri    TEXT,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP NULL DEFAULT NULL,
+    UNIQUE (tx_hash, log_index),
+    INDEX idx_user_address (user),
+    INDEX idx_box_id (box_id),
+    INDEX idx_block_number_mint (block_number)
+);
+
+CREATE TABLE IF NOT EXISTS owldinal_nft_transfer_events
+(
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash      CHAR(66)  NOT NULL,
+    log_index    BIGINT    NOT NULL,
+    block_number BIGINT    NOT NULL,
+    block_hash   CHAR(66)  NOT NULL,
+    from_user    CHAR(42)  NOT NULL,
+    to_user      CHAR(42)  NOT NULL,
+    box_id       BIGINT    NOT NULL,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP NULL DEFAULT NULL,
+    UNIQUE (tx_hash, log_index),
+    INDEX idx_from_user (from_user),
+    INDEX idx_to_user (to_user),
+    INDEX idx_box_id (box_id),
+    INDEX idx_block_number_mint (block_number)
+);
+
+CREATE TABLE owldinal_nft_tokens
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token_id    BIGINT    NOT NULL,
+    owner       VARCHAR(42),
+    token_uri   TEXT,
+    is_staking  BOOLEAN,
+    buffing_ids TEXT,
+    created_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at  TIMESTAMP NULL DEFAULT NULL,
+    UNIQUE (token_id),
+    INDEX idx_token_id (token_id),
+    INDEX idx_owner (owner)
+);
