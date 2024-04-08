@@ -26,12 +26,21 @@ func init() {
 		config.C.DBPort,
 		config.C.DBName,
 	)
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+		TranslateError: true,
+	})
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("%v mysql init successfully\n", time.Now())
+}
+
+type Model struct {
+	ID        uint           `gorm:"primarykey" json:"-"`
+	CreatedAt time.Time      `json:"-"`
+	UpdatedAt time.Time      `json:"-"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 type IdList []int
