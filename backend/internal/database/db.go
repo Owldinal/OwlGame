@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"math/big"
 	"owl-backend/internal/config"
 	"strings"
 	"time"
@@ -43,7 +44,7 @@ type Model struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-type IdList []int
+type IdList []uint64
 
 func (idList *IdList) Scan(value interface{}) error {
 	if value == nil {
@@ -59,7 +60,7 @@ func (idList *IdList) Scan(value interface{}) error {
 	parts := strings.Split(val, ",")
 	*idList = make(IdList, 0, len(parts))
 	for _, part := range parts {
-		var intVal int
+		var intVal uint64
 		if part != "" {
 			if err := json.Unmarshal([]byte(part), &intVal); err != nil {
 				return err
@@ -81,4 +82,44 @@ func (idList *IdList) Value() (driver.Value, error) {
 		strValues[i] = fmt.Sprintf("%d", intVal)
 	}
 	return strings.Join(strValues, ","), nil
+}
+
+type Amount struct {
+	*big.Int
+}
+
+func NewAmount(value string) Amount {
+	number, _ := big.NewInt(0).SetString(value, 10)
+	return Amount{number}
+}
+
+func (a *Amount) Scan(value interface{}) error {
+	switch v := value.(type) {
+	case int64:
+		a.Int = big.NewInt(v)
+	case []byte:
+		a.Int = new(big.Int)
+		_, success := a.Int.SetString(string(v), 10)
+		if !success {
+			return errors.New("Amount: Scan: invalid input")
+		}
+	case string:
+		a.Int = new(big.Int)
+		_, success := a.Int.SetString(v, 10)
+		if !success {
+			return errors.New("Amount: Scan: invalid input")
+		}
+	case nil:
+		a.Int = nil
+	default:
+		return errors.New("Amount: Scan: unsupported data type")
+	}
+	return nil
+}
+
+func (a Amount) Value() (driver.Value, error) {
+	if a.Int == nil {
+		return nil, nil
+	}
+	return a.Int.String(), nil
 }
