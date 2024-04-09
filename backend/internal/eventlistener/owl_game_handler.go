@@ -3,6 +3,7 @@ package eventlistener
 import (
 	"errors"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
@@ -75,10 +76,10 @@ func (h *OwlGamePrizePoolIncreasedHandler) Handle(vlog types.Log) error {
 		return err
 	}
 	// save event to database
-	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	// log.Infof("[%v-%v] Pool Increase: amount = %v\n", event.Raw.TxHash, event.Raw.Index, event.Amount)
 	eventItem := model.OwlGamePrizePoolIncreasedEvent{
 		Event:  model.NewEvent(&event.Raw),
-		Amount: database.Amount{Int: event.Amount},
+		Amount: decimal.NewFromBigInt(event.Amount, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -106,7 +107,7 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
 	eventItem := model.OwlGamePrizePoolDecreasedEvent{
 		Event:  model.NewEvent(&event.Raw),
-		Amount: database.Amount{Int: event.Amount},
+		Amount: decimal.NewFromBigInt(event.Amount, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -235,7 +236,7 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		Event:   model.NewEvent(&event.Raw),
 		User:    event.User.Hex(),
 		TokenId: event.TokenId.Uint64(),
-		Rewards: database.Amount{Int: event.Rewards},
+		Rewards: decimal.NewFromBigInt(event.Rewards, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -264,7 +265,7 @@ func (h *OwlGameClaimInviterRewardsHandler) Handle(vlog types.Log) error {
 	eventItem := model.OwlGameClaimInviterRewardEvent{
 		Event:          model.NewEvent(&event.Raw),
 		User:           event.User.Hex(),
-		WithdrawAmount: database.Amount{Int: event.WithdrawAmount},
+		WithdrawAmount: decimal.NewFromBigInt(event.WithdrawAmount, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
