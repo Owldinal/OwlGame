@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/core/types"
 	"gorm.io/gorm"
+	"owl-backend/internal/constant"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
@@ -77,8 +78,13 @@ func (h *OwldinalNftTransferHandler) Handle(vlog types.Log) error {
 	}
 
 	// When FromUser=0x0， means this is a mint. don't update db (mint will do this.)
-	if eventItem.FromUser == "0x0000000000000000000000000000000000000000" {
+	if eventItem.FromUser == constant.NoneAddr {
 		//
+		return nil
+	}
+
+	// is staking or unstaking, handle it in owl_game_handler
+	if eventItem.FromUser == OwlGameAddr || eventItem.ToUser == OwlGameAddr {
 		return nil
 	}
 

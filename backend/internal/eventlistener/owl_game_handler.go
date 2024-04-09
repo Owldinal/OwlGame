@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
+	"owl-backend/internal/util"
 	"owl-backend/pkg/log"
 )
 
@@ -34,7 +35,14 @@ func (h *OwlGameJoinGameHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	item := model.UserInfo{
+		Address:    eventItem.User,
+		InviteCode: util.DecodeInviteCode(eventItem.InviteCode),
+	}
+	itemResult := database.DB.Clauses().Create(&item)
+	if itemResult.Error != nil {
+		return itemResult.Error
+	}
 
 	return nil
 }
@@ -63,7 +71,30 @@ func (h *OwlGameBindInvitationHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	inviteItem := model.InviteRelation{
+		Inviter: eventItem.Inviter,
+		Invitee: eventItem.Invitee,
+	}
+	itemResult := database.DB.Clauses().Create(&inviteItem)
+	if itemResult.Error != nil {
+		return itemResult.Error
+	}
+
+	var userInfoItem model.UserInfo
+	if err := database.DB.Where("address = ?", eventItem.Inviter).First(&userInfoItem).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Warnf("Inviter not found with address: %v", eventItem.Inviter)
+			return err
+		} else {
+			log.Warnf("Error Is: %v", err)
+			return err
+		}
+	}
+	userInfoItem.InviteCount++
+	if err := database.DB.Save(&userInfoItem).Error; err != nil {
+		log.Warnf("Error updating inviter user infoo: %v", err)
+		return err
+	}
 
 	return nil
 }
