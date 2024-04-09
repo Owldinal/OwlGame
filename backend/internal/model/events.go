@@ -26,8 +26,8 @@ type OwldinalNftMintBoxEvent struct {
 	database.Model
 	User     string `gorm:"size:42;index:idx_user_address"`
 	BoxId    uint64 `gorm:"index:idx_box_id"`
-	MintType uint64 `gorm:"mint_type"`
-	TokenUri string `gorm:"token_uri"`
+	MintType uint64
+	TokenUri string
 }
 
 type OwldinalNftTransferEvent struct {
@@ -36,4 +36,92 @@ type OwldinalNftTransferEvent struct {
 	FromUser string `gorm:"size:42"`
 	ToUser   string `gorm:"size:42"`
 	BoxId    uint64
+}
+
+type GenOneBoxMintBoxEvent struct {
+	Event
+	database.Model
+	User    string `gorm:"size:42;index:idx_user"`
+	TokenId uint64 `gorm:"index:idx_token_id"`
+	BoxType uint8
+}
+
+type GenOneBoxTransferEvent struct {
+	Event
+	database.Model
+	FromUser string `gorm:"size:42"`
+	ToUser   string `gorm:"size:42"`
+	TokenId  uint64
+}
+
+// eventOwlGameJoinGame
+type OwlGameJoinGameEvent struct {
+	Event
+	database.Model
+	User       string `gorm:"size:42"`
+	InviteCode uint32
+}
+
+// eventOwlGameBindInvitation
+type OwlGameBindInvitationEvent struct {
+	Event
+	database.Model
+	Inviter string `gorm:"size:42"`
+	Invitee string `gorm:"size:42"`
+}
+
+// eventOwlGamePrizePoolIncreased
+type OwlGamePrizePoolIncreasedEvent struct {
+	Event
+	database.Model
+	Amount database.Amount
+}
+
+// eventOwlGamePrizePoolDecreased
+type OwlGamePrizePoolDecreasedEvent struct {
+	Event
+	database.Model
+	Amount database.Amount
+}
+
+// eventOwlGameStakeOwldinalNft
+type OwlGameStakeOwldinalNftEvent struct {
+	Event
+	database.Model
+	User     string `gorm:"size:42"`
+	TokenIds database.IdList
+}
+
+// eventOwlGameUnstakeOwldinalNft
+type OwlGameUnstakeOwldinalNftEvent struct {
+	Event
+	database.Model
+	User     string `gorm:"size:42"`
+	TokenIds database.IdList
+}
+
+// eventOwlGameStakeMysteryBox
+type OwlGameStakeMysteryBoxEvent struct {
+	Event
+	database.Model
+	User     string `gorm:"size:42"`
+	TokenIds database.IdList
+}
+
+// eventOwlGameUnstakeMysteryBox
+type OwlGameUnstakeMysteryBoxEvent struct {
+	Event
+	database.Model
+	User    string `gorm:"size:42"`
+	TokenId uint64
+	BoxType uint8
+	Rewards database.Amount
+}
+
+// eventOwlGameClaimInviterReward
+type OwlGameClaimInviterRewardEvent struct {
+	Event
+	database.Model
+	User           string `gorm:"size:42"`
+	WithdrawAmount database.Amount
 }

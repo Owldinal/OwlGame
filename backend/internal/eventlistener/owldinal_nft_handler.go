@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/core/types"
 	"gorm.io/gorm"
-	"owl-backend/abigen"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
@@ -18,11 +17,6 @@ func (h *OwldinalNftMintBoxHandler) Handle(vlog types.Log) error {
 	if err != nil {
 		return err
 	}
-	handleOwldinalMintBoxEvent(event)
-	return nil
-}
-
-func handleOwldinalMintBoxEvent(event *abigen.OwldinalMintBox) error {
 	// save event to database
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.BoxId.Uint64())
 	eventItem := model.OwldinalNftMintBoxEvent{

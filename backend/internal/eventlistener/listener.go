@@ -33,6 +33,7 @@ const (
 	eventOwldinalBatchMetadataUpdate = "0x6bd5c950a8d8df17f772f5af37cb3655737899cbf903264b9795592da439661c"
 	eventOwldinalMetadataUpdate      = "0xf8e1a15aba9398e019f0b49df1a4fde98ee17ae345cb5f6b5e2c27f5033e8ce7"
 	eventOwldinalTransfer            = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+
 	// Contract OwldinalGenOneBox
 	eventOwldinalGenOneBoxRoleGranted      = "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d"
 	eventOwldinalGenOneBoxRoleRevoked      = "0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b"
@@ -41,6 +42,7 @@ const (
 	eventOwldinalGenOneBoxApprovalForAll   = "0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"
 	eventOwldinalGenOneBoxMintBox          = "0x4cce2d7ca388465a90e71f76235d389abe1ede028b09c07d4f86519e5adb078c"
 	eventOwldinalGenOneBoxRoleAdminChanged = "0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff"
+
 	// Contract OwlGame
 	eventOwlGameStakeOwldinalNft   = "0x292b69a5590aefdf5de5c9da21ea45b29afd0635e4d0c7d149d1d84be9224106"
 	eventOwlGameUnstakeMysteryBox  = "0x363717deff436618c48fd125aa63e987b64c96ed5976f67cce76223bc8ab2a29"
@@ -86,14 +88,11 @@ func StartEventListening() error {
 	startBlock := big.NewInt(config.C.EventStartBlock)
 	eventProcessor := NewEventProcessor()
 	registerHandlers(eventProcessor)
-
-	// current block for poll event
-	currentBlock, err := getCurrentBlock(client)
+	header, err := getCurrentBlock(client)
 	if err != nil {
-		return err
+		log.Fatal("Failed to get the latest block header: %v", err)
 	}
-
-	handleHistoryEvents(client, startBlock, currentBlock, contractAddress, eventProcessor)
+	currentBlock := handleHistoryEvents(client, startBlock, header, contractAddress, eventProcessor)
 	// Poll the latest events starting from the newest block.
 	pollEvents(client, currentBlock, contractAddress, eventProcessor)
 
@@ -113,6 +112,20 @@ func StartEventListening() error {
 func registerHandlers(eventProcessor *EventProcessor) {
 	eventProcessor.RegisterHandler(eventOwldinalMintBox, &OwldinalNftMintBoxHandler{})
 	eventProcessor.RegisterHandler(eventOwldinalTransfer, &OwldinalNftTransferHandler{})
+
+	eventProcessor.RegisterHandler(eventOwldinalGenOneBoxMintBox, &GenOneBoxMintBoxHandler{})
+	eventProcessor.RegisterHandler(eventOwldinalGenOneBoxTransfer, &GenOneBoxTransferHandler{})
+
+	eventProcessor.RegisterHandler(eventOwlGameJoinGame, &OwlGameJoinGameHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameBindInvitation, &OwlGameBindInvitationHandler{})
+	eventProcessor.RegisterHandler(eventOwlGamePrizePoolIncreased, &OwlGamePrizePoolIncreasedHandler{})
+	eventProcessor.RegisterHandler(eventOwlGamePrizePoolDecreased, &OwlGamePrizePoolDecreasedHandler{})
+
+	eventProcessor.RegisterHandler(eventOwlGameStakeOwldinalNft, &OwlGameStakeOwldinalNftHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameUnstakeOwldinalNft, &OwlGameUnstakeOwldinalNftHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameStakeMysteryBox, &OwlGameStakeMysteryBoxHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameUnstakeMysteryBox, &OwlGameUnstakeMysteryBoxHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameClaimInviterReward, &OwlGameClaimInviterRewardsHandler{})
 }
 
 func getCurrentBlock(client *ethclient.Client) (*big.Int, error) {
@@ -175,11 +188,10 @@ func handleHistoryEvents(
 	endBlock *big.Int,
 	addresses []common.Address,
 	processors *EventProcessor,
-) {
+) *big.Int {
 
 	// Merlin chain only supports pulling events for up to 1024 blocks at a time, so need to loop to fetch them.
 	maxBlocks := big.NewInt(1024)
-
 	for startBlock.Cmp(endBlock) < 0 {
 		nextBlock := big.NewInt(0).Add(startBlock, maxBlocks)
 		if nextBlock.Cmp(endBlock) > 0 {
@@ -204,7 +216,19 @@ func handleHistoryEvents(
 		}
 
 		startBlock = big.NewInt(0).Add(nextBlock, big.NewInt(1))
+
+		header, err := getCurrentBlock(client)
+		if err != nil {
+			log.Fatal("Failed to get the latest block header: %v", err)
+		}
+		// If the header is much larger than the endblock, it will result in subsequent subscriptions exceeding 1024
+		// blocks and thus throw an exception, so the endblock needs to be updated.
+		if header.Cmp(big.NewInt(0).Add(endBlock, big.NewInt(100))) > 0 {
+			endBlock = header
+		}
 	}
+
+	return startBlock
 }
 
 func pollEvents(client *ethclient.Client,
@@ -225,6 +249,10 @@ func pollEvents(client *ethclient.Client,
 					continue
 				}
 				toBlock = big.NewInt(int64(endBlock))
+				// if startBlock larger than toBlock, wait next poll
+				if toBlock.Cmp(startBlock) < 0 {
+					continue
+				}
 
 				logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 					FromBlock: startBlock,
