@@ -76,7 +76,7 @@ func (h *OwlGamePrizePoolIncreasedHandler) Handle(vlog types.Log) error {
 	}
 	// save event to database
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
-	eventItem := model.OwlGamePrizePoolIncreased{
+	eventItem := model.OwlGamePrizePoolIncreasedEvent{
 		Event:  model.NewEvent(&event.Raw),
 		Amount: database.Amount{Int: event.Amount},
 	}
@@ -104,7 +104,7 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 	}
 	// save event to database
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
-	eventItem := model.OwlGamePrizePoolDecreased{
+	eventItem := model.OwlGamePrizePoolDecreasedEvent{
 		Event:  model.NewEvent(&event.Raw),
 		Amount: database.Amount{Int: event.Amount},
 	}
@@ -156,38 +156,127 @@ func (h *OwlGameStakeOwldinalNftHandler) Handle(vlog types.Log) error {
 	return nil
 }
 
-// TODO:
+type OwlGameUnstakeOwldinalNftHandler struct{}
 
-//// eventOwlGameUnstakeOwldinalNft
-//type OwlGameUnstakeOwldinalNftEvent struct {
-//	Event
-//	database.Model
-//	User     string `gorm:"size:42"`
-//	TokenIds database.IdList
-//}
-//
-//// eventOwlGameStakeMysteryBox
-//type OwlGameStakeMysteryBoxEvent struct {
-//	Event
-//	database.Model
-//	User     string `gorm:"size:42"`
-//	TokenIds database.IdList
-//}
-//
-//// eventOwlGameUnstakeMysteryBox
-//type OwlGameUnstakeMysteryBoxEvent struct {
-//	Event
-//	database.Model
-//	User    string `gorm:"size:42"`
-//	TokenId uint64
-//	BoxType uint8
-//	Rewards database.Amount
-//}
-//
-//// eventOwlGameClaimInviterReward
-//type OwlGameClaimInviterRewardEvent struct {
-//	Event
-//	database.Model
-//	User           string `gorm:"size:42"`
-//	WithdrawAmount database.Amount
-//}
+func (h *OwlGameUnstakeOwldinalNftHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseUnstakeOwldinalNft(vlog)
+	if err != nil {
+		return err
+	}
+	// save event to database
+	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	tokenIds := make([]uint64, len(event.TokenId))
+	for i, bigInt := range event.TokenId {
+		tokenIds[i] = bigInt.Uint64()
+	}
+	eventItem := model.OwlGameUnstakeOwldinalNftEvent{
+		Event:    model.NewEvent(&event.Raw),
+		User:     event.User.Hex(),
+		TokenIds: tokenIds,
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	// TODO:
+
+	return nil
+}
+
+type OwlGameStakeMysteryBoxHandler struct{}
+
+func (h *OwlGameStakeMysteryBoxHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseStakeMysteryBox(vlog)
+	if err != nil {
+		return err
+	}
+	// save event to database
+	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	tokenIds := make([]uint64, len(event.TokenId))
+	for i, bigInt := range event.TokenId {
+		tokenIds[i] = bigInt.Uint64()
+	}
+	eventItem := model.OwlGameStakeMysteryBoxEvent{
+		Event:    model.NewEvent(&event.Raw),
+		User:     event.User.Hex(),
+		TokenIds: tokenIds,
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	// TODO:
+
+	return nil
+}
+
+type OwlGameUnstakeMysteryBoxHandler struct{}
+
+func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseUnstakeMysteryBox(vlog)
+	if err != nil {
+		return err
+	}
+	// save event to database
+	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	eventItem := model.OwlGameUnstakeMysteryBoxEvent{
+		Event:   model.NewEvent(&event.Raw),
+		User:    event.User.Hex(),
+		TokenId: event.TokenId.Uint64(),
+		Rewards: database.Amount{Int: event.Rewards},
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	// TODO:
+
+	return nil
+}
+
+type OwlGameClaimInviterRewardsHandler struct{}
+
+func (h *OwlGameClaimInviterRewardsHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseClaimInviterReward(vlog)
+	if err != nil {
+		return err
+	}
+	// save event to database
+	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	eventItem := model.OwlGameClaimInviterRewardEvent{
+		Event:          model.NewEvent(&event.Raw),
+		User:           event.User.Hex(),
+		WithdrawAmount: database.Amount{Int: event.WithdrawAmount},
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	// TODO:
+
+	return nil
+}

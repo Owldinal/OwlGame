@@ -71,14 +71,14 @@ type OwlGameBindInvitationEvent struct {
 }
 
 // eventOwlGamePrizePoolIncreased
-type OwlGamePrizePoolIncreased struct {
+type OwlGamePrizePoolIncreasedEvent struct {
 	Event
 	database.Model
 	Amount database.Amount
 }
 
 // eventOwlGamePrizePoolDecreased
-type OwlGamePrizePoolDecreased struct {
+type OwlGamePrizePoolDecreasedEvent struct {
 	Event
 	database.Model
 	Amount database.Amount

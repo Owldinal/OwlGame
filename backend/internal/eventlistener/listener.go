@@ -113,6 +113,19 @@ func registerHandlers(eventProcessor *EventProcessor) {
 	eventProcessor.RegisterHandler(eventOwldinalMintBox, &OwldinalNftMintBoxHandler{})
 	eventProcessor.RegisterHandler(eventOwldinalTransfer, &OwldinalNftTransferHandler{})
 
+	eventProcessor.RegisterHandler(eventOwldinalGenOneBoxMintBox, &GenOneBoxMintBoxHandler{})
+	eventProcessor.RegisterHandler(eventOwldinalGenOneBoxTransfer, &GenOneBoxTransferHandler{})
+
+	eventProcessor.RegisterHandler(eventOwlGameJoinGame, &OwlGameJoinGameHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameBindInvitation, &OwlGameBindInvitationHandler{})
+	eventProcessor.RegisterHandler(eventOwlGamePrizePoolIncreased, &OwlGamePrizePoolIncreasedHandler{})
+	eventProcessor.RegisterHandler(eventOwlGamePrizePoolDecreased, &OwlGamePrizePoolDecreasedHandler{})
+
+	eventProcessor.RegisterHandler(eventOwlGameStakeOwldinalNft, &OwlGameStakeOwldinalNftHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameUnstakeOwldinalNft, &OwlGameUnstakeOwldinalNftHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameStakeMysteryBox, &OwlGameStakeMysteryBoxHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameUnstakeMysteryBox, &OwlGameUnstakeMysteryBoxHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameClaimInviterReward, &OwlGameClaimInviterRewardsHandler{})
 }
 
 func getCurrentBlock(client *ethclient.Client) (*big.Int, error) {
@@ -236,6 +249,10 @@ func pollEvents(client *ethclient.Client,
 					continue
 				}
 				toBlock = big.NewInt(int64(endBlock))
+				// if startBlock larger than toBlock, wait next poll
+				if toBlock.Cmp(startBlock) < 0 {
+					continue
+				}
 
 				logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 					FromBlock: startBlock,
