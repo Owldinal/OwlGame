@@ -9,6 +9,8 @@ let owldinalNftContract, owldinalNftAddress;
 let owlGameContract, owlGameAddress;
 let genOneBoxContract, genOneBoxAddress;
 
+const decimal = BigInt(10) ** BigInt(18)
+
 async function main() {
 	[deployer, playerB, playerC] = await hre.ethers.getSigners();
 	ownerAddress = deployer.address;
@@ -16,7 +18,7 @@ async function main() {
 	let tx;
 
 	// owlTokenAddress = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6";
-	owldinalNftAddress = "0x4C70a29A4be0954eE358f03C18BecCb888549c01";
+	// owldinalNftAddress = "0x4C70a29A4be0954eE358f03C18BecCb888549c01";
 	// owlGameAddress = "0x49fd2BE640DB2910c2fAb69bB8531Ab6E76127ff";
 	// genOneBoxAddress = "0x4631BCAbD6dF18D94796344963cB60d44a4136b6";
 
@@ -46,6 +48,9 @@ OWL_GAME_ADDR=${owlGameAddress}
 	];
 
 	await Promise.all(operations).then((results) => Promise.all(results.map(result => result.wait())));
+
+	const prizeAmount = BigInt(6_0000_0000n) * decimal;
+	console.log(`prizeAmount = ${prizeAmount}`);
 
 	console.log(`\nconst [owlTokenAddress, owldinalNftAddress, genOneBoxAddress, owlGameAddress] = ["${owlTokenAddress}", "${owldinalNftAddress}", "${genOneBoxAddress}", "${owlGameAddress}"];\n`);
 
@@ -77,20 +82,20 @@ OWL_GAME_ADDR=${owlGameAddress}
 	printTxDetail(tx, 'stakeOwldinalNft 2');
 
 	console.log("\nTest mintMysteryBox");
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 1 * 10 ** 18));
+	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 1) * decimal);
 	tx = await owlGameContract.connect(deployer).mintMysteryBox(1);
 	printTxDetail(tx, 'mintMysteryBox Count=1');
 
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 10 * 10 ** 18));
+	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 10) * decimal);
 	tx = await owlGameContract.connect(deployer).mintMysteryBox(10);
 	printTxDetail(tx, 'mintMysteryBox Count=10');
 
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 100 * 10 ** 18));
+	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 100) * decimal);
 	tx = await owlGameContract.connect(deployer).mintMysteryBox(100);
 	printTxDetail(tx, 'mintMysteryBox Count=100');
 
 	console.log("\nTest addPrize");
-	const prizeAmount = BigInt(6_0000_0000 * 10 ** 18);
+
 	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
 	await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
 	await owlGameContract.connect(deployer).addPrize(prizeAmount);
@@ -166,7 +171,7 @@ async function deployOrConnect() {
 		[owlTokenContract, owlTokenAddress] = await deploy("OwlToken", params);
 		console.log(`OwlToken contract deployed to : ${owlTokenAddress}\nParams = ${params.join(" ")}`);
 
-		await owlTokenContract.connect(deployer).mint(deployer.address, BigInt(10000000 * 10 ** 18));
+		await owlTokenContract.connect(deployer).mint(deployer.address, BigInt(100000000000) * decimal);
 	}
 
 	if (owldinalNftAddress) {

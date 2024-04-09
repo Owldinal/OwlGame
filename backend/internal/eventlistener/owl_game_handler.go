@@ -3,9 +3,11 @@ package eventlistener
 import (
 	"errors"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
+	"owl-backend/internal/util"
 	"owl-backend/pkg/log"
 )
 
@@ -33,7 +35,14 @@ func (h *OwlGameJoinGameHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	item := model.UserInfo{
+		Address:    eventItem.User,
+		InviteCode: util.DecodeInviteCode(eventItem.InviteCode),
+	}
+	itemResult := database.DB.Clauses().Create(&item)
+	if itemResult.Error != nil {
+		return itemResult.Error
+	}
 
 	return nil
 }
@@ -62,7 +71,30 @@ func (h *OwlGameBindInvitationHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	inviteItem := model.InviteRelation{
+		Inviter: eventItem.Inviter,
+		Invitee: eventItem.Invitee,
+	}
+	itemResult := database.DB.Clauses().Create(&inviteItem)
+	if itemResult.Error != nil {
+		return itemResult.Error
+	}
+
+	var userInfoItem model.UserInfo
+	if err := database.DB.Where("address = ?", eventItem.Inviter).First(&userInfoItem).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Warnf("Inviter not found with address: %v", eventItem.Inviter)
+			return err
+		} else {
+			log.Warnf("Error Is: %v", err)
+			return err
+		}
+	}
+	userInfoItem.InviteCount++
+	if err := database.DB.Save(&userInfoItem).Error; err != nil {
+		log.Warnf("Error updating inviter user infoo: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -75,10 +107,10 @@ func (h *OwlGamePrizePoolIncreasedHandler) Handle(vlog types.Log) error {
 		return err
 	}
 	// save event to database
-	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	// log.Infof("[%v-%v] Pool Increase: amount = %v\n", event.Raw.TxHash, event.Raw.Index, event.Amount)
 	eventItem := model.OwlGamePrizePoolIncreasedEvent{
 		Event:  model.NewEvent(&event.Raw),
-		Amount: database.Amount{Int: event.Amount},
+		Amount: decimal.NewFromBigInt(event.Amount, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -106,7 +138,7 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
 	eventItem := model.OwlGamePrizePoolDecreasedEvent{
 		Event:  model.NewEvent(&event.Raw),
-		Amount: database.Amount{Int: event.Amount},
+		Amount: decimal.NewFromBigInt(event.Amount, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -235,7 +267,7 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		Event:   model.NewEvent(&event.Raw),
 		User:    event.User.Hex(),
 		TokenId: event.TokenId.Uint64(),
-		Rewards: database.Amount{Int: event.Rewards},
+		Rewards: decimal.NewFromBigInt(event.Rewards, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -264,7 +296,7 @@ func (h *OwlGameClaimInviterRewardsHandler) Handle(vlog types.Log) error {
 	eventItem := model.OwlGameClaimInviterRewardEvent{
 		Event:          model.NewEvent(&event.Raw),
 		User:           event.User.Hex(),
-		WithdrawAmount: database.Amount{Int: event.WithdrawAmount},
+		WithdrawAmount: decimal.NewFromBigInt(event.WithdrawAmount, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {

@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/shopspring/decimal"
 	"owl-backend/internal/database"
 )
 
@@ -74,14 +75,14 @@ type OwlGameBindInvitationEvent struct {
 type OwlGamePrizePoolIncreasedEvent struct {
 	Event
 	database.Model
-	Amount database.Amount
+	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
 }
 
 // eventOwlGamePrizePoolDecreased
 type OwlGamePrizePoolDecreasedEvent struct {
 	Event
 	database.Model
-	Amount database.Amount
+	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
 }
 
 // eventOwlGameStakeOwldinalNft
@@ -115,13 +116,13 @@ type OwlGameUnstakeMysteryBoxEvent struct {
 	User    string `gorm:"size:42"`
 	TokenId uint64
 	BoxType uint8
-	Rewards database.Amount
+	Rewards decimal.Decimal `gorm:"type:decimal(36,18);"`
 }
 
 // eventOwlGameClaimInviterReward
 type OwlGameClaimInviterRewardEvent struct {
 	Event
 	database.Model
-	User           string `gorm:"size:42"`
-	WithdrawAmount database.Amount
+	User           string          `gorm:"size:42"`
+	WithdrawAmount decimal.Decimal `gorm:"type:decimal(36,18);"`
 }
