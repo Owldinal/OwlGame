@@ -9,6 +9,7 @@ import (
 	"owl-backend/internal/model"
 	"owl-backend/internal/util"
 	"owl-backend/pkg/log"
+	"time"
 )
 
 type OwlGameJoinGameHandler struct{}
@@ -122,7 +123,10 @@ func (h *OwlGamePrizePoolIncreasedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	err = updateDailyPoolSnapshot(DailyPoolUpdater{Increase: eventItem.Amount})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -150,7 +154,10 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	err = updateDailyPoolSnapshot(DailyPoolUpdater{Decrease: eventItem.Amount})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -284,19 +291,20 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	return nil
 }
 
-type OwlGameClaimInviterRewardsHandler struct{}
+type OwlGameOwlTokenBurnedHandler struct{}
 
-func (h *OwlGameClaimInviterRewardsHandler) Handle(vlog types.Log) error {
-	event, err := owlGameContract.ParseClaimInviterReward(vlog)
+func (h *OwlGameOwlTokenBurnedHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseOwlTokenBurned(vlog)
 	if err != nil {
 		return err
 	}
 	// save event to database
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
-	eventItem := model.OwlGameClaimInviterRewardEvent{
-		Event:          model.NewEvent(&event.Raw),
-		User:           event.User.Hex(),
-		WithdrawAmount: decimal.NewFromBigInt(event.WithdrawAmount, -18),
+	eventItem := model.OwlGameOwlTokenBurnedEvent{
+		Event:     model.NewEvent(&event.Raw),
+		User:      event.User.Hex(),
+		MintCount: event.MintCount.Uint64(),
+		Amount:    decimal.NewFromBigInt(event.Amount, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -308,7 +316,58 @@ func (h *OwlGameClaimInviterRewardsHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	err = updateDailyPoolSnapshot(DailyPoolUpdater{Burn: eventItem.Amount})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type DailyPoolUpdater struct {
+	Increase  decimal.Decimal
+	Decrease  decimal.Decimal
+	Burn      decimal.Decimal
+	MarketCap decimal.Decimal
+}
+
+func updateDailyPoolSnapshot(updater DailyPoolUpdater) error {
+	currentDate := time.Now().UTC().Truncate(24 * time.Hour)
+	var snapshot model.DailyPoolSnapshot
+	// Get newest data
+	if err := database.DB.Order("id desc").First(&snapshot).Error; err != nil {
+		log.Warnf("Error retrieving the latest DailyPoolSnapshot: %v", err)
+		return err
+	}
+
+	// check if is today's snapshot
+	if snapshot.Date != currentDate {
+		// if not today's snapshot, create new one
+		snapshot.ID = 0
+		snapshot.Date = currentDate
+	}
+
+	if !updater.Increase.IsZero() {
+		snapshot.TotalPoolAmount = snapshot.TotalPoolAmount.Add(updater.Increase)
+	}
+
+	if !updater.Decrease.IsZero() {
+		snapshot.TotalPoolAmount = snapshot.TotalPoolAmount.Sub(updater.Decrease)
+		snapshot.AllocatedRewards = snapshot.AllocatedRewards.Add(updater.Decrease)
+	}
+
+	if !updater.Burn.IsZero() {
+		snapshot.TotalBurn = snapshot.TotalBurn.Add(updater.Burn)
+	}
+
+	if !updater.MarketCap.IsZero() {
+		snapshot.TotalMarketCap = snapshot.TotalMarketCap.Add(updater.MarketCap)
+	}
+
+	if err := database.DB.Save(&snapshot).Error; err != nil {
+		log.Warnf("Error saving DailyPoolSnapshot: %v", err)
+		return err
+	}
 
 	return nil
 }

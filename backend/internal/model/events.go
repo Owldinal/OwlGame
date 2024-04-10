@@ -119,10 +119,37 @@ type OwlGameUnstakeMysteryBoxEvent struct {
 	Rewards decimal.Decimal `gorm:"type:decimal(36,18);"`
 }
 
-// eventOwlGameClaimInviterReward
-type OwlGameClaimInviterRewardEvent struct {
+type OwlGameOwlTokenBurnedEvent struct {
 	Event
 	database.Model
-	User           string          `gorm:"size:42"`
-	WithdrawAmount decimal.Decimal `gorm:"type:decimal(36,18);"`
+	User      string `gorm:"size:42"`
+	MintCount uint64
+	Amount    decimal.Decimal `gorm:"type:decimal(36,18);"`
+}
+
+// eventOwlGameRebateRewardsIncreased
+type OwlGameRebateRewardsIncreasedEvent struct {
+	Event
+	database.Model
+	User      string `gorm:"size:42"`
+	Invitee   string `gorm:"size:42"`
+	MintCount uint64
+	Amount    decimal.Decimal `gorm:"type:decimal(36,18);"`
+}
+
+// eventOwlGameUnlockableRebateIncreased
+type OwlGameUnlockableRebateIncreasedEvent struct {
+	Event
+	database.Model
+	User      string `gorm:"size:42"`
+	MintCount uint64
+	Amount    decimal.Decimal `gorm:"type:decimal(36,18);"`
+}
+
+// eventOwlGameRebateClaimed
+type OwlGameClaimRebateClaimedEvent struct {
+	Event
+	database.Model
+	User   string          `gorm:"size:42"`
+	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
 }
