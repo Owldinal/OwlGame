@@ -105,8 +105,9 @@ type OwlGameUnstakeOwldinalNftEvent struct {
 type OwlGameStakeMysteryBoxEvent struct {
 	Event
 	database.Model
-	User     string `gorm:"size:42"`
-	TokenIds database.IdList
+	User      string `gorm:"size:42"`
+	TokenIds  database.IdList
+	BuffLevel uint8
 }
 
 // eventOwlGameUnstakeMysteryBox
@@ -152,4 +153,18 @@ type OwlGameClaimRebateClaimedEvent struct {
 	database.Model
 	User   string          `gorm:"size:42"`
 	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
+}
+
+type OwlGameFruitRewardUpdateEvent struct {
+	Event
+	database.Model
+	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
+	Count  uint64
+}
+
+type OwlGameElfRewardUpdateEvent struct {
+	Event
+	database.Model
+	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
+	Count  uint64
 }

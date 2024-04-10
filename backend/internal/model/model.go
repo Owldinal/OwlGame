@@ -9,11 +9,12 @@ import (
 
 type OwldinalNftToken struct {
 	database.Model
-	TokenId    uint64          `json:"token_id" gorm:"index:idx_token_id"`
-	Owner      string          `json:"owner" gorm:"size:42;index:idx_owner"`
-	TokenUri   string          `json:"token_uri"`
-	IsStaking  bool            `json:"is_staking"`
-	BuffingIds database.IdList `json:"buffing_ids"`
+	TokenId     uint64          `json:"token_id" gorm:"index:idx_token_id"`
+	Owner       string          `json:"owner" gorm:"size:42;index:idx_owner"`
+	TokenUri    string          `json:"token_uri"`
+	IsStaking   bool            `json:"is_staking"`
+	StakingTime *time.Time      `json:"staking_time"`
+	BuffingIds  database.IdList `json:"buffing_ids"`
 }
 
 type MysteryBoxToken struct {
@@ -22,6 +23,7 @@ type MysteryBoxToken struct {
 	Owner          string           `json:"owner" gorm:"size:42;index:idx_owner"`
 	BoxType        constant.BoxType `json:"box_type" gorm:"type:TINYINT UNSIGNED NOT NULL"`
 	IsStaking      bool             `json:"is_staking"`
+	StakingTime    *time.Time       `json:"staking_time"`
 	BuffLevel      uint8            `json:"buff_level"`
 	CurrentRewards decimal.Decimal  `json:"current_rewards" gorm:"type:decimal(36,18);"`
 	TotalRewards   decimal.Decimal  `json:"total_rewards" gorm:"type:decimal(36,18);"`

@@ -43,10 +43,12 @@ const (
 	eventOwlGameBindInvitation     = "0x3144fc7320adf238514c761c91814e301f210c0e4e0bb5f9fd88bec051b4f100"
 	eventOwlGameJoinGame           = "0x3518b1830e6ec9f510e24a95f032e27013c745334b813b19f15405c90923f4bc"
 	eventOwlGamePrizePoolIncreased = "0x3c231f64b16483d16ca517ccd881f34f86dd04ccc1305e65b854fe82189b7625"
-	eventOwlGameStakeMysteryBox    = "0x85ee4e66817b80797ec9b3286b977e5b1e7c0890c0341916ff9acaa6f8210b0d"
+	eventOwlGameStakeMysteryBox    = "0xca6d3ba2c5c2c5da541c637a6da9bccafef99671140cd5fd444322bdaca03336"
 	eventOwlGamePrizePoolDecreased = "0xf0870791f79c9e860000c2e3005d55ab8944ec1a18a6b61d4ad60ce184654f42"
 	eventOwlGameUnstakeOwldinalNft = "0x953947fb8c8d5e1bd1fb1561e4a4077c9f02d4952ad1185d28133c0d764d9a5e"
 	eventOwlGameOwlTokenBurned     = "0x818c9d2e3949d2ab3a0c76d31b137496e1b14d58e2b2d746301c2926a31c435d"
+	eventOwlGameFruitRewardUpdated = "0x58071a54cb90db0376875e1948fc0b9a0a18ab2614077300107d4377602a34ce"
+	eventOwlGameElfRewardUpdated   = "0x9b964cbd458fdb8541cd6349fd809bc91ecc1a53602693a74fd37f5d3916363c"
 
 	eventOwlGameRebateRewardsIncreased    = "0x07e9fcef60e55f4c1c03cfeb57d85db49ecae00bc0367f586d1d67750dcebbe6"
 	eventOwlGameUnlockableRebateIncreased = "0x1f464096fc7638b46885d25d4cfc646c289ce897eeb853b8c4c4ace63285b77f"
@@ -122,6 +124,9 @@ func registerHandlers(eventProcessor *EventProcessor) {
 	eventProcessor.RegisterHandler(eventOwlGameStakeMysteryBox, &OwlGameStakeMysteryBoxHandler{})
 	eventProcessor.RegisterHandler(eventOwlGameUnstakeMysteryBox, &OwlGameUnstakeMysteryBoxHandler{})
 	eventProcessor.RegisterHandler(eventOwlGameOwlTokenBurned, &OwlGameOwlTokenBurnedHandler{})
+
+	eventProcessor.RegisterHandler(eventOwlGameFruitRewardUpdated, &OwlGameFruitRewardUpdatedHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameElfRewardUpdated, &OwlGameElfRewardUpdatedHandler{})
 
 	eventProcessor.RegisterHandler(eventOwlGameRebateRewardsIncreased, &OwlGameRebateRewardsIncreasedHandler{})
 	eventProcessor.RegisterHandler(eventOwlGameUnlockableRebateIncreased, &OwlGameUnlockableRebateIncreasedHandler{})

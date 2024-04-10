@@ -2,9 +2,12 @@ package eventlistener
 
 import (
 	"errors"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"math/big"
+	"owl-backend/internal/constant"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
 	"owl-backend/internal/util"
@@ -190,7 +193,27 @@ func (h *OwlGameStakeOwldinalNftHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	updateResult := database.DB.Model(&model.OwldinalNftToken{}).
+		Where("token_id IN ?", tokenIds).
+		Update("is_staking", true).
+		Update("staking_time", time.Now())
+	if updateResult.Error != nil {
+		return updateResult.Error
+	}
+
+	userInfo := model.UserInfo{
+		Address: eventItem.User,
+	}
+	if err := database.DB.Where(&userInfo).First(&userInfo).Error; err != nil {
+		log.Warnf("Error Is: %v", err)
+		return err
+	}
+
+	userInfo.BuffLevel += len(tokenIds)
+	if err := database.DB.Save(&userInfo).Error; err != nil {
+		log.Warnf("Error updating inviter user infoo: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -223,7 +246,28 @@ func (h *OwlGameUnstakeOwldinalNftHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	updateResult := database.DB.Model(&model.OwldinalNftToken{}).
+		Where("token_id IN ?", tokenIds).
+		Update("is_staking", false).
+		Update("staking_time", nil)
+
+	if updateResult.Error != nil {
+		return updateResult.Error
+	}
+
+	userInfo := model.UserInfo{
+		Address: eventItem.User,
+	}
+	if err := database.DB.Where(&userInfo).First(&userInfo).Error; err != nil {
+		log.Warnf("Error Is: %v", err)
+		return err
+	}
+
+	userInfo.BuffLevel -= len(tokenIds)
+	if err := database.DB.Save(&userInfo).Error; err != nil {
+		log.Warnf("Error updating inviter user infoo: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -256,7 +300,13 @@ func (h *OwlGameStakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	updateResult := database.DB.Model(&model.MysteryBoxToken{}).
+		Where("token_id IN ?", tokenIds).
+		Update("is_staking", true).
+		Update("staking_time", time.Now())
+	if updateResult.Error != nil {
+		return updateResult.Error
+	}
 
 	return nil
 }
@@ -286,7 +336,20 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO:
+	tokenItem := model.MysteryBoxToken{
+		TokenId: eventItem.TokenId,
+	}
+
+	if err := database.DB.Where(&tokenItem).First(&tokenItem).Error; err != nil {
+		log.Warnf("Error Is: %v", err)
+		return err
+	}
+	tokenItem.IsStaking = false
+	tokenItem.StakingTime = nil
+	if err := database.DB.Save(&tokenItem).Error; err != nil {
+		log.Warnf("Error updating inviter user infoo: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -318,6 +381,103 @@ func (h *OwlGameOwlTokenBurnedHandler) Handle(vlog types.Log) error {
 
 	err = updateDailyPoolSnapshot(DailyPoolUpdater{Burn: eventItem.Amount})
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type OwlGameFruitRewardUpdatedHandler struct{}
+type OwlGameElfRewardUpdatedHandler struct{}
+
+func (h *OwlGameFruitRewardUpdatedHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseFruitRewardUpdated(vlog)
+	if err != nil {
+		return err
+	}
+	// save event to database
+	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	eventItem := model.OwlGameFruitRewardUpdateEvent{
+		Event:  model.NewEvent(&event.Raw),
+		Count:  event.Count.Uint64(),
+		Amount: decimal.NewFromBigInt(event.Amount, -18),
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	return globalUpdateRewards(constant.BoxTypeFruit, eventItem.Count, eventItem.Amount)
+}
+
+func (h *OwlGameElfRewardUpdatedHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseElfRewardUpdated(vlog)
+	if err != nil {
+		return err
+	}
+	// save event to database
+	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	eventItem := model.OwlGameElfRewardUpdateEvent{
+		Event:  model.NewEvent(&event.Raw),
+		Count:  event.Count.Uint64(),
+		Amount: decimal.NewFromBigInt(event.Amount, -18),
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	return globalUpdateRewards(constant.BoxTypeElf, eventItem.Count, eventItem.Amount)
+}
+
+func globalUpdateRewards(boxType constant.BoxType, count uint64, amount decimal.Decimal) error {
+	var tokenList []model.MysteryBoxToken
+	err := database.DB.Where("box_type = ?", boxType).Where("is_staking = ?", true).Find(&tokenList).Error
+
+	if err != nil {
+		return err
+	}
+
+	tx := database.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	for _, token := range tokenList {
+		tokenId := big.NewInt(int64(token.TokenId))
+		tokenInfo, err := owlGameContract.GetTokenInfo(&bind.CallOpts{}, tokenId)
+		// TODO: 这里 hardhat 有问题，需要换个环境测试一下才行
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		currentRewards := decimal.NewFromBigInt(tokenInfo.Reward, -18)
+		if currentRewards.Cmp(token.CurrentRewards) > 0 {
+			addRewards := currentRewards.Sub(token.CurrentRewards)
+			token.CurrentRewards = currentRewards
+			token.TotalRewards.Add(addRewards)
+
+			if err := tx.Save(&token).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return err
 	}
 

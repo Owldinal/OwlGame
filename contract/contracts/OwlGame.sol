@@ -48,8 +48,17 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     event PrizePoolDecreased(uint256 amount);
     event JoinGame(address indexed user, uint32 inviteCode);
     event BindInvitation(address indexed invitee, address inviter);
+    event MintMysteryBox(
+        address indexed user,
+        uint256 count,
+        uint256[] tokenId
+    );
     event StakeOwldinalNft(address indexed user, uint256[] tokenId);
-    event StakeMysteryBox(address indexed user, uint256[] tokenId);
+    event StakeMysteryBox(
+        address indexed user,
+        uint256[] tokenId,
+        uint16 buffLevel
+    );
     event UnstakeOwldinalNft(address indexed user, uint256[] tokenId);
     // This event cannot accept batch parameters, otherwise it would be impossible to
     // distinguish the rewards for each specific token.
@@ -75,6 +84,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     );
     event RebateClaimed(address indexed user, uint256 amount);
 
+    event FruitRewardUpdated(uint256 amount, uint256 count);
+    event ElfRewardUpdated(uint256 amount, uint256 count);
+
     bytes32 public constant SERVER_ROLE = keccak256("SERVER_ROLE");
 
     ERC20Burnable public owlToken;
@@ -97,7 +109,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     // owner address -> owl token id list
     mapping(address => uint256[]) stakedOwldinalsByOwner;
-    mapping(uint256 => TokenStakingInfo) tokenInfoMap;
+    mapping(uint256 => TokenStakingInfo) public tokenInfoMap;
 
     uint256[] fruitIdList;
     uint256[] elfIdList;
@@ -163,6 +175,12 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     }
 
     // endregion ---- Admin ----
+
+    function getTokenInfo(
+        uint256 tokenId
+    ) external view returns (TokenStakingInfo memory) {
+        return tokenInfoMap[tokenId];
+    }
 
     // region ---- Player ----
 
@@ -263,7 +281,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         playerRebate.mintedBoxCount += count;
         playerRebate.unlockedRebateToClaim += addUnlockedAmount;
         emit UnlockableRebateIncreased(msg.sender, count, addUnlockedAmount);
-
+        emit MintMysteryBox(msg.sender, count, tokenIdList);
         emit PrizePoolIncreased(prizeAmount);
 
         return tokenIdList;
@@ -314,6 +332,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
         // check all the token is owner's
         uint256 length = tokenIdList.length;
+        uint16 buffLevel;
         for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(
@@ -326,7 +345,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             uint256[] storage stakingOwlIds = stakedOwldinalsByOwner[
                 msg.sender
             ];
-            uint16 buffLevel = uint16(stakingOwlIds.length);
+            buffLevel = uint16(stakingOwlIds.length);
             for (uint256 j = 0; j < stakingOwlIds.length; j++) {
                 owlInfoMap[stakingOwlIds[j]].buffedTargetIds.push(tokenId);
                 buffingOwlsByMysteryBox[tokenId].push(stakingOwlIds[j]);
@@ -349,7 +368,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             }
         }
 
-        emit StakeMysteryBox(msg.sender, tokenIdList);
+        emit StakeMysteryBox(msg.sender, tokenIdList, buffLevel);
     }
 
     function unstakeOwldinalNft(uint256[] calldata tokenIdList) external {
@@ -507,6 +526,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             for (uint256 i = 0; i < elfIdList.length; i++) {
                 tokenInfoMap[elfIdList[i]].reward += eachElfRewards;
             }
+            emit ElfRewardUpdated(eachElfRewards, elfIdList.length);
         }
     }
 
@@ -587,6 +607,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             fruit.reward += eachFruitRewards;
             fruit.stakingTime = uint64(block.timestamp);
         }
+        emit FruitRewardUpdated(eachFruitRewards, rewardFruitCount);
 
         prizePool -= totalRewards;
         emit PrizePoolDecreased(totalRewards);

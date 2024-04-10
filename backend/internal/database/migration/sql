@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS gen_one_box_mint_box_events
     user         CHAR(42)  NOT NULL,
     token_id     BIGINT    NOT NULL,
     box_type     TINYINT   NOT NULL,
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user),
@@ -66,8 +66,8 @@ CREATE TABLE IF NOT EXISTS gen_one_box_transfer_events
     from_user    CHAR(42)  NOT NULL,
     to_user      CHAR(42)  NOT NULL,
     token_id     BIGINT    NOT NULL,
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_from_user (from_user),
@@ -84,8 +84,8 @@ CREATE TABLE IF NOT EXISTS owl_game_join_game_events
     block_hash   CHAR(66)  NOT NULL,
     user         CHAR(42)  NOT NULL,
     invite_code  INT       NOT NULL,
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user)
@@ -100,8 +100,8 @@ CREATE TABLE IF NOT EXISTS owl_game_bind_invitation_events
     block_hash   CHAR(66)  NOT NULL,
     inviter      CHAR(42)  NOT NULL,
     invitee      CHAR(42)  NOT NULL,
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_inviter (inviter),
@@ -115,9 +115,9 @@ CREATE TABLE IF NOT EXISTS owl_game_prize_pool_increased_events
     log_index    BIGINT    NOT NULL,
     block_number BIGINT    NOT NULL,
     block_hash   CHAR(66)  NOT NULL,
-    amount       DECIMAL(36,18),
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    amount       DECIMAL(36, 18),
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index)
 );
@@ -129,9 +129,9 @@ CREATE TABLE IF NOT EXISTS owl_game_prize_pool_decreased_events
     log_index    BIGINT    NOT NULL,
     block_number BIGINT    NOT NULL,
     block_hash   CHAR(66)  NOT NULL,
-    amount       DECIMAL(36,18),
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    amount       DECIMAL(36, 18),
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index)
 );
@@ -145,8 +145,8 @@ CREATE TABLE IF NOT EXISTS owl_game_stake_owldinal_nft_events
     block_hash   CHAR(66)  NOT NULL,
     user         CHAR(42)  NOT NULL,
     token_ids    TEXT,
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user)
@@ -161,8 +161,8 @@ CREATE TABLE IF NOT EXISTS owl_game_unstake_owldinal_nft_events
     block_hash   CHAR(66)  NOT NULL,
     user         CHAR(42)  NOT NULL,
     token_ids    TEXT,
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user)
@@ -177,8 +177,9 @@ CREATE TABLE IF NOT EXISTS owl_game_stake_mystery_box_events
     block_hash   CHAR(66)  NOT NULL,
     user         CHAR(42)  NOT NULL,
     token_ids    TEXT,
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    buff_level   TINYINT UNSIGNED,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user)
@@ -194,9 +195,9 @@ CREATE TABLE IF NOT EXISTS owl_game_unstake_mystery_box_events
     user         CHAR(42)  NOT NULL,
     token_id     BIGINT    NOT NULL,
     box_type     TINYINT   NOT NULL,
-    rewards      DECIMAL(36,18),
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    rewards      DECIMAL(36, 18),
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user),
@@ -205,18 +206,18 @@ CREATE TABLE IF NOT EXISTS owl_game_unstake_mystery_box_events
 
 CREATE TABLE IF NOT EXISTS owl_game_rebate_rewards_increased_events
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tx_hash     CHAR(66) NOT NULL,
-    log_index   BIGINT NOT NULL,
-    block_number BIGINT NOT NULL,
-    block_hash  CHAR(66) NOT NULL,
-    user        CHAR(42) NOT NULL,
-    invitee     CHAR(42) NOT NULL,
-    mint_count  BIGINT UNSIGNED NOT NULL,
-    amount      DECIMAL(36,18) NOT NULL,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at  TIMESTAMP NULL DEFAULT NULL,
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash      CHAR(66)        NOT NULL,
+    log_index    BIGINT          NOT NULL,
+    block_number BIGINT          NOT NULL,
+    block_hash   CHAR(66)        NOT NULL,
+    user         CHAR(42)        NOT NULL,
+    invitee      CHAR(42)        NOT NULL,
+    mint_count   BIGINT UNSIGNED NOT NULL,
+    amount       DECIMAL(36, 18) NOT NULL,
+    created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP       NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user),
     INDEX idx_invitee (invitee)
@@ -224,17 +225,17 @@ CREATE TABLE IF NOT EXISTS owl_game_rebate_rewards_increased_events
 
 CREATE TABLE IF NOT EXISTS owl_game_unlockable_rebate_increased_events
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tx_hash     CHAR(66) NOT NULL,
-    log_index   BIGINT NOT NULL,
-    block_number BIGINT NOT NULL,
-    block_hash  CHAR(66) NOT NULL,
-    user        CHAR(42) NOT NULL,
-    mint_count  BIGINT UNSIGNED NOT NULL,
-    amount      DECIMAL(36,18) NOT NULL,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at  TIMESTAMP NULL DEFAULT NULL,
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash      CHAR(66)        NOT NULL,
+    log_index    BIGINT          NOT NULL,
+    block_number BIGINT          NOT NULL,
+    block_hash   CHAR(66)        NOT NULL,
+    user         CHAR(42)        NOT NULL,
+    mint_count   BIGINT UNSIGNED NOT NULL,
+    amount       DECIMAL(36, 18) NOT NULL,
+    created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP       NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user)
 );
@@ -242,33 +243,62 @@ CREATE TABLE IF NOT EXISTS owl_game_unlockable_rebate_increased_events
 CREATE TABLE IF NOT EXISTS owl_game_owl_token_burned_events
 (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tx_hash      CHAR(66) NOT NULL,
-    log_index    BIGINT NOT NULL,
-    block_number BIGINT NOT NULL,
-    block_hash   CHAR(66) NOT NULL,
-    user         CHAR(42) NOT NULL,
+    tx_hash      CHAR(66)        NOT NULL,
+    log_index    BIGINT          NOT NULL,
+    block_number BIGINT          NOT NULL,
+    block_hash   CHAR(66)        NOT NULL,
+    user         CHAR(42)        NOT NULL,
     mint_count   BIGINT UNSIGNED NOT NULL,
-    amount       DECIMAL(36,18) NOT NULL,
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at   TIMESTAMP NULL DEFAULT NULL,
+    amount       DECIMAL(36, 18) NOT NULL,
+    created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP       NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user)
 );
 
+CREATE TABLE IF NOT EXISTS owl_game_fruit_reward_update_events
+(
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash      CHAR(66)        NOT NULL,
+    log_index    BIGINT          NOT NULL,
+    block_number BIGINT          NOT NULL,
+    block_hash   CHAR(66)        NOT NULL,
+    count        BIGINT UNSIGNED NOT NULL,
+    amount       DECIMAL(36, 18) NOT NULL,
+    created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP       NULL DEFAULT NULL,
+    UNIQUE (tx_hash, log_index)
+);
+
+CREATE TABLE IF NOT EXISTS owl_game_elf_reward_update_events
+(
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash      CHAR(66)        NOT NULL,
+    log_index    BIGINT          NOT NULL,
+    block_number BIGINT          NOT NULL,
+    block_hash   CHAR(66)        NOT NULL,
+    count        BIGINT UNSIGNED NOT NULL,
+    amount       DECIMAL(36, 18) NOT NULL,
+    created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP       NULL DEFAULT NULL,
+    UNIQUE (tx_hash, log_index)
+);
 
 CREATE TABLE IF NOT EXISTS owl_game_rebate_claimed_events
 (
-    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tx_hash         CHAR(66)  NOT NULL,
-    log_index       BIGINT    NOT NULL,
-    block_number    BIGINT    NOT NULL,
-    block_hash      CHAR(66)  NOT NULL,
-    user            CHAR(42)  NOT NULL,
-    amount          DECIMAL(36,18),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP NULL DEFAULT NULL,
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash      CHAR(66)  NOT NULL,
+    log_index    BIGINT    NOT NULL,
+    block_number BIGINT    NOT NULL,
+    block_hash   CHAR(66)  NOT NULL,
+    user         CHAR(42)  NOT NULL,
+    amount       DECIMAL(36, 18),
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index),
     INDEX idx_user (user)
 );
@@ -277,89 +307,95 @@ CREATE TABLE IF NOT EXISTS owl_game_rebate_claimed_events
 
 CREATE TABLE owldinal_nft_tokens
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    token_id    BIGINT    NOT NULL,
-    owner       VARCHAR(42),
-    token_uri   TEXT,
-    is_staking  BOOLEAN,
-    buffing_ids TEXT,
-    created_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at  TIMESTAMP NULL DEFAULT NULL,
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token_id     BIGINT    NOT NULL,
+    owner        VARCHAR(42),
+    token_uri    TEXT,
+    is_staking   BOOLEAN,
+    staking_time TIMESTAMP      DEFAULT NULL,
+    buffing_ids  TEXT,
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP NULL DEFAULT NULL,
     UNIQUE (token_id),
     INDEX idx_token_id (token_id),
     INDEX idx_owner (owner)
 );
 
-CREATE TABLE mystery_box_tokens (
-    id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    token_id         BIGINT UNSIGNED NOT NULL,
-    owner            VARCHAR(42),
-    box_type         TINYINT UNSIGNED NOT NULL,
-    is_staking       BOOLEAN,
-    buff_level       TINYINT UNSIGNED,
-    current_rewards  DECIMAL(36,18),
-    total_rewards    DECIMAL(36,18),
-    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at       TIMESTAMP NULL DEFAULT NULL,
+CREATE TABLE mystery_box_tokens
+(
+    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    token_id        BIGINT UNSIGNED  NOT NULL,
+    owner           VARCHAR(42),
+    box_type        TINYINT UNSIGNED NOT NULL,
+    is_staking      BOOLEAN,
+    staking_time    TIMESTAMP             DEFAULT NULL,
+    buff_level      TINYINT UNSIGNED,
+    current_rewards DECIMAL(36, 18),
+    total_rewards   DECIMAL(36, 18),
+    created_at      TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP             DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at      TIMESTAMP        NULL DEFAULT NULL,
     INDEX idx_token_id (token_id),
     INDEX idx_owner (owner)
 );
 
 CREATE TABLE user_infos
 (
-    id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    address              VARCHAR(42),
-    invite_code          VARCHAR(255),
-    buff_level           INT,
-    invite_count         INT,
-    unclaimed_referral   DECIMAL(36, 18),
+    id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    address             VARCHAR(42),
+    invite_code         VARCHAR(255),
+    buff_level          INT,
+    invite_count        INT,
+    unclaimed_referral  DECIMAL(36, 18),
     unlockable_referral DECIMAL(36, 18),
-    claimed_referral     DECIMAL(36, 18),
-    available_referral   DECIMAL(36, 18),
-    created_at           TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at           TIMESTAMP NULL DEFAULT NULL
+    claimed_referral    DECIMAL(36, 18),
+    available_referral  DECIMAL(36, 18),
+    created_at          TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at          TIMESTAMP NULL DEFAULT NULL
 );
 
-CREATE TABLE invite_relations (
+CREATE TABLE invite_relations
+(
     id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     inviter          VARCHAR(42),
     invitee          VARCHAR(42),
-    referral_rewards DECIMAL(36,18),
-    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    referral_rewards DECIMAL(36, 18),
+    created_at       TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at       TIMESTAMP NULL DEFAULT NULL,
     INDEX idx_inviter (inviter)
 );
 
-CREATE TABLE daily_pool_snapshots (
+CREATE TABLE daily_pool_snapshots
+(
     id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     date              DATETIME,
-    total_pool_amount DECIMAL(36,18),
-    allocated_rewards DECIMAL(36,18),
-    total_market_cap DECIMAL(36,18),
-    total_burn DECIMAL(36,18),
-    created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    total_pool_amount DECIMAL(36, 18),
+    allocated_rewards DECIMAL(36, 18),
+    total_market_cap  DECIMAL(36, 18),
+    total_burn        DECIMAL(36, 18),
+    created_at        TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at        TIMESTAMP NULL DEFAULT NULL
 );
 
-CREATE TABLE reward_pool_transaction_records (
-    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user        VARCHAR(42),
-    operation   VARCHAR(255),
-    description VARCHAR(255),
-    count       INT,
-    amount      DECIMAL(36,18),
-    tx_hash     VARCHAR(66),
-    log_index   BIGINT UNSIGNED,
+CREATE TABLE reward_pool_transaction_records
+(
+    id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user         VARCHAR(42),
+    operation    VARCHAR(255),
+    description  VARCHAR(255),
+    count        INT,
+    amount       DECIMAL(36, 18),
+    tx_hash      VARCHAR(66),
+    log_index    BIGINT UNSIGNED,
     block_number BIGINT UNSIGNED,
-    block_hash  VARCHAR(66),
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at  TIMESTAMP NULL DEFAULT NULL,
+    block_hash   VARCHAR(66),
+    created_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP NULL DEFAULT NULL,
     INDEX idx_tx_hash (tx_hash),
     INDEX idx_log_index (log_index),
     INDEX idx_block_number (block_number)
