@@ -48,8 +48,17 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     event PrizePoolDecreased(uint256 amount);
     event JoinGame(address indexed user, uint32 inviteCode);
     event BindInvitation(address indexed invitee, address inviter);
+    event MintMysteryBox(
+        address indexed user,
+        uint256 count,
+        uint256[] tokenId
+    );
     event StakeOwldinalNft(address indexed user, uint256[] tokenId);
-    event StakeMysteryBox(address indexed user, uint256[] tokenId);
+    event StakeMysteryBox(
+        address indexed user,
+        uint256[] tokenId,
+        uint16 buffLevel
+    );
     event UnstakeOwldinalNft(address indexed user, uint256[] tokenId);
     // This event cannot accept batch parameters, otherwise it would be impossible to
     // distinguish the rewards for each specific token.
@@ -59,7 +68,24 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         BoxType boxType,
         uint256 rewards
     );
-    event ClaimInviterReward(address indexed user, uint256 withdrawAmount);
+    // If mintCount=0, it indicates that the burn occurred during the claim elf.
+    event OwlTokenBurned(address user, uint256 mintCount, uint256 amount);
+
+    event RebateRewardsIncreased(
+        address indexed user,
+        address invitee,
+        uint256 mintCount,
+        uint256 amount
+    );
+    event UnlockableRebateIncreased(
+        address indexed user,
+        uint256 mintCount,
+        uint256 amount
+    );
+    event RebateClaimed(address indexed user, uint256 amount);
+
+    event FruitRewardUpdated(uint256 amount, uint256 count);
+    event ElfRewardUpdated(uint256 amount, uint256 count);
 
     bytes32 public constant SERVER_ROLE = keccak256("SERVER_ROLE");
 
@@ -68,9 +94,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     OwldinalGenOneBox public mysteryBoxContract;
 
     // The price that needs to be spent for each mint.
-    uint256 public constant MINT_PRICE = 100000;
-    uint256 public constant MINT_REBATE = 10000;
     uint256 public constant FRUIT_REWARD_INTERVAL = 3600;
+    uint256 public constant MINT_PRICE = 100000 * 10 ** 18;
+    uint256 public constant MINT_REBATE = 10000 * 10 ** 18;
 
     // The reward proportion for Fruit, scaled by a factor of 1,000,000.
     // This value starts at 0 and is calculated by the _calculateFruitRewardsProportion
@@ -83,7 +109,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     // owner address -> owl token id list
     mapping(address => uint256[]) stakedOwldinalsByOwner;
-    mapping(uint256 => TokenStakingInfo) tokenInfoMap;
+    mapping(uint256 => TokenStakingInfo) public tokenInfoMap;
 
     uint256[] fruitIdList;
     uint256[] elfIdList;
@@ -92,17 +118,17 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     mapping(uint256 => uint256[]) buffingOwlsByMysteryBox;
 
     // inviter address -> invitees
-    mapping(address => address[]) inviterToInviteesMap;
+    mapping(address => address[]) public inviterToInviteesMap;
     // invitees address -> inviter
-    mapping(address => address) inviteeToInviterMap;
+    mapping(address => address) public inviteeToInviterMap;
 
     // invite code -> inviter (find invter from code)
-    mapping(uint32 => address) inviteCodeToInviterMap;
+    mapping(uint32 => address) public inviteCodeToInviterMap;
     // inviter -> invite code (check if first join game)
-    mapping(address => uint32) inviterToInviteCodeMap;
+    mapping(address => uint32) public inviterToInviteCodeMap;
 
     // inviter -> unclaimed rebate
-    mapping(address => Rebate) inviterRebateMap;
+    mapping(address => Rebate) public inviterRebateMap;
 
     // prize pool
     uint256 public prizePool;
@@ -149,6 +175,12 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     }
 
     // endregion ---- Admin ----
+
+    function getTokenInfo(
+        uint256 tokenId
+    ) external view returns (TokenStakingInfo memory) {
+        return tokenInfoMap[tokenId];
+    }
 
     // region ---- Player ----
 
@@ -219,6 +251,12 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             Rebate storage inviterRebate = inviterRebateMap[inviter];
             inviterRebate.totalRebateEarned += rebateAmount;
             inviterRebate.rebatePendingWithdrawal += rebateAmount;
+            emit RebateRewardsIncreased(
+                inviter,
+                msg.sender,
+                count,
+                rebateAmount
+            );
         }
 
         // get owldinal buff level
@@ -227,6 +265,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
         // burn cost and do mint, mystery box will open directly (maybe burned)
         owlToken.burn(burnAmount);
+        emit OwlTokenBurned(msg.sender, count, burnAmount);
         tokenIdList = mysteryBoxContract.mintAndOpenBoxes(
             msg.sender,
             count,
@@ -241,7 +280,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         );
         playerRebate.mintedBoxCount += count;
         playerRebate.unlockedRebateToClaim += addUnlockedAmount;
-
+        emit UnlockableRebateIncreased(msg.sender, count, addUnlockedAmount);
+        emit MintMysteryBox(msg.sender, count, tokenIdList);
         emit PrizePoolIncreased(prizeAmount);
 
         return tokenIdList;
@@ -292,6 +332,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
         // check all the token is owner's
         uint256 length = tokenIdList.length;
+        uint16 buffLevel;
         for (uint256 i = 0; i < length; i++) {
             uint256 tokenId = tokenIdList[i];
             require(
@@ -304,7 +345,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             uint256[] storage stakingOwlIds = stakedOwldinalsByOwner[
                 msg.sender
             ];
-            uint16 buffLevel = uint16(stakingOwlIds.length);
+            buffLevel = uint16(stakingOwlIds.length);
             for (uint256 j = 0; j < stakingOwlIds.length; j++) {
                 owlInfoMap[stakingOwlIds[j]].buffedTargetIds.push(tokenId);
                 buffingOwlsByMysteryBox[tokenId].push(stakingOwlIds[j]);
@@ -327,7 +368,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             }
         }
 
-        emit StakeMysteryBox(msg.sender, tokenIdList);
+        emit StakeMysteryBox(msg.sender, tokenIdList, buffLevel);
     }
 
     function unstakeOwldinalNft(uint256[] calldata tokenIdList) external {
@@ -478,12 +519,14 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         }
         if (totalRewardsToBurn > 0) {
             owlToken.burn(totalRewardsToBurn);
+            emit OwlTokenBurned(msg.sender, totalRewardsToBurn, 0);
         }
         if (totalRewardsForElf > 0 && elfIdList.length > 0) {
             uint256 eachElfRewards = totalRewardsForElf / elfIdList.length;
             for (uint256 i = 0; i < elfIdList.length; i++) {
                 tokenInfoMap[elfIdList[i]].reward += eachElfRewards;
             }
+            emit ElfRewardUpdated(eachElfRewards, elfIdList.length);
         }
     }
 
@@ -510,7 +553,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         }
 
         owlToken.transfer(msg.sender, withdrawAmount);
-        emit ClaimInviterReward(msg.sender, withdrawAmount);
+        emit RebateClaimed(msg.sender, withdrawAmount);
     }
 
     // endregion ---- Player ----
@@ -564,6 +607,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             fruit.reward += eachFruitRewards;
             fruit.stakingTime = uint64(block.timestamp);
         }
+        emit FruitRewardUpdated(eachFruitRewards, rewardFruitCount);
 
         prizePool -= totalRewards;
         emit PrizePoolDecreased(totalRewards);
@@ -680,13 +724,13 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     ) internal pure returns (uint256 amount) {
         uint256 totalMintCount = mintBoxCount + prevMintedBoxCount;
         if (totalMintCount <= 10) {
-            amount = 30000 * mintBoxCount;
+            amount = 30000 * 10 ** 18 * mintBoxCount;
         } else if (totalMintCount <= 50) {
-            amount = 55000 * mintBoxCount;
+            amount = 55000 * 10 ** 18 * mintBoxCount;
         } else if (totalMintCount <= 100) {
-            amount = 70000 * mintBoxCount;
+            amount = 70000 * 10 ** 18 * mintBoxCount;
         } else {
-            amount = 85000 * mintBoxCount;
+            amount = 85000 * 10 ** 18 * mintBoxCount;
         }
 
         return amount;

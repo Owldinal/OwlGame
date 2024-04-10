@@ -26,24 +26,16 @@ var (
 
 const (
 	// Contract Owldinal
-	eventOwldinalMintBox             = "0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230"
-	eventOwldinalRoleAdminChanged    = "0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff"
-	eventOwldinalRoleGranted         = "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d"
-	eventOwldinalRoleRevoked         = "0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b"
-	eventOwldinalApproval            = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
-	eventOwldinalApprovalForAll      = "0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"
-	eventOwldinalBatchMetadataUpdate = "0x6bd5c950a8d8df17f772f5af37cb3655737899cbf903264b9795592da439661c"
-	eventOwldinalMetadataUpdate      = "0xf8e1a15aba9398e019f0b49df1a4fde98ee17ae345cb5f6b5e2c27f5033e8ce7"
-	eventOwldinalTransfer            = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+	eventOwldinalMintBox        = "0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230"
+	eventOwldinalApproval       = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
+	eventOwldinalApprovalForAll = "0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"
+	eventOwldinalTransfer       = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 
 	// Contract OwldinalGenOneBox
-	eventOwldinalGenOneBoxRoleGranted      = "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d"
-	eventOwldinalGenOneBoxRoleRevoked      = "0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b"
-	eventOwldinalGenOneBoxTransfer         = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-	eventOwldinalGenOneBoxApproval         = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
-	eventOwldinalGenOneBoxApprovalForAll   = "0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"
-	eventOwldinalGenOneBoxMintBox          = "0x4cce2d7ca388465a90e71f76235d389abe1ede028b09c07d4f86519e5adb078c"
-	eventOwldinalGenOneBoxRoleAdminChanged = "0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff"
+	eventOwldinalGenOneBoxTransfer       = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+	eventOwldinalGenOneBoxApproval       = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
+	eventOwldinalGenOneBoxApprovalForAll = "0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"
+	eventOwldinalGenOneBoxMintBox        = "0x4cce2d7ca388465a90e71f76235d389abe1ede028b09c07d4f86519e5adb078c"
 
 	// Contract OwlGame
 	eventOwlGameStakeOwldinalNft   = "0x292b69a5590aefdf5de5c9da21ea45b29afd0635e4d0c7d149d1d84be9224106"
@@ -51,13 +43,16 @@ const (
 	eventOwlGameBindInvitation     = "0x3144fc7320adf238514c761c91814e301f210c0e4e0bb5f9fd88bec051b4f100"
 	eventOwlGameJoinGame           = "0x3518b1830e6ec9f510e24a95f032e27013c745334b813b19f15405c90923f4bc"
 	eventOwlGamePrizePoolIncreased = "0x3c231f64b16483d16ca517ccd881f34f86dd04ccc1305e65b854fe82189b7625"
-	eventOwlGameRoleAdminChanged   = "0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff"
-	eventOwlGameRoleGranted        = "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d"
-	eventOwlGameStakeMysteryBox    = "0x85ee4e66817b80797ec9b3286b977e5b1e7c0890c0341916ff9acaa6f8210b0d"
-	eventOwlGameClaimInviterReward = "0x1b066a4c1595fdf3bf1c300bca29f51f237bbc15ee85e815b39befc1bc630cfc"
+	eventOwlGameStakeMysteryBox    = "0xca6d3ba2c5c2c5da541c637a6da9bccafef99671140cd5fd444322bdaca03336"
 	eventOwlGamePrizePoolDecreased = "0xf0870791f79c9e860000c2e3005d55ab8944ec1a18a6b61d4ad60ce184654f42"
-	eventOwlGameRoleRevoked        = "0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b"
 	eventOwlGameUnstakeOwldinalNft = "0x953947fb8c8d5e1bd1fb1561e4a4077c9f02d4952ad1185d28133c0d764d9a5e"
+	eventOwlGameOwlTokenBurned     = "0x818c9d2e3949d2ab3a0c76d31b137496e1b14d58e2b2d746301c2926a31c435d"
+	eventOwlGameFruitRewardUpdated = "0x58071a54cb90db0376875e1948fc0b9a0a18ab2614077300107d4377602a34ce"
+	eventOwlGameElfRewardUpdated   = "0x9b964cbd458fdb8541cd6349fd809bc91ecc1a53602693a74fd37f5d3916363c"
+
+	eventOwlGameRebateRewardsIncreased    = "0x07e9fcef60e55f4c1c03cfeb57d85db49ecae00bc0367f586d1d67750dcebbe6"
+	eventOwlGameUnlockableRebateIncreased = "0x1f464096fc7638b46885d25d4cfc646c289ce897eeb853b8c4c4ace63285b77f"
+	eventOwlGameRebateClaimed             = "0x8ec2a9ed236322c625516e43eab59fcb8145e38ee8d489a28d0aacaeecc298d6"
 )
 
 func StartEventListening() error {
@@ -128,7 +123,14 @@ func registerHandlers(eventProcessor *EventProcessor) {
 	eventProcessor.RegisterHandler(eventOwlGameUnstakeOwldinalNft, &OwlGameUnstakeOwldinalNftHandler{})
 	eventProcessor.RegisterHandler(eventOwlGameStakeMysteryBox, &OwlGameStakeMysteryBoxHandler{})
 	eventProcessor.RegisterHandler(eventOwlGameUnstakeMysteryBox, &OwlGameUnstakeMysteryBoxHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameClaimInviterReward, &OwlGameClaimInviterRewardsHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameOwlTokenBurned, &OwlGameOwlTokenBurnedHandler{})
+
+	eventProcessor.RegisterHandler(eventOwlGameFruitRewardUpdated, &OwlGameFruitRewardUpdatedHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameElfRewardUpdated, &OwlGameElfRewardUpdatedHandler{})
+
+	eventProcessor.RegisterHandler(eventOwlGameRebateRewardsIncreased, &OwlGameRebateRewardsIncreasedHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameUnlockableRebateIncreased, &OwlGameUnlockableRebateIncreasedHandler{})
+	eventProcessor.RegisterHandler(eventOwlGameRebateClaimed, &OwlGameClaimRebateClaimedHandler{})
 }
 
 func getCurrentBlock(client *ethclient.Client) (*big.Int, error) {
@@ -214,7 +216,7 @@ func handleHistoryEvents(
 
 		for _, vLog := range logs {
 			if err := processors.ProcessLog(vLog); err != nil {
-				log.Warnf("Failed to process log: %v", err)
+				log.Warnf("Failed to process log: %v, %v", err, vLog)
 			}
 		}
 

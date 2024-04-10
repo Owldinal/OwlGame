@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"owl-backend/internal/config"
 	"strings"
 	"time"
@@ -29,7 +28,7 @@ func init() {
 	)
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		TranslateError: true,
-		Logger:         logger.Default.LogMode(logger.Silent),
+		//Logger:         logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
 		panic(err)
