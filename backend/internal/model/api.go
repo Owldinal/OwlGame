@@ -1,10 +1,16 @@
 package model
 
+import (
+	"github.com/shopspring/decimal"
+	"time"
+)
+
 type ResponseCode int
 
 const (
 	Success             ResponseCode = 0
 	WrongParam          ResponseCode = 401
+	NotFound            ResponseCode = 404
 	HCaptchaFailed      ResponseCode = 402
 	ServerInternalError ResponseCode = 500
 )
@@ -17,8 +23,8 @@ type ResponseData struct {
 }
 
 type CursorRequest struct {
-	Cursor int `json:"cursor" form:"cursor"`
-	Limit  int `json:"limit" form:"limit"`
+	Cursor int `json:"cursor,omitempty" form:"cursor"`
+	Limit  int `json:"limit,omitempty" form:"limit"`
 }
 
 type CursorResponse[T any] struct {
@@ -40,19 +46,6 @@ type PaginationResponse[T any] struct {
 	PerPage   int `json:"per_page"`
 	PageCount int `json:"page_count"`
 	List      []T `json:"list"`
-}
-
-type CursorPaginationRequest struct {
-	Cursor int `json:"cursor" form:"cursor"`
-	Limit  int `json:"limit" form:"limit"`
-}
-
-type CursorPaginationResponse[T any] struct {
-	Cursor     int  `json:"cursor"`
-	Limit      int  `json:"limit"`
-	NextCursor int  `json:"next_cursor"`
-	HasMore    bool `json:"has_more"`
-	List       []T  `json:"list"`
 }
 
 type GetMintSignatureRequest struct {
@@ -80,12 +73,7 @@ type GetUserInfoResponse struct {
 	FruitInfo   UserBoxInfo `json:"fruit_info"`
 	OwlInfo     UserBoxInfo `json:"owl_info"`
 
-	ReferralRewards struct {
-		Total     int64 `json:"total"`
-		Claimed   int64 `json:"claimed"`
-		Available int64 `json:"available"`
-		Locked    int64 `json:"locked"`
-	} `json:"referral_rewards"`
+	ReferralRewards UserReferralRewards `json:"referral_rewards"`
 
 	InvitationCode string `json:"invitation_code"`
 	InviteCount    int    `json:"invite_count"`
@@ -96,12 +84,19 @@ type GetUserBoxInfoRequest struct {
 	PaginationRequest
 }
 
+type UserReferralRewards struct {
+	Total     int64 `json:"total"`
+	Claimed   int64 `json:"claimed"`
+	Available int64 `json:"available"`
+	Locked    int64 `json:"locked"`
+}
+
 type UserBoxInfo struct {
-	Total          int     `json:"total"`
-	Staked         int     `json:"staked"`
-	Apr            float64 `json:"apr"`
-	StakedIdList   []uint  `json:"staked_id_list"`
-	UnstakedIdList []uint  `json:"unstaked_id_list"`
+	Total          int      `json:"total"`
+	Staked         int      `json:"staked"`
+	Apr            float64  `json:"apr"`
+	StakedIdList   []uint64 `json:"staked_id_list"`
+	UnstakedIdList []uint64 `json:"unstaked_id_list"`
 }
 
 type GetUserOwldinalsRequest struct {
@@ -129,45 +124,39 @@ type GetUserInviterResponse struct {
 }
 
 type GetGameInfoResponse struct {
-	TotalRewards         int64 `json:"total_rewards"`
-	TotalRewardUSD       int64 `json:"total_reward_usd"`
-	OwlPrice             int64 `json:"owl_price"`
-	OwlPriceChange       int64 `json:"owl_price_change"`
-	TotalMarketCap       int64 `json:"total_market_cap"`
-	TotalMarketCapChange int64 `json:"total_market_cap_change"`
-	TotalBurned          int64 `json:"total_burned"`
-	TotalBurnedChange    int64 `json:"total_burned_change"`
+	TotalRewards         decimal.Decimal `json:"total_rewards"`
+	TotalRewardUSD       decimal.Decimal `json:"total_reward_usd"`
+	OwlPrice             decimal.Decimal `json:"owl_price"`
+	OwlPriceChange       decimal.Decimal `json:"owl_price_change"`
+	TotalMarketCap       decimal.Decimal `json:"total_market_cap"`
+	TotalMarketCapChange decimal.Decimal `json:"total_market_cap_change"`
+	TotalBurned          decimal.Decimal `json:"total_burned"`
+	TotalBurnedChange    decimal.Decimal `json:"total_burned_change"`
 }
 
 type DataPoint struct {
-	Date             string `json:"date"`
-	TotalPoolAmount  int64  `json:"total_pool_amount"`
-	AllocatedRewards int64  `json:"allocated_rewards"`
+	Date             time.Time       `json:"date"`
+	TotalPoolAmount  decimal.Decimal `json:"total_pool_amount"`
+	AllocatedRewards decimal.Decimal `json:"allocated_rewards"`
 }
 
 type GetGameRewardsTrendingResponse struct {
-	Daily struct {
-		From       string      `json:"from"`
-		To         string      `json:"to"`
-		DataPoints []DataPoint `json:"data"`
-	} `json:"daily"`
-	Weekly struct {
-		From       string      `json:"from"`
-		To         string      `json:"to"`
-		DataPoints []DataPoint `json:"data"`
-	}
-	Monthly struct {
-		From       string      `json:"from"`
-		To         string      `json:"to"`
-		DataPoints []DataPoint `json:"data"`
-	}
+	Daily   *RewardTrendingDetail `json:"daily"`
+	Weekly  *RewardTrendingDetail `json:"weekly"`
+	Monthly *RewardTrendingDetail `json:"monthly"`
+}
+
+type RewardTrendingDetail struct {
+	From       *time.Time  `json:"from"`
+	To         *time.Time  `json:"to"`
+	DataPoints []DataPoint `json:"data"`
 }
 
 type TreasuryRevenueHistory struct {
-	Address         string `json:"address"`
-	Operation       string `json:"operation"`
-	Description     string `json:"description"`
-	Count           int64  `json:"count"`
-	Amount          int64  `json:"amount"`
-	TransactionHash string `json:"transaction_hash"`
+	Address         string          `json:"address"`
+	Operation       string          `json:"operation"`
+	Description     string          `json:"description"`
+	Count           int64           `json:"count"`
+	Amount          decimal.Decimal `json:"amount"`
+	TransactionHash string          `json:"transaction_hash"`
 }

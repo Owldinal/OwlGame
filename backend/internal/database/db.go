@@ -53,10 +53,11 @@ func (idList *IdList) Scan(value interface{}) error {
 		return nil
 	}
 
-	val, ok := value.(string)
+	bytes, ok := value.([]byte)
 	if !ok {
-		return errors.New("buffingIds should be a string")
+		return errors.New("value is not a byte slice")
 	}
+	val := string(bytes)
 
 	parts := strings.Split(val, ",")
 	*idList = make(IdList, 0, len(parts))

@@ -39,5 +39,12 @@ func registerRouters(engine *gin.Engine) {
 		apiGroup.POST("/generateSignature", api.GetMintSignature)
 
 		apiGroup.GET("/user/info", api.GetUserInfo)
+		apiGroup.GET("/user/owldinals", api.GetUserOwldinalList)
+		apiGroup.GET("/user/boxes", api.GetUserBoxList)
+		apiGroup.GET("/user/inviter", api.GetUserInviteList)
+
+		apiGroup.GET("/game/info", api.GetGameInfo)
+		apiGroup.GET("/game/rewards_trend", api.GetRewardTrend)
+		apiGroup.GET("/game/rewards_history", api.GetRewardHistory)
 	}
 }

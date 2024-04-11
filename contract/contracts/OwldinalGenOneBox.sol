@@ -76,7 +76,7 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
                 _burn(tokenId);
             }
 
-            emit MintBox(msg.sender, tokenId, tokenBoxTypes[tokenId]);
+            emit MintBox(owner, tokenId, tokenBoxTypes[tokenId]);
         }
 
         return tokenIdList;

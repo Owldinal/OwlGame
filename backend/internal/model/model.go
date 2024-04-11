@@ -42,7 +42,11 @@ type UserInfo struct {
 	InviteCode  string `json:"invite_code"`
 	BuffLevel   int    `json:"buff_level"`
 	InviteCount int    `json:"invite_count"`
+
+	// total earned from mystery box claim
 	//TotalEarned decimal.Decimal `json:"total_earned" gorm:"type:decimal(36,18)"`
+
+	// invite referral
 	UnclaimedReferral  decimal.Decimal `json:"-" gorm:"type:decimal(36,18)"`
 	UnlockableReferral decimal.Decimal `json:"-" gorm:"type:decimal(36,18)"`
 	ClaimedReferral    decimal.Decimal `json:"claimed_referral" gorm:"type:decimal(36,18)"`
