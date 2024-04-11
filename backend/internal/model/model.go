@@ -70,7 +70,7 @@ type RewardPoolTransactionRecord struct {
 	User        string
 	Operation   string
 	Description string
-	Count       int
+	Count       int64
 	Amount      decimal.Decimal `gorm:"type:decimal(36,18)"`
 	Event
 }

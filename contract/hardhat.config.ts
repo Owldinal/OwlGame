@@ -28,6 +28,10 @@ const config: HardhatUserConfig = {
       process.env.HARDHAT_PRIVATE_KEY_4!,
       process.env.HARDHAT_PRIVATE_KEY_5!,]
     },
+    ganache: {
+      url: 'http://127.0.0.1:7545',
+      accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
+    },
     merlinTestnet: {
       url: 'https://testnet-rpc.merlinchain.io',
       timeout: 20000000,
