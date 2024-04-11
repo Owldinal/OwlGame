@@ -17,6 +17,8 @@ import (
 
 type OwlGameJoinGameHandler struct{}
 
+var PrizeIncreasedForEachMint = decimal.NewFromInt(50000)
+
 func (h *OwlGameJoinGameHandler) Handle(vlog types.Log) error {
 	event, err := owlGameContract.ParseJoinGame(vlog)
 	if err != nil {
@@ -160,6 +162,52 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 	err = updateDailyPoolSnapshot(DailyPoolUpdater{Decrease: eventItem.Amount})
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+type OwlGameMintMysteryBoxHandler struct{}
+
+func (h *OwlGameMintMysteryBoxHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseMintMysteryBox(vlog)
+	if err != nil {
+		return err
+	}
+	// save event to database
+	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+	tokenIds := make([]uint64, len(event.TokenId))
+	for i, bigInt := range event.TokenId {
+		tokenIds[i] = bigInt.Uint64()
+	}
+	eventItem := model.OwlGameMintMysteryBoxEvent{
+		Event:    model.NewEvent(&event.Raw),
+		User:     event.User.Hex(),
+		Count:    event.Count.Int64(),
+		TokenIds: tokenIds,
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	transactionDetail := &model.RewardPoolTransactionRecord{
+		User:        eventItem.User,
+		Operation:   "Mint",
+		Description: "Gen1 Mystery Box",
+		Count:       eventItem.Count,
+		Amount:      decimal.NewFromInt(eventItem.Count).Mul(PrizeIncreasedForEachMint),
+		Event:       eventItem.Event,
+	}
+
+	itemResult := database.DB.Clauses().Create(&transactionDetail)
+	if itemResult.Error != nil {
+		return itemResult.Error
 	}
 
 	return nil

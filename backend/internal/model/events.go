@@ -85,6 +85,15 @@ type OwlGamePrizePoolDecreasedEvent struct {
 	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
 }
 
+// eventOwlGameMintMysteryBox
+type OwlGameMintMysteryBoxEvent struct {
+	Event
+	database.Model
+	User     string `gorm:"size:42"`
+	Count    int64
+	TokenIds database.IdList
+}
+
 // eventOwlGameStakeOwldinalNft
 type OwlGameStakeOwldinalNftEvent struct {
 	Event
