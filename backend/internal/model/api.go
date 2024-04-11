@@ -5,6 +5,7 @@ type ResponseCode int
 const (
 	Success             ResponseCode = 0
 	WrongParam          ResponseCode = 401
+	NotFound            ResponseCode = 404
 	HCaptchaFailed      ResponseCode = 402
 	ServerInternalError ResponseCode = 500
 )
@@ -42,19 +43,6 @@ type PaginationResponse[T any] struct {
 	List      []T `json:"list"`
 }
 
-type CursorPaginationRequest struct {
-	Cursor int `json:"cursor" form:"cursor"`
-	Limit  int `json:"limit" form:"limit"`
-}
-
-type CursorPaginationResponse[T any] struct {
-	Cursor     int  `json:"cursor"`
-	Limit      int  `json:"limit"`
-	NextCursor int  `json:"next_cursor"`
-	HasMore    bool `json:"has_more"`
-	List       []T  `json:"list"`
-}
-
 type GetMintSignatureRequest struct {
 	Wallet   string `json:"wallet" binding:"required"`
 	HCaptcha string `json:"hcaptcha" binding:"required"`
@@ -80,12 +68,7 @@ type GetUserInfoResponse struct {
 	FruitInfo   UserBoxInfo `json:"fruit_info"`
 	OwlInfo     UserBoxInfo `json:"owl_info"`
 
-	ReferralRewards struct {
-		Total     int64 `json:"total"`
-		Claimed   int64 `json:"claimed"`
-		Available int64 `json:"available"`
-		Locked    int64 `json:"locked"`
-	} `json:"referral_rewards"`
+	ReferralRewards UserReferralRewards `json:"referral_rewards"`
 
 	InvitationCode string `json:"invitation_code"`
 	InviteCount    int    `json:"invite_count"`
@@ -96,12 +79,19 @@ type GetUserBoxInfoRequest struct {
 	PaginationRequest
 }
 
+type UserReferralRewards struct {
+	Total     int64 `json:"total"`
+	Claimed   int64 `json:"claimed"`
+	Available int64 `json:"available"`
+	Locked    int64 `json:"locked"`
+}
+
 type UserBoxInfo struct {
-	Total          int     `json:"total"`
-	Staked         int     `json:"staked"`
-	Apr            float64 `json:"apr"`
-	StakedIdList   []uint  `json:"staked_id_list"`
-	UnstakedIdList []uint  `json:"unstaked_id_list"`
+	Total          int      `json:"total"`
+	Staked         int      `json:"staked"`
+	Apr            float64  `json:"apr"`
+	StakedIdList   []uint64 `json:"staked_id_list"`
+	UnstakedIdList []uint64 `json:"unstaked_id_list"`
 }
 
 type GetUserOwldinalsRequest struct {
