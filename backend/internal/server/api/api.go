@@ -112,13 +112,41 @@ func GetUserInviteList(c *gin.Context) {
 }
 
 func GetGameInfo(c *gin.Context) {
+	data, code, msg := service.GetGameInfo()
 
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
 }
 
 func GetRewardTrend(c *gin.Context) {
+	data, code, msg := service.GetRewardsTrending()
 
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
 }
 
 func GetRewardHistory(c *gin.Context) {
+	var req model.CursorRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
 
+	if req.Limit < 1 {
+		req.Limit = 20
+	}
+
+	data, code, msg := service.GetTreasuryRevenueHistory(req)
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
 }
