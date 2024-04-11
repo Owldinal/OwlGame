@@ -37,10 +37,9 @@ func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, 
 	// load owl balance
 	amount, err := loadOwlBalanceByWallet(common.HexToAddress(wallet))
 	if err != nil {
-		// TODO: hardhat 有问题，需要到线上链进行测试，之后修改
-		//return nil, model.ServerInternalError, "Error fetching owl balance"
-		amountDecimal := decimal.New(0, 0)
-		amount = &amountDecimal
+		return nil, model.ServerInternalError, "Error fetching owl balance"
+		//amountDecimal := decimal.New(0, 0)
+		//amount = &amountDecimal
 	}
 
 	// Get Owldinal Nft
