@@ -30,6 +30,7 @@ const config: HardhatUserConfig = {
     },
     ganache: {
       url: 'http://127.0.0.1:7545',
+      // url: 'https://api.owldinal.xyz/node',
       accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
     },
     merlinTestnet: {

@@ -21,6 +21,9 @@ async function main() {
 	const blockNumber = await hre.ethers.provider.getBlockNumber();
 	console.log(`Current Block number: ${blockNumber}`);
 
+	const chainId = await hre.ethers.provider.getNetwork();
+	console.log(`Current Chain Id: ${JSON.stringify(chainId)}`);
+
 	// owlTokenAddress = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6";
 	// owldinalNftAddress = "0x4C70a29A4be0954eE358f03C18BecCb888549c01";
 	// owlGameAddress = "0x49fd2BE640DB2910c2fAb69bB8531Ab6E76127ff";
