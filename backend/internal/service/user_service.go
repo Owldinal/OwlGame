@@ -14,9 +14,14 @@ import (
 	"owl-backend/internal/eth"
 	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
+	"time"
 )
 
-var owlTokenContract *abigen.OwlToken
+var (
+	owlTokenContract *abigen.OwlToken
+	owlGameContract  *abigen.OwlGame
+	moonBoostAddress map[string]bool
+)
 
 func init() {
 	var err error
@@ -24,9 +29,18 @@ func init() {
 	if err != nil {
 		log.Fatalf("Failed init user service: %v", err)
 	}
+
+	owlGameContract, err = abigen.NewOwlGame(common.HexToAddress(config.C.OwlGameAddr), eth.Client)
+
+	// init moon boost list.
+	moonBoostAddress = make(map[string]bool)
+	addressList := []string{"0xAABB"}
+	for _, address := range addressList {
+		moonBoostAddress[address] = true
+	}
 }
 
-func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, msg string) {
+func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model.ResponseCode, msg string) {
 	user, notFound, err := getCurrentUser(wallet)
 	if notFound {
 		return nil, model.NotFound, fmt.Sprintf("No user with address %v", wallet)
@@ -40,6 +54,18 @@ func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, 
 		return nil, model.ServerInternalError, "Error fetching owl balance"
 		//amountDecimal := decimal.New(0, 0)
 		//amount = &amountDecimal
+	}
+
+	// check moon boost
+	isMoonBoost := false
+	if config.C.NeedCheckMoonBoost {
+		globalEnable, err := owlGameContract.IsMoonBoostEnable(&bind.CallOpts{})
+		if err != nil {
+			return nil, model.ServerInternalError, fmt.Sprintf("Failed to check moon boost (%v)", err)
+		}
+		if globalEnable {
+			isMoonBoost = moonBoostAddress[wallet]
+		}
 	}
 
 	// Get Owldinal Nft
@@ -76,9 +102,17 @@ func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, 
 			boxInfo = &elfInfo
 		}
 		boxInfo.Total += 1
+
 		if token.IsStaking {
 			boxInfo.Staked += 1
 			boxInfo.StakedIdList = append(boxInfo.StakedIdList, token.TokenId)
+
+			// calculate APR: 单个ELF的APR = （单个ELF的日平均Earning/100000）*365
+			stakingRewards := token.CurrentRewards
+			stakingDays := int64(time.Now().Sub(*token.StakingTime).Hours()) / 24
+			apr := stakingRewards.Div(decimal.NewFromInt(stakingDays)).Div(constant.MysteryBoxMintPrice).Mul(decimal.NewFromInt32(365))
+			boxInfo.Apr += apr.InexactFloat64()
+
 		} else {
 			boxInfo.UnstakedIdList = append(boxInfo.UnstakedIdList, token.TokenId)
 		}
@@ -95,6 +129,7 @@ func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, 
 		InvitationCode: user.InviteCode,
 		InviteCount:    user.InviteCount,
 		BuffLevel:      user.BuffLevel,
+		IsMoonBoost:    isMoonBoost,
 		OwlInfo:        owlInfo,
 		ElfInfo:        elfInfo,
 		FruitInfo:      fruitInfo,
@@ -108,8 +143,8 @@ func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, 
 	return response, model.Success, ""
 }
 
-func GetUserOwldinalList(wallet string, pagination model.PaginationRequest) (response interface{}, code model.ResponseCode, msg string) {
-	result := &model.PaginationResponse[model.OwldinalNftToken]{
+func GetUserOwldinalList(wallet string, pagination model.PaginationRequest) (response *model.PaginationResponse[model.UserOwldinal], code model.ResponseCode, msg string) {
+	result := &model.PaginationResponse[model.UserOwldinal]{
 		Page:    pagination.Page,
 		PerPage: pagination.PerPage,
 	}
@@ -125,25 +160,34 @@ func GetUserOwldinalList(wallet string, pagination model.PaginationRequest) (res
 	result.Total = int(total)
 	result.PageCount = int((total + int64(pagination.PerPage) - 1) / int64(pagination.PerPage))
 
-	var owldinalList []model.OwldinalNftToken
+	var list []model.OwldinalNftToken
 	err = db.Offset((pagination.Page - 1) * pagination.PerPage).
 		Limit(pagination.PerPage).
-		Find(&owldinalList).Error
+		Find(&list).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.List = []model.OwldinalNftToken{}
+			result.List = []model.UserOwldinal{}
 		} else {
 			return nil, model.ServerInternalError, fmt.Sprintf("failed to find OwldinalNftToken records: %v", err)
 		}
 	} else {
-		result.List = owldinalList
+		result.List = make([]model.UserOwldinal, 0, len(list))
+
+		for _, token := range list {
+			data := &model.UserOwldinal{
+				TokenId:   token.TokenId,
+				TokenUri:  token.TokenUri,
+				IsStaking: token.IsStaking,
+			}
+			result.List = append(result.List, *data)
+		}
 	}
 
 	return result, model.Success, ""
 }
 
-func GetUserMysteryBoxList(wallet string, pagination model.PaginationRequest) (response interface{}, code model.ResponseCode, msg string) {
-	result := &model.PaginationResponse[model.MysteryBoxToken]{
+func GetUserMysteryBoxList(wallet string, pagination model.PaginationRequest) (response *model.PaginationResponse[model.UserMysteryBox], code model.ResponseCode, msg string) {
+	response = &model.PaginationResponse[model.UserMysteryBox]{
 		Page:    pagination.Page,
 		PerPage: pagination.PerPage,
 	}
@@ -156,8 +200,8 @@ func GetUserMysteryBoxList(wallet string, pagination model.PaginationRequest) (r
 		return nil, model.ServerInternalError, fmt.Sprintf("failed to count MysteryBoxToken records: %v", err)
 	}
 
-	result.Total = int(total)
-	result.PageCount = int((total + int64(pagination.PerPage) - 1) / int64(pagination.PerPage))
+	response.Total = int(total)
+	response.PageCount = int((total + int64(pagination.PerPage) - 1) / int64(pagination.PerPage))
 
 	var list []model.MysteryBoxToken
 	err = db.Offset((pagination.Page - 1) * pagination.PerPage).
@@ -165,15 +209,36 @@ func GetUserMysteryBoxList(wallet string, pagination model.PaginationRequest) (r
 		Find(&list).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			result.List = []model.MysteryBoxToken{}
+			response.List = []model.UserMysteryBox{}
 		} else {
 			return nil, model.ServerInternalError, fmt.Sprintf("failed to find MysteryBoxToken records: %v", err)
 		}
 	} else {
-		result.List = list
+
+		resultList := make([]model.UserMysteryBox, 0, len(list))
+		for _, token := range list {
+			data := &model.UserMysteryBox{
+				TokenId:   token.TokenId,
+				BoxType:   token.BoxType,
+				Earning:   token.CurrentRewards, // TODO: Earning 是什么意思?
+				IsStaking: token.IsStaking,
+			}
+			if token.IsStaking {
+				stakingRewards := token.CurrentRewards
+				stakingDays := int64(time.Now().Sub(*token.StakingTime).Hours()) / 24
+				if stakingDays == 0 {
+					stakingDays = 1
+				}
+				apr := stakingRewards.Div(decimal.NewFromInt(stakingDays)).Div(constant.MysteryBoxMintPrice).Mul(decimal.NewFromInt32(365))
+				data.Apr = apr.InexactFloat64()
+			}
+			resultList = append(resultList, *data)
+		}
+
+		response.List = resultList
 	}
 
-	return result, model.Success, ""
+	return response, model.Success, ""
 }
 
 func GetUserInviteList(wallet string, pagination model.PaginationRequest) (response interface{}, code model.ResponseCode, msg string) {

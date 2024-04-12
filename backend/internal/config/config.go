@@ -34,6 +34,8 @@ type Config struct {
 	OwlTokenAddr      string `env:"OWL_TOKEN_ADDR" envDefault:""`
 	NftMysteryBoxAddr string `env:"NFT_MYSTERY_BOX_ADDR" envDefault:""`
 	OwlGameAddr       string `env:"OWL_GAME_ADDR" envDefault:""`
+
+	NeedCheckMoonBoost bool `env:"NEED_CHECK_MOON_BOOST" envDefault:"false"`
 }
 
 func init() {

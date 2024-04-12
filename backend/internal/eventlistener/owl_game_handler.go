@@ -506,7 +506,6 @@ func globalUpdateRewards(boxType constant.BoxType, count uint64, amount decimal.
 	for _, token := range tokenList {
 		tokenId := big.NewInt(int64(token.TokenId))
 		tokenInfo, err := owlGameContract.GetTokenInfo(&bind.CallOpts{}, tokenId)
-		// TODO: 这里 hardhat 有问题，需要换个环境测试一下才行
 		if err != nil {
 			tx.Rollback()
 			return err
