@@ -17,7 +17,11 @@ import (
 	"time"
 )
 
-var owlTokenContract *abigen.OwlToken
+var (
+	owlTokenContract *abigen.OwlToken
+	owlGameContract  *abigen.OwlGame
+	moonBoostAddress map[string]bool
+)
 
 func init() {
 	var err error
@@ -25,9 +29,18 @@ func init() {
 	if err != nil {
 		log.Fatalf("Failed init user service: %v", err)
 	}
+
+	owlGameContract, err = abigen.NewOwlGame(common.HexToAddress(config.C.OwlGameAddr), eth.Client)
+
+	// init moon boost list.
+	moonBoostAddress = make(map[string]bool)
+	addressList := []string{"0xAABB"}
+	for _, address := range addressList {
+		moonBoostAddress[address] = true
+	}
 }
 
-func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, msg string) {
+func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model.ResponseCode, msg string) {
 	user, notFound, err := getCurrentUser(wallet)
 	if notFound {
 		return nil, model.NotFound, fmt.Sprintf("No user with address %v", wallet)
@@ -41,6 +54,18 @@ func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, 
 		return nil, model.ServerInternalError, "Error fetching owl balance"
 		//amountDecimal := decimal.New(0, 0)
 		//amount = &amountDecimal
+	}
+
+	// check moon boost
+	isMoonBoost := false
+	if config.C.NeedCheckMoonBoost {
+		globalEnable, err := owlGameContract.IsMoonBoostEnable(&bind.CallOpts{})
+		if err != nil {
+			return nil, model.ServerInternalError, fmt.Sprintf("Failed to check moon boost (%v)", err)
+		}
+		if globalEnable {
+			isMoonBoost = moonBoostAddress[wallet]
+		}
 	}
 
 	// Get Owldinal Nft
@@ -104,6 +129,7 @@ func GetUserInfo(wallet string) (response interface{}, code model.ResponseCode, 
 		InvitationCode: user.InviteCode,
 		InviteCount:    user.InviteCount,
 		BuffLevel:      user.BuffLevel,
+		IsMoonBoost:    isMoonBoost,
 		OwlInfo:        owlInfo,
 		ElfInfo:        elfInfo,
 		FruitInfo:      fruitInfo,

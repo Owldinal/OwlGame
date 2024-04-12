@@ -16,6 +16,7 @@ async function main() {
 	ownerAddress = deployer.address;
 	backendAddress = process.env.BACKEND_WALLET;
 	let tx;
+	console.log(`Address = ${deployer.address}`);
 
 	// owlTokenAddress = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6";
 	// owldinalNftAddress = "0x4C70a29A4be0954eE358f03C18BecCb888549c01";
@@ -25,10 +26,10 @@ async function main() {
 	await deployOrConnect();
 
 	console.log(`
-	owlTokenAddress= "${owlTokenAddress}";
-	owldinalNftAddress= "${owldinalNftAddress}";
-	owlGameAddress= "${owlGameAddress}";
-	genOneBoxAddress= "${genOneBoxAddress}";
+owlTokenAddress= "${owlTokenAddress}";
+owldinalNftAddress= "${owldinalNftAddress}";
+owlGameAddress= "${owlGameAddress}";
+genOneBoxAddress= "${genOneBoxAddress}";
 		`);
 
 	await owldinalNftContract.connect(deployer).mintByAdmin();
@@ -150,6 +151,9 @@ OWL_GAME_ADDR=${owlGameAddress}
 	console.log("\nTest unstake");
 	tx = await owlGameContract.connect(deployer).claimAndUnstakeMysteryBox(tokenList5, { gasLimit: 100_000_000_000 });
 	await printTxDetail(tx, 'claimAndUnstakeMysteryBox Count=5');
+
+	return;
+
 	tx = await owlGameContract.connect(deployer).claimAndUnstakeMysteryBox(tokenList50, { gasLimit: 100_000_000_000 });
 	await printTxDetail(tx, 'claimAndUnstakeMysteryBox Count=50');
 	tx = await owlGameContract.connect(deployer).unstakeOwldinalNft([2, 3, 4], { gasLimit: 100_000_000_000 });

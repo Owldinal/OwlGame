@@ -70,6 +70,7 @@ type GetUserInfoResponse struct {
 	OwlBalance  int64       `json:"owl_balance"` // load from contract OWL_TOKEN_ADDR
 	TotalEarned int64       `json:"total_earned"`
 	BuffLevel   int         `json:"buff_level"`
+	IsMoonBoost bool        `json:"is_moon_boost"`
 	ElfInfo     UserBoxInfo `json:"elf_info"`
 	FruitInfo   UserBoxInfo `json:"fruit_info"`
 	OwlInfo     UserBoxInfo `json:"owl_info"`
