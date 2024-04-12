@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/shopspring/decimal"
+	"owl-backend/internal/constant"
 	"time"
 )
 
@@ -104,13 +105,19 @@ type GetUserOwldinalsRequest struct {
 	PaginationRequest
 }
 
-type GetUserOwldinalsResponse struct {
-	TokenId  uint64 `json:"token_id"`
-	Type     string `json:"type"`
-	TokenUrl string `json:"token_url"`
-	Earning  int64  `json:"earning"`
-	Apr      int64  `json:"apr"`
-	Status   string `json:"status"`
+type UserOwldinal struct {
+	TokenId uint64 `json:"token_id"`
+	//Type      string `json:"type"`
+	TokenUri  string `json:"token_uri"`
+	IsStaking bool   `json:"is_staking"`
+}
+
+type UserMysteryBox struct {
+	TokenId   uint64           `json:"token_id"`
+	BoxType   constant.BoxType `json:"box_type"`
+	Earning   decimal.Decimal  `json:"earning"`
+	Apr       float64          `json:"apr"`
+	IsStaking bool             `json:"is_staking"`
 }
 
 type GetUserInviterRequest struct {
