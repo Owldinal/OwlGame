@@ -44,7 +44,7 @@ type UserInfo struct {
 	InviteCount int    `json:"invite_count"`
 
 	// total earned from mystery box claim
-	//TotalEarned decimal.Decimal `json:"total_earned" gorm:"type:decimal(36,18)"`
+	TotalEarned decimal.Decimal `json:"total_earned" gorm:"type:decimal(36,18)"`
 
 	// invite referral
 	UnclaimedReferral  decimal.Decimal `json:"-" gorm:"type:decimal(36,18)"`

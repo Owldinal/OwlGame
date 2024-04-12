@@ -91,7 +91,6 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 	if err := database.DB.Where("owner = ?", wallet).Find(&boxTokens).Error; err != nil {
 		return nil, model.ServerInternalError, "Error fetching mystery boxes"
 	}
-	totalEarned := decimal.New(0, 0)
 	fruitInfo := model.UserBoxInfo{}
 	elfInfo := model.UserBoxInfo{}
 	for _, token := range boxTokens {
@@ -116,16 +115,12 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 		} else {
 			boxInfo.UnstakedIdList = append(boxInfo.UnstakedIdList, token.TokenId)
 		}
-		// TODO: 需要确认这里 total earned 的含义，是不是所有 token 历史总收益的加总。
-		// 也有可能是：1. 仅当前 stake 的收益，claim过的不算
-		// 2. 仅 claim 的，还没提取的不算
-		// 3. 也包括 invite referral 的，下个问题是否仅 cliam 还是 locked 的也算
-		totalEarned = totalEarned.Add(token.TotalRewards)
 	}
 
 	response = &model.GetUserInfoResponse{
 		Wallet:         wallet,
 		OwlBalance:     amount.IntPart(),
+		TotalEarned:    user.TotalEarned,
 		InvitationCode: user.InviteCode,
 		InviteCount:    user.InviteCount,
 		BuffLevel:      user.BuffLevel,

@@ -364,13 +364,15 @@ CREATE TABLE user_infos
     invite_code         VARCHAR(255),
     buff_level          INT,
     invite_count        INT,
+    total_earned        DECIMAL(36, 18),
     unclaimed_referral  DECIMAL(36, 18),
     unlockable_referral DECIMAL(36, 18),
     claimed_referral    DECIMAL(36, 18),
     available_referral  DECIMAL(36, 18),
     created_at          TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at          TIMESTAMP NULL DEFAULT NULL
+    deleted_at          TIMESTAMP NULL DEFAULT NULL,
+    UNIQUE (address)
 );
 
 CREATE TABLE invite_relations

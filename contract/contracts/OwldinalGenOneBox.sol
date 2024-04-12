@@ -97,4 +97,32 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
     ) public view override(ERC721, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
+
+    // disable transfer
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
+                hasRole(GAME_CONTRACT_ROLE, msg.sender),
+            "OwldinalGenOneBox: transfer disabled"
+        );
+        super.transferFrom(from, to, tokenId);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory _data
+    ) public override {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
+                hasRole(GAME_CONTRACT_ROLE, msg.sender),
+            "OwldinalGenOneBox: transfer disabled"
+        );
+        super.safeTransferFrom(from, to, tokenId, _data);
+    }
 }

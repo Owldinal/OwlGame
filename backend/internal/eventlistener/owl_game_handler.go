@@ -399,6 +399,17 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		return err
 	}
 
+	userInfo := model.UserInfo{
+		Address: eventItem.User,
+	}
+	if err := database.DB.Where(&userInfo).First(&userInfo).Error; err != nil {
+		return err
+	}
+	userInfo.TotalEarned = userInfo.TotalEarned.Add(eventItem.Rewards)
+	if err := database.DB.Save(&userInfo).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 

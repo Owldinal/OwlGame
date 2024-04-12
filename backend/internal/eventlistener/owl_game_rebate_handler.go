@@ -144,23 +144,19 @@ func (h *OwlGameClaimRebateClaimedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	var userInfoItem model.UserInfo
-	if err := database.DB.Where("address = ?", eventItem.User).First(&userInfoItem).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Warnf("Inviter not found with address: %v", eventItem.User)
-			return err
-		} else {
-			log.Warnf("Error Is: %v", err)
-			return err
-		}
+	userInfo := model.UserInfo{
+		Address: eventItem.User,
+	}
+	if err := database.DB.Where(&userInfo).First(&userInfo).Error; err != nil {
+		return err
 	}
 
-	userInfoItem.UnlockableReferral = userInfoItem.UnlockableReferral.Sub(eventItem.Amount)
-	userInfoItem.UnclaimedReferral = userInfoItem.UnclaimedReferral.Sub(eventItem.Amount)
-	userInfoItem.ClaimedReferral = userInfoItem.ClaimedReferral.Add(eventItem.Amount)
+	userInfo.TotalEarned = userInfo.TotalEarned.Add(eventItem.Amount)
+	userInfo.UnlockableReferral = userInfo.UnlockableReferral.Sub(eventItem.Amount)
+	userInfo.UnclaimedReferral = userInfo.UnclaimedReferral.Sub(eventItem.Amount)
+	userInfo.ClaimedReferral = userInfo.ClaimedReferral.Add(eventItem.Amount)
 
-	if err := database.DB.Save(&userInfoItem).Error; err != nil {
-		log.Warnf("Error updating inviter user infoo: %v", err)
+	if err := database.DB.Save(&userInfo).Error; err != nil {
 		return err
 	}
 
