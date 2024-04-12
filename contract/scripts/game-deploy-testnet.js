@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 const { deploy } = require('./utils');
 
-let deployer, ownerAddress, backendAddress, playerB, playerC;
+let deployer, ownerAddress;
 
 // deploy contracts
 let owlTokenContract, owlTokenAddress;
@@ -12,7 +12,7 @@ let genOneBoxContract, genOneBoxAddress;
 const decimal = BigInt(10) ** BigInt(18)
 
 async function main() {
-	[deployer, playerB, playerC] = await hre.ethers.getSigners();
+	[deployer] = await hre.ethers.getSigners();
 	ownerAddress = deployer.address;
 	backendAddress = process.env.BACKEND_WALLET;
 	let tx;
@@ -35,17 +35,17 @@ owlGameAddress= "${owlGameAddress}";
 genOneBoxAddress= "${genOneBoxAddress}";
 		`);
 
-	await owldinalNftContract.connect(deployer).mintByAdmin();
-	await owldinalNftContract.connect(deployer).mintByAdmin();
-	await owldinalNftContract.connect(deployer).mintByAdmin();
-
 	console.log(`
 EVENT_START_BLOCK=${blockNumber}
 NFT_OWL_ADDR=${owldinalNftAddress}
 OWL_TOKEN_ADDR=${owlTokenAddress}
 NFT_MYSTERY_BOX_ADDR=${genOneBoxAddress}
 OWL_GAME_ADDR=${owlGameAddress}
-	`);
+			`);
+
+	await owldinalNftContract.connect(deployer).mintByAdmin();
+	await owldinalNftContract.connect(deployer).mintByAdmin();
+	await owldinalNftContract.connect(deployer).mintByAdmin();
 
 	// init contract config
 	const operations = [
@@ -58,6 +58,8 @@ OWL_GAME_ADDR=${owlGameAddress}
 	console.log(`prizeAmount = ${prizeAmount}`);
 
 	console.log(`\nconst [owlTokenAddress, owldinalNftAddress, genOneBoxAddress, owlGameAddress] = ["${owlTokenAddress}", "${owldinalNftAddress}", "${genOneBoxAddress}", "${owlGameAddress}"];\n`);
+
+	return;
 
 	// playerB
 	await owldinalNftContract.connect(playerB).approve(owlGameAddress, 5);
@@ -179,7 +181,7 @@ async function deployOrConnect() {
 		[owlTokenContract, owlTokenAddress] = await deploy("OwlToken", params);
 		console.log(`OwlToken contract deployed to : ${owlTokenAddress}\nParams = ${params.join(" ")}`);
 
-		await owlTokenContract.connect(deployer).mint(deployer.address, BigInt(100000000000) * decimal);
+		await owlTokenContract.connect(deployer).mint(deployer.address, BigInt(100000000) * decimal);
 	}
 
 	if (owldinalNftAddress) {
@@ -193,13 +195,6 @@ async function deployOrConnect() {
 		await owldinalNftContract.connect(deployer).mintByAdmin();
 		await owldinalNftContract.connect(deployer).mintByAdmin();
 		await owldinalNftContract.connect(deployer).mintByAdmin();
-
-		await owldinalNftContract.connect(deployer).mintByAdmin();
-		await owldinalNftContract.connect(deployer).mintByAdmin();
-		await owldinalNftContract.connect(deployer).mintByAdmin();
-		await owldinalNftContract.connect(deployer).transferFrom(deployer.address, playerB.address, 5);
-		await owldinalNftContract.connect(deployer).transferFrom(deployer.address, playerB.address, 6);
-		await owldinalNftContract.connect(deployer).transferFrom(deployer.address, playerB.address, 7);
 	}
 
 	if (owlGameAddress) {
