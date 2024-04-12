@@ -200,6 +200,9 @@ async function deployOrConnect() {
 		await owldinalNftContract.connect(deployer).transferFrom(deployer.address, playerB.address, 5);
 		await owldinalNftContract.connect(deployer).transferFrom(deployer.address, playerB.address, 6);
 		await owldinalNftContract.connect(deployer).transferFrom(deployer.address, playerB.address, 7);
+
+		// should panic because we disable transfer
+		// await owldinalNftContract.connect(playerB).transferFrom(playerB.address, deployer.address, 7);
 	}
 
 	if (owlGameAddress) {
