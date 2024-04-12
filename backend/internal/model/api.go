@@ -66,14 +66,14 @@ type GetUserInfoRequest struct {
 }
 
 type GetUserInfoResponse struct {
-	Wallet      string      `json:"wallet"`
-	OwlBalance  int64       `json:"owl_balance"` // load from contract OWL_TOKEN_ADDR
-	TotalEarned int64       `json:"total_earned"`
-	BuffLevel   int         `json:"buff_level"`
-	IsMoonBoost bool        `json:"is_moon_boost"`
-	ElfInfo     UserBoxInfo `json:"elf_info"`
-	FruitInfo   UserBoxInfo `json:"fruit_info"`
-	OwlInfo     UserBoxInfo `json:"owl_info"`
+	Wallet      string          `json:"wallet"`
+	OwlBalance  int64           `json:"owl_balance"` // load from contract OWL_TOKEN_ADDR
+	TotalEarned decimal.Decimal `json:"total_earned"`
+	BuffLevel   int             `json:"buff_level"`
+	IsMoonBoost bool            `json:"is_moon_boost"`
+	ElfInfo     UserBoxInfo     `json:"elf_info"`
+	FruitInfo   UserBoxInfo     `json:"fruit_info"`
+	OwlInfo     UserBoxInfo     `json:"owl_info"`
 
 	ReferralRewards UserReferralRewards `json:"referral_rewards"`
 
