@@ -46,5 +46,7 @@ func registerRouters(engine *gin.Engine) {
 		apiGroup.GET("/game/info", api.GetGameInfo)
 		apiGroup.GET("/game/rewards_trend", api.GetRewardTrend)
 		apiGroup.GET("/game/rewards_history", api.GetRewardHistory)
+
+		apiGroup.POST("/admin/update_rewards", api.UpdateRewards)
 	}
 }

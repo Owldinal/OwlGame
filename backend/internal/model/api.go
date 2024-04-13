@@ -168,3 +168,7 @@ type TreasuryRevenueHistory struct {
 	Amount          decimal.Decimal `json:"amount"`
 	TransactionHash string          `json:"transaction_hash"`
 }
+
+type AdminSecret struct {
+	Secret string `json:"secret" form:"secret"`
+}

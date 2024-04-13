@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
+	"owl-backend/internal/config"
 	"owl-backend/internal/model"
 	"owl-backend/internal/service"
 )
@@ -143,6 +144,27 @@ func GetRewardHistory(c *gin.Context) {
 	}
 
 	data, code, msg := service.GetTreasuryRevenueHistory(req)
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}
+
+func UpdateRewards(c *gin.Context) {
+	var req model.AdminSecret
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	if req.Secret != config.C.BackendWalletPrivateKey[0:6] {
+		ErrorResponse(c, model.WrongParam, "Wrong Param")
+		return
+	}
+
+	data, code, msg := service.UpdateFruitRewards()
 
 	if code == model.Success {
 		SuccessResponse(c, data)
