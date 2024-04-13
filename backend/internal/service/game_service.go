@@ -62,7 +62,14 @@ func GetGameInfo() (response *model.GetGameInfoResponse, code model.ResponseCode
 }
 
 func GetRewardsTrending() (response *model.GetGameRewardsTrendingResponse, code model.ResponseCode, msg string) {
-	now := time.Now()
+	//now := time.Now()
+
+	var snapshots model.DailyPoolSnapshot
+	if err := database.DB.Model(&model.DailyPoolSnapshot{}).Order("id desc").First(&snapshots).Error; err != nil {
+		return response, model.ServerInternalError, "Failed to load snapshot"
+	}
+	now := snapshots.Date
+
 	dailyDataPoints, dailyFrom, dailyTo, err1 := generateRewardsTrending(now, 24*time.Hour, 12)
 	weeklyDataPoints, weeklyFrom, weeklyTo, err2 := generateRewardsTrending(now, 7*24*time.Hour, 12)
 	monthlyDataPoints, monthlyFrom, monthlyTo, err3 := generateRewardsTrending(now, 30*24*time.Hour, 12)
@@ -95,7 +102,7 @@ func generateRewardsTrending(start time.Time, interval time.Duration, count int)
 	var snapshots []model.DailyPoolSnapshot
 	dataStrings := make([]string, count)
 	for i := 0; i < count; i++ {
-		date := start.Add(interval * time.Duration(i))
+		date := start.Add(-interval * time.Duration(i))
 		dataStrings[i] = date.Format("2006-01-02")
 	}
 	if err := database.DB.Where("date IN ?", dataStrings).Find(&snapshots).Error; err != nil {
