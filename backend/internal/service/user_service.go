@@ -109,6 +109,9 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 			// calculate APR: 单个ELF的APR = （单个ELF的日平均Earning/100000）*365
 			stakingRewards := token.CurrentRewards
 			stakingDays := int64(time.Now().Sub(*token.StakingTime).Hours()) / 24
+			if stakingDays < 1 {
+				stakingDays = 1
+			}
 			apr := stakingRewards.Div(decimal.NewFromInt(stakingDays)).Div(constant.MysteryBoxMintPrice).Mul(decimal.NewFromInt32(365))
 			boxInfo.Apr += apr.InexactFloat64()
 
