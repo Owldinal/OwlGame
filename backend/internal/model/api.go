@@ -66,7 +66,9 @@ type GetUserInfoRequest struct {
 }
 
 type GetUserInfoResponse struct {
-	Wallet      string          `json:"wallet"`
+	Wallet    string `json:"wallet"`
+	HasJoined bool   `json:"has_joined"`
+
 	OwlBalance  int64           `json:"owl_balance"` // load from contract OWL_TOKEN_ADDR
 	TotalEarned decimal.Decimal `json:"total_earned"`
 	BuffLevel   int             `json:"buff_level"`
