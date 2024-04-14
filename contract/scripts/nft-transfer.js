@@ -52,10 +52,6 @@ OWL_GAME_ADDR=${owlGameAddress}
 
 
 	const addressList = [
-		"0xF4B96413F1Da961cd9E6F92D89bc927E907EE105",
-		"0x4695f9e89c26cde1b2c6321d19b5374f3d1b9aa8",
-		"0x6d212acb40b908c331dca26ca1951da950435c65",
-		"0x332cB50fA07767684c761b8c797A433FaA6f99AE",
 		"0x5CbAd14e910b95Ba630482f1e65C49F075171f7f",
 		"0x57931f17ee7fc505ce6b225df7b1213b0953feb9",
 		"0x6ce580b0e9081bd60ba8d11f37f4eed1796556b8",
@@ -118,28 +114,36 @@ OWL_GAME_ADDR=${owlGameAddress}
 		var user = addressList[j];
 		console.log(`For User ${addressList[j]}`);
 
-		await owlTokenContract.connect(deployer).mint(user, BigInt(5 * 100000) * decimal);
+		try {
+			await owlTokenContract.connect(deployer).mint(user, BigInt(5 * 100000) * decimal);
+		} catch (e) {
+			console.log(`${e}`);
+		}
 
 		for (i = 0; i < 3; i++) {
-			const tx = await owldinalNftContract.connect(deployer).mintByAdmin();
-			const receipt = await tx.wait();
+			try {
+				const tx = await owldinalNftContract.connect(deployer).mintByAdmin();
+				const receipt = await tx.wait();
 
-			var mintBoxLogs = receipt.logs.filter(log => log.topics[0] === "0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230");
-			// console.log(`Logs: ${JSON.stringify(mintBoxLogs)}`);
+				var mintBoxLogs = receipt.logs.filter(log => log.topics[0] === "0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230");
+				// console.log(`Logs: ${JSON.stringify(mintBoxLogs)}`);
 
-			if (!mintBoxLogs || mintBoxLogs.length === 0) {
-				console.error("MintBox event not found");
-				return;
+				if (!mintBoxLogs || mintBoxLogs.length === 0) {
+					console.error("MintBox event not found");
+					return;
+				}
+				const decodedEventData = ethers.AbiCoder.defaultAbiCoder().decode(
+					["uint256", "uint256", "string"],
+					mintBoxLogs[0].data
+				);
+
+				const tokenId = decodedEventData[0];
+				console.log(`Minted tokenId: ${tokenId}`);
+
+				await owldinalNftContract.connect(deployer).transferFrom(deployer.address, user, tokenId);
+			} catch (e) {
+				console.log(`${e}`);
 			}
-			const decodedEventData = ethers.AbiCoder.defaultAbiCoder().decode(
-				["uint256", "uint256", "string"],
-				mintBoxLogs[0].data
-			);
-
-			const tokenId = decodedEventData[0];
-			console.log(`Minted tokenId: ${tokenId}`);
-
-			await owldinalNftContract.connect(deployer).transferFrom(deployer.address, user, tokenId);
 		}
 	}
 }
