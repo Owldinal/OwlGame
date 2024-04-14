@@ -21,10 +21,10 @@ async function main() {
 	const blockNumber = await hre.ethers.provider.getBlockNumber();
 	console.log(`Current Block number: ${blockNumber}`);
 
-	// owlTokenAddress = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6";
-	// owldinalNftAddress = "0x4C70a29A4be0954eE358f03C18BecCb888549c01";
-	// owlGameAddress = "0x49fd2BE640DB2910c2fAb69bB8531Ab6E76127ff";
-	// genOneBoxAddress = "0x4631BCAbD6dF18D94796344963cB60d44a4136b6";
+	owlTokenAddress = "0xF86EA7e636f43dd6dCD35B7E04742f5508F9CF73";
+	owldinalNftAddress = "0x96fB752fc565c740F8b09a1760FE5a3D89dD18E5";
+	owlGameAddress = "0xC0E5d058eeF687B0c3cEf2967D0B55AD81eb9C21";
+	genOneBoxAddress = "0xC9761572c264ADE5253d4F56a574fa0F4905ca5d";
 
 	await deployOrConnect();
 
@@ -56,6 +56,9 @@ OWL_GAME_ADDR=${owlGameAddress}
 
 	const prizeAmount = BigInt(6_0000_0000n) * decimal;
 	console.log(`prizeAmount = ${prizeAmount}`);
+	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
+	await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
+	await owlGameContract.connect(deployer).addPrize(prizeAmount);
 
 	console.log(`\nconst [owlTokenAddress, owldinalNftAddress, genOneBoxAddress, owlGameAddress] = ["${owlTokenAddress}", "${owldinalNftAddress}", "${genOneBoxAddress}", "${owlGameAddress}"];\n`);
 

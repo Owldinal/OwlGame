@@ -34,7 +34,7 @@ const config: HardhatUserConfig = {
       accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
     },
     merlinTestnet: {
-      url: 'https://testnet-rpc.merlinchain.io',
+      url: 'https://merlin-testnet.blockpi.network/v1/rpc/f1f602d890e8a1ccce4cc679aa4c49def500fbb2',
       timeout: 20000000,
       accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || ''],
     },
