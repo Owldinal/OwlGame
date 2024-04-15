@@ -174,6 +174,21 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         isMoonBoostEnable = isEnable;
     }
 
+    function withdraw(
+        address recipient
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+        require(recipient != address(0), "Cannot withdraw to the zero address");
+        uint256 balance  = owlToken.balanceOf(address(this));
+        require(balance > 0, "No funds to withdraw");
+        bool sent = owlToken.transfer(recipient, balance);
+        require(sent, "Token transfer failed");
+        
+        emit PrizePoolDecreased(prizePool);
+        prizePool = 0;
+
+        return balance;
+    }
+
     // endregion ---- Admin ----
 
     function getTokenInfo(
