@@ -14,7 +14,7 @@ type OwldinalNftToken struct {
 	TokenUri    string          `json:"token_uri"`
 	IsStaking   bool            `json:"is_staking"`
 	StakingTime *time.Time      `json:"staking_time"`
-	BuffingIds  database.IdList `json:"buffing_ids"`
+	BuffingIds  database.IdList `json:"buffing_ids"` // not in use
 }
 
 type MysteryBoxToken struct {
