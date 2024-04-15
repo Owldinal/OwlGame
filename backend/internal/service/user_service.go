@@ -61,15 +61,7 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 	// check moon boost
 	isMoonBoost := false
 	if config.C.NeedCheckMoonBoost && !notFound {
-		globalEnable, err := owlGameContract.IsMoonBoostEnable(&bind.CallOpts{})
-		if err != nil {
-			log.Warnf("Failed to check moon boost (%v)", err)
-			// don't return. use false as default
-			//return nil, model.ServerInternalError, fmt.Sprintf("Failed to check moon boost (%v)", err)
-		}
-		if globalEnable {
-			isMoonBoost = moonBoostAddress[wallet]
-		}
+		isMoonBoost = moonBoostAddress[wallet]
 	}
 
 	// Get Owldinal Nft
