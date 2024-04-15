@@ -32,17 +32,18 @@ func GetGameInfo() (response *model.GetGameInfoResponse, code model.ResponseCode
 		yesterday = &snapshots[1]
 	}
 
+	// TODO: TotalMarketCap should equal to TotalPoolAmount * UsdPrice, But UsdPrice is get from frontend, so here use
+	// TotalPoolAmount instead
 	response = &model.GetGameInfoResponse{
-		TotalRewards:         today.TotalPoolAmount,
-		TotalMarketCap:       today.TotalMarketCap,
-		TotalBurned:          today.TotalBurn,
-		TotalMarketCapChange: today.TotalMarketCap.Sub(yesterday.TotalMarketCap),
+		TotalRewards:   today.AllocatedRewards,
+		TotalMarketCap: today.TotalPoolAmount,
+		TotalBurned:    today.TotalBurn,
 	}
 
-	if yesterday.TotalMarketCap.IsZero() {
+	if yesterday.TotalPoolAmount.IsZero() {
 		response.TotalMarketCapChange = decimal.NewFromInt(1)
 	} else {
-		response.TotalMarketCapChange = today.TotalMarketCap.Sub(yesterday.TotalMarketCap).Div(yesterday.TotalMarketCap)
+		response.TotalMarketCapChange = today.TotalPoolAmount.Sub(yesterday.TotalPoolAmount).Div(yesterday.TotalPoolAmount)
 	}
 
 	if yesterday.TotalBurn.IsZero() {
@@ -51,12 +52,12 @@ func GetGameInfo() (response *model.GetGameInfoResponse, code model.ResponseCode
 		response.TotalBurnedChange = today.TotalBurn.Sub(yesterday.TotalBurn).Div(yesterday.TotalBurn)
 	}
 
-	owlToUsdMultiple := 0.001 // TODO: usd, From https://docs.dexscreener.com/api/reference
-	response.TotalRewardUSD = response.TotalRewards.Mul(decimal.NewFromFloat(owlToUsdMultiple))
-
-	// TODO: owlPrice， From https://docs.dexscreener.com/api/reference ，需要确认是否能拉取到昨天的数据
-	response.OwlPrice = decimal.NewFromFloat(0.001)
-	response.OwlPriceChange = decimal.NewFromFloat(0)
+	// Frontend will load this data from https://docs.dexscreener.com/api/reference
+	//owlToUsdMultiple := 0.001
+	//response.TotalRewardUSD = response.TotalRewards.Mul(decimal.NewFromFloat(owlToUsdMultiple))
+	//
+	//response.OwlPrice = decimal.NewFromFloat(0.001)
+	//response.OwlPriceChange = decimal.NewFromFloat(0)
 
 	return response, model.Success, ""
 }
