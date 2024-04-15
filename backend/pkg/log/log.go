@@ -14,8 +14,8 @@ func init() {
 		Logger.Warn("Invalid log level. Using default 'info'")
 		level = logrus.InfoLevel
 	}
+	Logger.SetOutput(os.Stdout)
 	Logger.SetLevel(level)
-
 	Logger.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
 
 	switch config.C.LogOutput {
