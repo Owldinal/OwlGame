@@ -205,6 +205,7 @@ func handleHistoryEvents(
 			nextBlock.Set(endBlock)
 		}
 
+		log.Debugf("Indexer: handle history from %v to %v", startBlock, nextBlock)
 		eventQuery := ethereum.FilterQuery{
 			FromBlock: startBlock,
 			ToBlock:   nextBlock,
@@ -260,6 +261,8 @@ func pollEvents(client *ethclient.Client,
 				if toBlock.Cmp(startBlock) < 0 {
 					continue
 				}
+
+				log.Debugf("Indexer: poll event from %v to %v", startBlock, toBlock)
 
 				logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 					FromBlock: startBlock,
