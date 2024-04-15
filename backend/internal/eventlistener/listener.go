@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"os"
@@ -26,16 +25,12 @@ var (
 
 const (
 	// Contract Owldinal
-	eventOwldinalMintBox        = "0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230"
-	eventOwldinalApproval       = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
-	eventOwldinalApprovalForAll = "0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"
-	eventOwldinalTransfer       = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+	eventOwldinalMintBox  = "0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230"
+	eventOwldinalTransfer = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 
 	// Contract OwldinalGenOneBox
-	eventOwldinalGenOneBoxTransfer       = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-	eventOwldinalGenOneBoxApproval       = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
-	eventOwldinalGenOneBoxApprovalForAll = "0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31"
-	eventOwldinalGenOneBoxMintBox        = "0x4cce2d7ca388465a90e71f76235d389abe1ede028b09c07d4f86519e5adb078c"
+	eventOwldinalGenOneBoxTransfer = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+	eventOwldinalGenOneBoxMintBox  = "0x4cce2d7ca388465a90e71f76235d389abe1ede028b09c07d4f86519e5adb078c"
 
 	// Contract OwlGame
 	eventOwlGameStakeOwldinalNft   = "0x292b69a5590aefdf5de5c9da21ea45b29afd0635e4d0c7d149d1d84be9224106"
@@ -109,30 +104,34 @@ func StartEventListening() error {
 }
 
 func registerHandlers(eventProcessor *EventProcessor) {
-	eventProcessor.RegisterHandler(eventOwldinalMintBox, &OwldinalNftMintBoxHandler{})
-	eventProcessor.RegisterHandler(eventOwldinalTransfer, &OwldinalNftTransferHandler{})
+	owldinalNftAddr := common.HexToAddress(config.C.NftOwlAddr)
+	genOneBoxAddr := common.HexToAddress(config.C.NftMysteryBoxAddr)
+	owlGameAddr := common.HexToAddress(config.C.OwlGameAddr)
 
-	eventProcessor.RegisterHandler(eventOwldinalGenOneBoxMintBox, &GenOneBoxMintBoxHandler{})
-	eventProcessor.RegisterHandler(eventOwldinalGenOneBoxTransfer, &GenOneBoxTransferHandler{})
+	eventProcessor.RegisterHandler(owldinalNftAddr, eventOwldinalMintBox, &OwldinalNftMintBoxHandler{})
+	eventProcessor.RegisterHandler(owldinalNftAddr, eventOwldinalTransfer, &OwldinalNftTransferHandler{})
 
-	eventProcessor.RegisterHandler(eventOwlGameJoinGame, &OwlGameJoinGameHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameBindInvitation, &OwlGameBindInvitationHandler{})
-	eventProcessor.RegisterHandler(eventOwlGamePrizePoolIncreased, &OwlGamePrizePoolIncreasedHandler{})
-	eventProcessor.RegisterHandler(eventOwlGamePrizePoolDecreased, &OwlGamePrizePoolDecreasedHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameMintMysteryBox, &OwlGameMintMysteryBoxHandler{})
+	eventProcessor.RegisterHandler(genOneBoxAddr, eventOwldinalGenOneBoxMintBox, &GenOneBoxMintBoxHandler{})
+	eventProcessor.RegisterHandler(genOneBoxAddr, eventOwldinalGenOneBoxTransfer, &GenOneBoxTransferHandler{})
 
-	eventProcessor.RegisterHandler(eventOwlGameStakeOwldinalNft, &OwlGameStakeOwldinalNftHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameUnstakeOwldinalNft, &OwlGameUnstakeOwldinalNftHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameStakeMysteryBox, &OwlGameStakeMysteryBoxHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameUnstakeMysteryBox, &OwlGameUnstakeMysteryBoxHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameOwlTokenBurned, &OwlGameOwlTokenBurnedHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameJoinGame, &OwlGameJoinGameHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameBindInvitation, &OwlGameBindInvitationHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGamePrizePoolIncreased, &OwlGamePrizePoolIncreasedHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGamePrizePoolDecreased, &OwlGamePrizePoolDecreasedHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameMintMysteryBox, &OwlGameMintMysteryBoxHandler{})
 
-	eventProcessor.RegisterHandler(eventOwlGameFruitRewardUpdated, &OwlGameFruitRewardUpdatedHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameElfRewardUpdated, &OwlGameElfRewardUpdatedHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameStakeOwldinalNft, &OwlGameStakeOwldinalNftHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameUnstakeOwldinalNft, &OwlGameUnstakeOwldinalNftHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameStakeMysteryBox, &OwlGameStakeMysteryBoxHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameUnstakeMysteryBox, &OwlGameUnstakeMysteryBoxHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameOwlTokenBurned, &OwlGameOwlTokenBurnedHandler{})
 
-	eventProcessor.RegisterHandler(eventOwlGameRebateRewardsIncreased, &OwlGameRebateRewardsIncreasedHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameUnlockableRebateIncreased, &OwlGameUnlockableRebateIncreasedHandler{})
-	eventProcessor.RegisterHandler(eventOwlGameRebateClaimed, &OwlGameClaimRebateClaimedHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameFruitRewardUpdated, &OwlGameFruitRewardUpdatedHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameElfRewardUpdated, &OwlGameElfRewardUpdatedHandler{})
+
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameRebateRewardsIncreased, &OwlGameRebateRewardsIncreasedHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameUnlockableRebateIncreased, &OwlGameUnlockableRebateIncreasedHandler{})
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameRebateClaimed, &OwlGameClaimRebateClaimedHandler{})
 }
 
 func getCurrentBlock(client *ethclient.Client) (*big.Int, error) {
@@ -145,49 +144,49 @@ func getCurrentBlock(client *ethclient.Client) (*big.Int, error) {
 }
 
 // subscribe events ... fuck merlin chain didn't support subscribe event.
-func subscribeEvents(
-	client *ethclient.Client,
-	addresses []common.Address,
-	processors *EventProcessor,
-) error {
-	subs := make([]*EventSubscription, 0, len(addresses))
-	for _, addr := range addresses {
-		logs := make(chan types.Log)
-		query := ethereum.FilterQuery{
-			Addresses: []common.Address{addr},
-		}
-		sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
-		if err != nil {
-			return err
-		}
-		subs = append(subs, &EventSubscription{subscription: sub, eventChannel: logs})
-	}
-
-	for _, sub := range subs {
-		go func(sub *EventSubscription) {
-			defer sub.subscription.Unsubscribe()
-
-			logsChan := sub.eventChannel.(chan types.Log)
-			for {
-				select {
-				case err := <-sub.subscription.Err():
-					log.Warnf("Subscription error: %v", err)
-					return
-				case vLog := <-logsChan:
-					if handler, exists := processors.handlers[vLog.Topics[0]]; exists {
-						if err := handler.Handle(vLog); err != nil {
-							log.Warnf("Failed to process log: %v", err)
-						}
-					} else {
-						//log.Warnf("No handler for event: %s", vLog.Topics[0].Hex())
-					}
-				}
-			}
-		}(sub)
-	}
-
-	return nil
-}
+//func subscribeEvents(
+//	client *ethclient.Client,
+//	addresses []common.Address,
+//	processors *EventProcessor,
+//) error {
+//	subs := make([]*EventSubscription, 0, len(addresses))
+//	for _, addr := range addresses {
+//		logs := make(chan types.Log)
+//		query := ethereum.FilterQuery{
+//			Addresses: []common.Address{addr},
+//		}
+//		sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
+//		if err != nil {
+//			return err
+//		}
+//		subs = append(subs, &EventSubscription{subscription: sub, eventChannel: logs})
+//	}
+//
+//	for _, sub := range subs {
+//		go func(sub *EventSubscription) {
+//			defer sub.subscription.Unsubscribe()
+//
+//			logsChan := sub.eventChannel.(chan types.Log)
+//			for {
+//				select {
+//				case err := <-sub.subscription.Err():
+//					log.Warnf("Subscription error: %v", err)
+//					return
+//				case vLog := <-logsChan:
+//					if handler, exists := processors.handlers[vLog.Topics[0]]; exists {
+//						if err := handler.Handle(vLog); err != nil {
+//							log.Warnf("Failed to process log: %v", err)
+//						}
+//					} else {
+//						//log.Warnf("No handler for event: %s", vLog.Topics[0].Hex())
+//					}
+//				}
+//			}
+//		}(sub)
+//	}
+//
+//	return nil
+//}
 
 func handleHistoryEvents(
 	client *ethclient.Client,

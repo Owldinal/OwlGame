@@ -12,26 +12,34 @@ type EventHandler interface {
 }
 
 type EventProcessor struct {
-	handlers map[common.Hash]EventHandler
+	handlers map[common.Address]map[common.Hash]EventHandler
 }
 
 func NewEventProcessor() *EventProcessor {
 	return &EventProcessor{
-		handlers: make(map[common.Hash]EventHandler),
+		handlers: make(map[common.Address]map[common.Hash]EventHandler),
 	}
 }
 
-func (p *EventProcessor) RegisterHandler(eventHash string, handler EventHandler) {
-	p.handlers[common.HexToHash(eventHash)] = handler
+func (p *EventProcessor) RegisterHandler(contractAddress common.Address, eventHash string, handler EventHandler) {
+	if p.handlers[contractAddress] == nil {
+		p.handlers[contractAddress] = make(map[common.Hash]EventHandler)
+	}
+	p.handlers[contractAddress][common.HexToHash(eventHash)] = handler
 }
 
 func (p *EventProcessor) ProcessLog(log types.Log) error {
-	eventHash := log.Topics[0]
-	handler, ok := p.handlers[eventHash]
+	handlerMap, ok := p.handlers[log.Address]
 	if !ok {
-		//return errors.New("no handler for event")
 		return nil
 	}
+
+	eventHash := log.Topics[0]
+	handler, ok := handlerMap[eventHash]
+	if !ok {
+		return nil
+	}
+
 	return handler.Handle(log)
 }
 
