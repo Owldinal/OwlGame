@@ -23,10 +23,10 @@ async function main() {
 	console.log(`Current Block number: ${blockNumber}`);
 
 	// Server 
-	owldinalNftAddress = "0xF6E4Af62bD0f298311079503563ea4B1cfF6Dead";
-	owlTokenAddress = "0x15463B075F37c269830801feCd8CdAC76Aa1A310";
-	genOneBoxAddress = "0x4b54fC01A0714f79Ec0Bd1856f62Dc710601ef7f";
-	owlGameAddress = "0xe53A375D3B997FB22f8bF85910280A011042aDf2";
+	owlTokenAddress = "0xf8bB8324Cd226f6229dbB8792C66119832791A59";
+	owldinalNftAddress = "0x73a11097dCf0817909039d2661a15cbc8F6624eF";
+	owlGameAddress = "0x8338B3295f87DEBa418c2F0bb7497414b0D73AC2";
+	genOneBoxAddress = "0xB9D8660b4a45aA24EC6dB53485E4334364C773A6";
 
 	await deployOrConnect();
 
@@ -45,14 +45,15 @@ NFT_MYSTERY_BOX_ADDR=${genOneBoxAddress}
 OWL_GAME_ADDR=${owlGameAddress}
 			`);
 
-	const userPrivKeyList = []
-	const userAddressList = []
+	const userList = []
 	for (j = 1; j < 80; j++) {
 		var user = (await hre.ethers.getSigners())[j];
 		console.log(`User: ${user.address}`);
 
-		userPrivKeyList.push(user.privateKey);
-		userAddressList.push(user.address);
+		var userObj = {
+			address: user.address,
+			tokenIds: []
+		}
 
 		try {
 			await owlTokenContract.connect(deployer).mint(user.address, BigInt(100000 * 100000) * decimal);
@@ -79,15 +80,19 @@ OWL_GAME_ADDR=${owlGameAddress}
 				);
 
 				const tokenId = decodedEventData[0];
-				console.log(`Minted tokenId: ${tokenId}`);
-
 				await owldinalNftContract.connect(deployer).transferFrom(deployer.address, user.address, tokenId);
 
+				userObj.tokenIds.push(Number(tokenId));
 			} catch (e) {
 				console.log(`Failed mint nft for User: ${user.address}`);
 			}
 		}
+
+		userList.push(userObj);
 	}
+
+	console.log("All Done: \n");
+	console.log(JSON.stringify(userList));
 }
 
 async function printTxDetail(tx, msg) {
@@ -167,3 +172,4 @@ main().catch((error) => {
 	console.error(error);
 	process.exitCode = 1;
 });
+

@@ -29,7 +29,7 @@ const config: HardhatUserConfig = {
     },
     ganache: {
       url: 'https://node.owldinal.xyz',
-      accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
+      accounts: { mnemonic: process.env.GANACHE_MNEMONIC, count: 300 }
     },
     merlinTestnet: {
       url: 'https://merlin-testnet.blockpi.network/v1/rpc/f1f602d890e8a1ccce4cc679aa4c49def500fbb2',
