@@ -21,10 +21,10 @@ async function main() {
 	const blockNumber = await hre.ethers.provider.getBlockNumber();
 	console.log(`Current Block number: ${blockNumber}`);
 
-	owlTokenAddress = "0xF86EA7e636f43dd6dCD35B7E04742f5508F9CF73";
-	owldinalNftAddress = "0x96fB752fc565c740F8b09a1760FE5a3D89dD18E5";
-	owlGameAddress = "0xC0E5d058eeF687B0c3cEf2967D0B55AD81eb9C21";
-	genOneBoxAddress = "0xC9761572c264ADE5253d4F56a574fa0F4905ca5d";
+	// owlTokenAddress = "0xF86EA7e636f43dd6dCD35B7E04742f5508F9CF73";
+	// owldinalNftAddress = "0x96fB752fc565c740F8b09a1760FE5a3D89dD18E5";
+	// owlGameAddress = "0xC0E5d058eeF687B0c3cEf2967D0B55AD81eb9C21";
+	// genOneBoxAddress = "0xC9761572c264ADE5253d4F56a574fa0F4905ca5d";
 
 	await deployOrConnect();
 
@@ -43,16 +43,7 @@ NFT_MYSTERY_BOX_ADDR=${genOneBoxAddress}
 OWL_GAME_ADDR=${owlGameAddress}
 			`);
 
-	await owldinalNftContract.connect(deployer).mintByAdmin();
-	await owldinalNftContract.connect(deployer).mintByAdmin();
-	await owldinalNftContract.connect(deployer).mintByAdmin();
-
-	// init contract config
-	const operations = [
-		await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress),
-	];
-
-	await Promise.all(operations).then((results) => Promise.all(results.map(result => result.wait())));
+	await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress);
 
 	const prizeAmount = BigInt(6_0000_0000n) * decimal;
 	console.log(`prizeAmount = ${prizeAmount}`);
@@ -63,110 +54,6 @@ OWL_GAME_ADDR=${owlGameAddress}
 	console.log(`\nconst [owlTokenAddress, owldinalNftAddress, genOneBoxAddress, owlGameAddress] = ["${owlTokenAddress}", "${owldinalNftAddress}", "${genOneBoxAddress}", "${owlGameAddress}"];\n`);
 
 	return;
-
-	// playerB
-	await owldinalNftContract.connect(playerB).approve(owlGameAddress, 5);
-	await owldinalNftContract.connect(playerB).approve(owlGameAddress, 6);
-	await owldinalNftContract.connect(playerB).approve(owlGameAddress, 7);
-	tx = await owlGameContract.connect(playerB).stakeOwldinalNft([5, 6, 7]);
-
-	console.log("\nTest Invite");
-	const inviteCodePlayerB = await owlGameContract.getInviteCode(playerB);
-	console.log(`playerB: invite code = ${inviteCodePlayerB}, string = ${decodeInviteCode(inviteCodePlayerB)}`);
-	tx = await owlGameContract.connect(deployer).handleInviteCode(inviteCodePlayerB);
-	const inviteCodeDeployer = await owlGameContract.getInviteCode(deployer);
-	console.log(`deployer: invite code = ${inviteCodeDeployer}, string = ${decodeInviteCode(inviteCodeDeployer)}`);
-
-	// ----
-
-	console.log("\nTest stakeOwldinalNft");
-	await owldinalNftContract.connect(deployer).approve(owlGameAddress, 2);
-	await owldinalNftContract.connect(deployer).approve(owlGameAddress, 3);
-	await owldinalNftContract.connect(deployer).approve(owlGameAddress, 4);
-	tx = await owlGameContract.connect(deployer).stakeOwldinalNft([2, 3, 4]);
-	await printTxDetail(tx, 'stakeOwldinalNft 2,3,4');
-	tx = await owlGameContract.connect(deployer).unstakeOwldinalNft([2]);
-	await printTxDetail(tx, 'unstakeOwldinalNft 2');
-	await owldinalNftContract.connect(deployer).approve(owlGameAddress, 2);
-	tx = await owlGameContract.connect(deployer).stakeOwldinalNft([2]);
-	await printTxDetail(tx, 'stakeOwldinalNft 2');
-
-	console.log("\nTest mintMysteryBox");
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 1) * decimal);
-	tx = await owlGameContract.connect(deployer).mintMysteryBox(1);
-	await printTxDetail(tx, 'mintMysteryBox Count=1');
-
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 10) * decimal);
-	tx = await owlGameContract.connect(deployer).mintMysteryBox(10, { gasLimit: 100_000_000_000 });
-	await printTxDetail(tx, 'mintMysteryBox Count=10');
-
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 100) * decimal);
-	tx = await owlGameContract.connect(deployer).mintMysteryBox(100, { gasLimit: 100_000_000_000 });
-	await printTxDetail(tx, 'mintMysteryBox Count=100');
-
-	console.log("\nTest addPrize");
-
-	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount, { gasLimit: 100_000_000_000 });
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount, { gasLimit: 100_000_000_000 });
-	await owlGameContract.connect(deployer).addPrize(prizeAmount, { gasLimit: 100_000_000_000 });
-
-	const tokenList5 = [];
-	const tokenList50 = [];
-
-	const fruitIds = [];
-	const elfIds = [];
-	const burnedIds = [];
-
-	for (i = 1; i < 111; i++) {
-		const boxType = await genOneBoxContract.getBoxType(i);
-		if (boxType == 3) {
-			burnedIds.push(i);
-			continue;
-		}
-
-		const owner = await genOneBoxContract.ownerOf(i);
-		if (owner == ownerAddress) {
-			if (tokenList5.length < 5) {
-				tokenList5.push(i);
-			} else if (tokenList50.length < 50) {
-				tokenList50.push(i);
-			} else {
-				break;
-			}
-
-			if (boxType == 1) {
-				elfIds.push(i);
-			} else if (boxType == 2) {
-				fruitIds.push(i);
-			}
-		}
-	}
-
-	console.log(`Elf: ${JSON.stringify(elfIds)}`);
-	console.log(`Fruit: ${JSON.stringify(fruitIds)}`);
-	console.log(`Burned: ${JSON.stringify(burnedIds)}`);
-
-	console.log("\nTest stakeToken");
-	await genOneBoxContract.connect(deployer).setApprovalForAll(owlGameAddress, true);
-	tx = await owlGameContract.connect(deployer).stakeMysteryBox(tokenList5, { gasLimit: 100_000_000_000 });
-	await printTxDetail(tx, 'stakeMysteryBox Count=5');
-	tx = await owlGameContract.connect(deployer).stakeMysteryBox(tokenList50, { gasLimit: 100_000_000_000 });
-	await printTxDetail(tx, 'stakeMysteryBox Count=50');
-
-	console.log("\nTest updateAllFruitRewards");
-	tx = await owlGameContract.connect(deployer).updateAllFruitRewards({ gasLimit: 100_000_000_000 });
-	await printTxDetail(tx, 'updateAllFruitRewards');
-
-	console.log("\nTest unstake");
-	tx = await owlGameContract.connect(deployer).claimAndUnstakeMysteryBox(tokenList5, { gasLimit: 100_000_000_000 });
-	await printTxDetail(tx, 'claimAndUnstakeMysteryBox Count=5');
-
-	return;
-
-	tx = await owlGameContract.connect(deployer).claimAndUnstakeMysteryBox(tokenList50, { gasLimit: 100_000_000_000 });
-	await printTxDetail(tx, 'claimAndUnstakeMysteryBox Count=50');
-	tx = await owlGameContract.connect(deployer).unstakeOwldinalNft([2, 3, 4], { gasLimit: 100_000_000_000 });
-	await printTxDetail(tx, 'unstakeOwldinalNft 2,3,4');
 }
 
 async function printTxDetail(tx, msg) {

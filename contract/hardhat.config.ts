@@ -17,20 +17,18 @@ const config: HardhatUserConfig = {
   sourcify: {
     enabled: false
   },
+  defaultNetwork: "localhost",
 
   networks: {
+    hardhat: {
+      accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
+    },
     localhost: {
-      url: 'http://127.0.0.1:8545',
-      accounts: [process.env.HARDHAT_PRIVATE_KEY || '',
-      process.env.HARDHAT_PRIVATE_KEY_1!,
-      process.env.HARDHAT_PRIVATE_KEY_2!,
-      process.env.HARDHAT_PRIVATE_KEY_3!,
-      process.env.HARDHAT_PRIVATE_KEY_4!,
-      process.env.HARDHAT_PRIVATE_KEY_5!,]
+      url: 'http://127.0.0.1:7545',
+      accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
     },
     ganache: {
-      url: 'http://127.0.0.1:7545',
-      // url: 'https://api.owldinal.xyz/node',
+      url: 'https://node.owldinal.xyz',
       accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
     },
     merlinTestnet: {
@@ -43,18 +41,12 @@ const config: HardhatUserConfig = {
       timeout: 200000000,
       gasPrice: 50000000,
       accounts: [process.env.MERLIN_MAIN_PRIVATE_KEY || ''],
-    },
-    sepolia: {
-      url: `https://sepolia.infura.io/v3/${process.env.SEPOLIA_INFURA_KEY}`,
-      timeout: 200000000,
-      accounts: [process.env.MERLIN_TEST_PRIVATE_KEY || '',]
     }
   },
   etherscan: {
     apiKey: {
       merlinTestnet: "no-api-key-needed",
-      merlinMainnet: "no-api-key-needed",
-      sepolia: process.env.SEPOLIA_ETHERSCAN_API_KEY!,
+      merlinMainnet: "no-api-key-needed"
     },
     customChains: [
       {
