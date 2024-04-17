@@ -44,6 +44,7 @@ OWL_GAME_ADDR=${owlGameAddress}
 			`);
 
 	await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress);
+	await owlGameContract.connect(deployer).setMoonBoost(true);
 
 	const prizeAmount = BigInt(6_0000_0000n) * decimal;
 	console.log(`prizeAmount = ${prizeAmount}`);
