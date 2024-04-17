@@ -32,18 +32,17 @@ func GetGameInfo() (response *model.GetGameInfoResponse, code model.ResponseCode
 		yesterday = &snapshots[1]
 	}
 
-	// TODO: TotalMarketCap should equal to TotalPoolAmount * UsdPrice, But UsdPrice is get from frontend, so here use
-	// TotalPoolAmount instead
 	response = &model.GetGameInfoResponse{
 		TotalRewards:   today.TotalPoolAmount,
-		TotalMarketCap: today.TotalPoolAmount,
+		TotalMarketCap: decimal.NewFromInt(2100000000).Sub(today.TotalBurn),
 		TotalBurned:    today.TotalBurn,
 	}
 
-	if yesterday.TotalPoolAmount.IsZero() {
-		response.TotalMarketCapChange = decimal.NewFromInt(1)
+	yesterdayMarketCap := decimal.NewFromInt(2100000000).Sub(yesterday.TotalBurn)
+	if yesterdayMarketCap.IsZero() {
+		response.TotalMarketCapChange = decimal.NewFromInt(0)
 	} else {
-		response.TotalMarketCapChange = today.TotalPoolAmount.Sub(yesterday.TotalPoolAmount).Div(yesterday.TotalPoolAmount)
+		response.TotalMarketCapChange = response.TotalMarketCap.Sub(yesterdayMarketCap).Div(yesterdayMarketCap)
 	}
 
 	if yesterday.TotalBurn.IsZero() {
