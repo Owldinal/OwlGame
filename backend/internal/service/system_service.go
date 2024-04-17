@@ -30,7 +30,7 @@ func init() {
 }
 
 func UpdateFruitRewards() (response interface{}, code model.ResponseCode, msg string) {
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1337))
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
 	if err != nil {
 		return false, model.ServerInternalError, fmt.Sprintf("Err: %v", err)
 	}

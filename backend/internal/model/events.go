@@ -179,3 +179,11 @@ type OwlGameElfRewardUpdateEvent struct {
 	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
 	Count  uint64
 }
+
+type OwlGameRequestMintEvent struct {
+	Event
+	database.Model
+	User      string `gorm:"size:42"`
+	RequestId uint64
+	Count     uint64
+}

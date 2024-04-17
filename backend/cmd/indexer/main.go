@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
+	go eventlistener.StartJobListening()
 	eventlistener.StartEventListening()
 }

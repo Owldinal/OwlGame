@@ -42,7 +42,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     event JoinGame(address indexed user, uint32 inviteCode);
     event BindInvitation(address indexed invitee, address inviter);
 
-    event RequestMint(address indexed user, uint256 count);
+    event RequestMint(address indexed user, uint256 requestId, uint256 count);
 
     event MintMysteryBox(
         address indexed user,
@@ -300,7 +300,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         });
 
         emit PrizePoolIncreased(prizeAmount);
-        emit RequestMint(msg.sender, count);
+        emit RequestMint(msg.sender, mintRequestCounter, count);
     }
 
     // GAS=329550: tokenIdList.length=3
@@ -663,6 +663,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             addUnlockedAmount
         );
         emit MintMysteryBox(request.user, request.count, tokenIdList);
+
+        delete requestMintMap[mintRequestId];
     }
 
     // endregion ---- Server ----

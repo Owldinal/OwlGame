@@ -28,6 +28,7 @@ type Config struct {
 	LogFile    string `env:"LOG_FILE" envDefault:"app.log"`   // Only required if LogOutput is set to "file"
 
 	NodeUrl         string `env:"NODE_URL" envDefault:""`
+	ChainId         int64  `env:"CHAIN_ID" envDefault:"1337"`
 	EventStartBlock int64  `env:"EVENT_START_BLOCK" envDefault:"0"`
 
 	NftOwlAddr        string `env:"NFT_OWL_ADDR" envDefault:""`

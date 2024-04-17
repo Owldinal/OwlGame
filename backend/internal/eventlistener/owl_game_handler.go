@@ -168,6 +168,50 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 	return nil
 }
 
+type OwlGameRequestMintHandler struct{}
+
+func (h *OwlGameRequestMintHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseRequestMint(vlog)
+	if err != nil {
+		return err
+	}
+
+	eventItem := model.OwlGameRequestMintEvent{
+		Event:     model.NewEvent(&event.Raw),
+		User:      event.User.Hex(),
+		Count:     event.Count.Uint64(),
+		RequestId: event.RequestId.Uint64(),
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	job := &model.RequestMintJob{
+		RequestTxHash:      eventItem.TxHash,
+		RequestLogIndex:    eventItem.LogIndex,
+		RequestBlockNumber: eventItem.BlockNumber,
+		RequestBlockHash:   eventItem.BlockHash,
+
+		RequestId: eventItem.RequestId,
+		User:      eventItem.User,
+		Count:     eventItem.Count,
+		Status:    constant.MintJobStatusNotStart,
+	}
+
+	itemResult := database.DB.Clauses().Create(&job)
+	if itemResult.Error != nil {
+		return itemResult.Error
+	}
+
+	return nil
+}
+
 type OwlGameMintMysteryBoxHandler struct{}
 
 func (h *OwlGameMintMysteryBoxHandler) Handle(vlog types.Log) error {
