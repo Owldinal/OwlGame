@@ -134,7 +134,18 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     uint256 public prizePool;
 
     bool public isMoonBoostEnable;
-    address[] private moonBoostWhiteList = [address(0xAABB)];
+    address[] private moonBoostWhiteList = [
+        address(0x0012b4b8B7E8f5B69b3BDb5DE56Fb19A6464894C),
+        address(0xD0004696e83f1D6614f4d7BF3392B6005B6DE3Ec),
+        address(0xceAc49a86AdB77D322d3F9fE435397982C942c00),
+        address(0xE87d3CE5740062aDfa6B09cc7A8Ef600A732A3bD),
+        address(0x44ea107Df684040f89f42f250997901269EBAB68),
+        address(0xDb4fcEE6212E9c16d099B2264E628A92044ceF5e),
+        address(0x3C8a4EdfE35b4eEAAD9A06e5c93ad954A8672868),
+        address(0xDcf358aE5A6B6E71cfC0756a0706978F1AEFa091),
+        address(0xB93Cb37A3207c09a0dC1afbf6F2D1914450E6f2E),
+        address(0xfa4C794e070FDA97d3A57e8b274845066Cc2c107)
+    ];
 
     constructor(address server) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -612,7 +623,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         uint256 fruitRewardsProportion = _calculateFruitRewardsProportion(
             rewardFruitCount
         );
-        uint256 totalRewards = (prizePool * fruitRewardsProportion) / 100_000_000;
+        uint256 totalRewards = (prizePool * fruitRewardsProportion) /
+            100_000_000;
         uint256 eachFruitRewards = totalRewards / rewardFruitCount;
         require(eachFruitRewards > 0, "rewards should not be zero");
 

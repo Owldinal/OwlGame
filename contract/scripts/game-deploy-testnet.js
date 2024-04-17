@@ -91,7 +91,7 @@ async function deployOrConnect() {
 		owlGameContract = await hre.ethers.getContractFactory("OwlGame").then((c) => c.attach(owlGameAddress));
 		console.log(`OwlGame contract connected to : ${owlGameAddress}`);
 	} else {
-		const params = [ownerAddress];
+		const params = [backendAddress];
 		[owlGameContract, owlGameAddress] = await deploy("OwlGame", params);
 		console.log(`OwlGame contract deployed to : ${owlGameAddress}\nParams = ${params.join(" ")}`);
 	}

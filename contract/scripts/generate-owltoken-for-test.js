@@ -23,10 +23,10 @@ async function main() {
 	console.log(`Current Block number: ${blockNumber}`);
 
 	// Server 
-	owlTokenAddress = "0xf8bB8324Cd226f6229dbB8792C66119832791A59";
-	owldinalNftAddress = "0x73a11097dCf0817909039d2661a15cbc8F6624eF";
-	owlGameAddress = "0x8338B3295f87DEBa418c2F0bb7497414b0D73AC2";
-	genOneBoxAddress = "0xB9D8660b4a45aA24EC6dB53485E4334364C773A6";
+	owlTokenAddress = "0x5d99cfFf65f6fb075A997486E54db92C8886cCEb";
+	owldinalNftAddress = "0x6C2C2B29f5eB761335755EE606B19aF877732654";
+	owlGameAddress = "0xE02b95093027cefCa0938440C5B4cC3D95fdC896";
+	genOneBoxAddress = "0x17B4d30f123bB1BB3b1101c36c09C3d45eb8024C";
 
 	await deployOrConnect();
 
@@ -46,7 +46,7 @@ OWL_GAME_ADDR=${owlGameAddress}
 			`);
 
 	const userList = []
-	for (j = 1; j < 80; j++) {
+	for (j = 1; j < 100; j++) {
 		var user = (await hre.ethers.getSigners())[j];
 		console.log(`User: ${user.address}`);
 

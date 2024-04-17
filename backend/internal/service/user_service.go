@@ -34,7 +34,18 @@ func init() {
 
 	// init moon boost list.
 	moonBoostAddress = make(map[string]bool)
-	addressList := []string{"0xAABB"}
+	addressList := []string{
+		"0x0012b4b8B7E8f5B69b3BDb5DE56Fb19A6464894C",
+		"0xD0004696e83f1D6614f4d7BF3392B6005B6DE3Ec",
+		"0xceAc49a86AdB77D322d3F9fE435397982C942c00",
+		"0xE87d3CE5740062aDfa6B09cc7A8Ef600A732A3bD",
+		"0x44ea107Df684040f89f42f250997901269EBAB68",
+		"0xDb4fcEE6212E9c16d099B2264E628A92044ceF5e",
+		"0x3C8a4EdfE35b4eEAAD9A06e5c93ad954A8672868",
+		"0xDcf358aE5A6B6E71cfC0756a0706978F1AEFa091",
+		"0xB93Cb37A3207c09a0dC1afbf6F2D1914450E6f2E",
+		"0xfa4C794e070FDA97d3A57e8b274845066Cc2c107",
+	}
 	for _, address := range addressList {
 		moonBoostAddress[address] = true
 	}
@@ -102,7 +113,7 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 			boxInfo.Staked += 1
 			boxInfo.StakedIdList = append(boxInfo.StakedIdList, token.TokenId)
 
-			// calculate APR: 单个ELF的APR = （单个ELF的日平均Earning/100000）*365
+			// calculate APR : 单个ELF的APR = （单个ELF的日平均Earning/100000）*365
 			stakingRewards := token.CurrentRewards
 			stakingDays := int64(time.Now().Sub(*token.StakingTime).Hours()) / 24
 			if stakingDays < 1 {
@@ -114,6 +125,14 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 		} else {
 			boxInfo.UnstakedIdList = append(boxInfo.UnstakedIdList, token.TokenId)
 		}
+	}
+
+	// 所有MF的APR = 【所有MF的日平均Earning之和/（MF的数量*100000）】*365
+	if fruitInfo.Staked > 0 {
+		fruitInfo.Apr = fruitInfo.Apr / float64(fruitInfo.Staked)
+	}
+	if elfInfo.Staked > 0 {
+		elfInfo.Apr = elfInfo.Apr / float64(elfInfo.Staked)
 	}
 
 	response = &model.GetUserInfoResponse{
