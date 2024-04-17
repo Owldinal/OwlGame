@@ -21,6 +21,22 @@ async function generateSignForMint(signer, boxGen0Contract) {
 	return { hash, signature }
 }
 
+async function sendEth(signer, receiverAddress, amountInEther) {
+	const amountInWei = hre.ethers.parseEther(amountInEther);
+
+	const tx = {
+		to: receiverAddress,
+		value: amountInWei
+	};
+
+	const transactionResponse = await signer.sendTransaction(tx);
+
+	await transactionResponse.wait();
+
+	console.log(`Transaction successful with hash: ${transactionResponse.hash}`);
+}
+
+
 module.exports = {
-	deploy, generateSignForMint
+	deploy, generateSignForMint, sendEth
 };
