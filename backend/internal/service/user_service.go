@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"math"
 	"owl-backend/abigen"
 	"owl-backend/internal/config"
 	"owl-backend/internal/constant"
@@ -112,28 +113,18 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 		if token.IsStaking {
 			boxInfo.Staked += 1
 			boxInfo.StakedIdList = append(boxInfo.StakedIdList, token.TokenId)
-
-			// calculate APR : 单个ELF的APR = （单个ELF的日平均Earning/100000）*365
-			stakingRewards := token.CurrentRewards
-			stakingDays := int64(time.Now().Sub(*token.StakingTime).Hours()) / 24
-			if stakingDays < 1 {
-				stakingDays = 1
-			}
-			apr := stakingRewards.Div(decimal.NewFromInt(stakingDays)).Div(constant.MysteryBoxMintPrice).Mul(decimal.NewFromInt32(365))
-			boxInfo.Apr += apr.InexactFloat64()
-
 		} else {
 			boxInfo.UnstakedIdList = append(boxInfo.UnstakedIdList, token.TokenId)
 		}
 	}
-
-	// 所有MF的APR = 【所有MF的日平均Earning之和/（MF的数量*100000）】*365
-	if fruitInfo.Staked > 0 {
-		fruitInfo.Apr = fruitInfo.Apr / float64(fruitInfo.Staked)
+	var lastApr model.AprSnapshot
+	if err := database.DB.Order("id DESC").First(&lastApr).Error; err != nil {
+		return nil, model.ServerInternalError, fmt.Sprintf("failed to load apr: %v", err)
 	}
-	if elfInfo.Staked > 0 {
-		elfInfo.Apr = elfInfo.Apr / float64(elfInfo.Staked)
-	}
+	fruitInfo.Apr = lastApr.FruitApr
+	fruitInfo.Apy = lastApr.FruitApy
+	elfInfo.Apy = lastApr.ElfApr
+	elfInfo.Apy = lastApr.ElfApy
 
 	response = &model.GetUserInfoResponse{
 		Wallet:         wallet,
@@ -239,13 +230,18 @@ func GetUserMysteryBoxList(wallet string, pagination model.PaginationRequest) (r
 				IsStaking: token.IsStaking,
 			}
 			if token.IsStaking {
+				// 单个ELF的APR= （单个ELF的日平均Earning/100000）*365
 				stakingRewards := token.CurrentRewards
 				stakingDays := int64(time.Now().Sub(*token.StakingTime).Hours()) / 24
 				if stakingDays == 0 {
 					stakingDays = 1
 				}
-				apr := stakingRewards.Div(decimal.NewFromInt(stakingDays)).Div(constant.MysteryBoxMintPrice).Mul(decimal.NewFromInt32(365))
+				apr := stakingRewards.
+					Div(decimal.NewFromInt(stakingDays)).
+					Div(constant.MysteryBoxMintPrice).
+					Mul(decimal.NewFromInt32(365))
 				data.Apr = apr.InexactFloat64()
+				data.Apy = math.Pow(1+(data.Apr/365), 365) - 1
 			}
 			resultList = append(resultList, *data)
 		}

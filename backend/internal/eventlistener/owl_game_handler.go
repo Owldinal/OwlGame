@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"math"
 	"math/big"
 	"owl-backend/internal/constant"
 	"owl-backend/internal/database"
@@ -457,9 +458,11 @@ func (h *OwlGameFruitRewardUpdatedHandler) Handle(vlog types.Log) error {
 	// save event to database
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
 	eventItem := model.OwlGameFruitRewardUpdateEvent{
-		Event:  model.NewEvent(&event.Raw),
-		Count:  event.Count.Uint64(),
-		Amount: decimal.NewFromBigInt(event.Amount, -18),
+		Event:           model.NewEvent(&event.Raw),
+		Count:           event.Count.Uint64(),
+		TotalFruitCount: event.TotalFruitCount.Uint64(),
+		TotalElfCount:   event.TotalElfCount.Uint64(),
+		Amount:          decimal.NewFromBigInt(event.Amount, -18),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -471,6 +474,7 @@ func (h *OwlGameFruitRewardUpdatedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
+	updateAprSnapshot(&eventItem)
 	return globalUpdateRewards(constant.BoxTypeFruit, eventItem.Count, eventItem.Amount)
 }
 
@@ -540,6 +544,51 @@ func globalUpdateRewards(boxType constant.BoxType, count uint64, amount decimal.
 	}
 
 	return nil
+}
+
+func updateAprSnapshot(fruitRewardEvent *model.OwlGameFruitRewardUpdateEvent) {
+	snapshot := model.AprSnapshot{
+		TotalFruitCount: fruitRewardEvent.TotalFruitCount,
+		TotalElfCount:   fruitRewardEvent.TotalElfCount,
+		FruitRewards:    fruitRewardEvent.Amount,
+	}
+
+	// Fruit APR 计算公式： 1- 上次4h给每个水果发了多少奖励X ; 2- 水果成本 10w
+	// APR= 6X / 100000 * 365
+	// APY = (1 + APR/365) ^ 365 - 1
+	fruitRewards := fruitRewardEvent.Amount
+	fruitAprDecimal := fruitRewards.
+		Mul(decimal.NewFromInt(6)).
+		Div(decimal.NewFromInt(100000)).
+		Mul(decimal.NewFromInt(365))
+	fruitApr := fruitAprDecimal.InexactFloat64()
+	fruitApy := math.Pow(1+(fruitApr/365), 365) - 1
+
+	snapshot.FruitApr = fruitApr
+	snapshot.FruitApy = fruitApy
+
+	// Elf APR 计算公式： 1- 上次4h给每个水果发了多少奖励X; 2- 妖精成本10w; 3- 上次4h总质押的妖精数量Y
+	// 注意 X 是水果的奖励，而非妖精的
+	// APR= (（16% * X * 6）/ Y / 100000) * 365
+	// APY = (1 + APR/365) ^ 365 - 1
+	if int64(fruitRewardEvent.TotalElfCount) > 0 {
+		elfRewards := fruitRewardEvent.Amount
+		elfAprDecimal := elfRewards.
+			Mul(decimal.NewFromInt(6)).
+			Mul(decimal.NewFromFloatWithExponent(16, -2)).
+			Div(decimal.NewFromInt(int64(fruitRewardEvent.TotalElfCount))).
+			Div(decimal.NewFromInt(100000)).
+			Mul(decimal.NewFromInt(365))
+		elfApr := elfAprDecimal.InexactFloat64()
+		elfApy := math.Pow(1+(elfApr/365), 365) - 1
+
+		snapshot.ElfApr = elfApr
+		snapshot.ElfApy = elfApy
+	}
+
+	if err := database.DB.Create(&snapshot).Error; err != nil {
+		log.Warnf("Error saving updateAprSnapshot: %v", err)
+	}
 }
 
 type DailyPoolUpdater struct {

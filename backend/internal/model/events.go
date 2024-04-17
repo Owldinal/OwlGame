@@ -167,8 +167,10 @@ type OwlGameClaimRebateClaimedEvent struct {
 type OwlGameFruitRewardUpdateEvent struct {
 	Event
 	database.Model
-	Amount decimal.Decimal `gorm:"type:decimal(36,18);"`
-	Count  uint64
+	Amount          decimal.Decimal `gorm:"type:decimal(36,18);"`
+	Count           uint64
+	TotalFruitCount uint64
+	TotalElfCount   uint64
 }
 
 type OwlGameElfRewardUpdateEvent struct {

@@ -84,7 +84,12 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     );
     event RebateClaimed(address indexed user, uint256 amount);
 
-    event FruitRewardUpdated(uint256 amount, uint256 count);
+    event FruitRewardUpdated(
+        uint256 amount,
+        uint256 count,
+        uint256 totalFruitCount,
+        uint256 totalElfCount
+    );
     event ElfRewardUpdated(uint256 amount, uint256 count);
 
     bytes32 public constant SERVER_ROLE = keccak256("SERVER_ROLE");
@@ -634,7 +639,12 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             fruit.reward += eachFruitRewards;
             fruit.stakingTime = uint64(block.timestamp);
         }
-        emit FruitRewardUpdated(eachFruitRewards, rewardFruitCount);
+        emit FruitRewardUpdated(
+            eachFruitRewards,
+            rewardFruitCount,
+            fruitIdList.length,
+            elfIdList.length
+        );
 
         prizePool -= totalRewards;
         emit PrizePoolDecreased(totalRewards);

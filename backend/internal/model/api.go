@@ -99,6 +99,7 @@ type UserBoxInfo struct {
 	Total          int      `json:"total"`
 	Staked         int      `json:"staked"`
 	Apr            float64  `json:"apr"`
+	Apy            float64  `json:"apy"`
 	StakedIdList   []uint64 `json:"staked_id_list"`
 	UnstakedIdList []uint64 `json:"unstaked_id_list"`
 }
@@ -120,6 +121,7 @@ type UserMysteryBox struct {
 	BoxType   constant.BoxType `json:"box_type"`
 	Earning   decimal.Decimal  `json:"earning"`
 	Apr       float64          `json:"apr"`
+	Apy       float64          `json:"apy"`
 	IsStaking bool             `json:"is_staking"`
 }
 

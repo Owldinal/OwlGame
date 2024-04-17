@@ -43,7 +43,7 @@ const (
 	eventOwlGamePrizePoolDecreased = "0xf0870791f79c9e860000c2e3005d55ab8944ec1a18a6b61d4ad60ce184654f42"
 	eventOwlGameUnstakeOwldinalNft = "0x953947fb8c8d5e1bd1fb1561e4a4077c9f02d4952ad1185d28133c0d764d9a5e"
 	eventOwlGameOwlTokenBurned     = "0x818c9d2e3949d2ab3a0c76d31b137496e1b14d58e2b2d746301c2926a31c435d"
-	eventOwlGameFruitRewardUpdated = "0x58071a54cb90db0376875e1948fc0b9a0a18ab2614077300107d4377602a34ce"
+	eventOwlGameFruitRewardUpdated = "0x77cbc09843659e18ed105aec15e30ade634e6ca7b6d13e5ac92bb82cea91f8ee"
 	eventOwlGameElfRewardUpdated   = "0x9b964cbd458fdb8541cd6349fd809bc91ecc1a53602693a74fd37f5d3916363c"
 
 	eventOwlGameRebateRewardsIncreased    = "0x07e9fcef60e55f4c1c03cfeb57d85db49ecae00bc0367f586d1d67750dcebbe6"

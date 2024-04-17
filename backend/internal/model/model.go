@@ -65,6 +65,17 @@ type DailyPoolSnapshot struct {
 	TotalBurn        decimal.Decimal `json:"total_burn" gorm:"type:decimal(36,18)"`
 }
 
+type AprSnapshot struct {
+	database.Model
+	TotalFruitCount uint64
+	TotalElfCount   uint64
+	FruitRewards    decimal.Decimal `gorm:"type:decimal(36,18)"`
+	FruitApr        float64
+	FruitApy        float64
+	ElfApr          float64
+	ElfApy          float64
+}
+
 type RewardPoolTransactionRecord struct {
 	database.Model
 	User        string
