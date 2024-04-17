@@ -120,6 +120,7 @@ type UserMysteryBox struct {
 	TokenId   uint64           `json:"token_id"`
 	BoxType   constant.BoxType `json:"box_type"`
 	Earning   decimal.Decimal  `json:"earning"`
+	Claimed   decimal.Decimal  `json:"claimed"`
 	Apr       float64          `json:"apr"`
 	Apy       float64          `json:"apy"`
 	IsStaking bool             `json:"is_staking"`

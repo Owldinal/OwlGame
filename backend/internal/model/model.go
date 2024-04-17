@@ -27,6 +27,8 @@ type MysteryBoxToken struct {
 	BuffLevel      uint8            `json:"buff_level"`
 	CurrentRewards decimal.Decimal  `json:"current_rewards" gorm:"type:decimal(36,18);"`
 	TotalRewards   decimal.Decimal  `json:"total_rewards" gorm:"type:decimal(36,18);"`
+	ClaimedRewards decimal.Decimal  `json:"claimed_rewards" gorm:"type:decimal(36,18);"`
+	// ClaimedRewards + CurrentRewards = TotalRewards
 }
 
 type InviteRelation struct {

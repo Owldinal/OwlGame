@@ -350,6 +350,7 @@ CREATE TABLE mystery_box_tokens
     buff_level      TINYINT UNSIGNED,
     current_rewards DECIMAL(36, 18),
     total_rewards   DECIMAL(36, 18),
+    claimed_rewards DECIMAL(36, 18),
     created_at      TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP             DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at      TIMESTAMP        NULL DEFAULT NULL,
@@ -439,3 +440,6 @@ CREATE TABLE reward_pool_transaction_records
 -- initial date
 INSERT INTO daily_pool_snapshots (date, total_pool_amount, allocated_rewards, total_market_cap, total_burn)
 VALUES ('1970-01-01', 0.0, 0.0, 0.0, 0.0);
+
+INSERT INTO apr_snapshots (total_fruit_count, total_elf_count, fruit_rewards, fruit_apr, fruit_apy, elf_apr, elf_apy)
+VALUES (0, 0, 0.0, 0.0, 0.0, 0.0, 0.0);

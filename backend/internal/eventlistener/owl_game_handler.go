@@ -395,8 +395,10 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	}
 	tokenItem.IsStaking = false
 	tokenItem.StakingTime = nil
+	tokenItem.ClaimedRewards = tokenItem.ClaimedRewards.Add(eventItem.Rewards)
+
 	if err := database.DB.Save(&tokenItem).Error; err != nil {
-		log.Warnf("Error updating inviter user infoo: %v", err)
+		log.Warnf("Error updating unstake box: %v", err)
 		return err
 	}
 
@@ -522,6 +524,7 @@ func globalUpdateRewards(boxType constant.BoxType, count uint64, amount decimal.
 		tokenId := big.NewInt(int64(token.TokenId))
 		tokenInfo, err := owlGameContract.GetTokenInfo(&bind.CallOpts{}, tokenId)
 		if err != nil {
+			log.Warnf("error when load token info for token id %v", tokenId)
 			tx.Rollback()
 			return err
 		}
@@ -530,9 +533,10 @@ func globalUpdateRewards(boxType constant.BoxType, count uint64, amount decimal.
 		if currentRewards.Cmp(token.CurrentRewards) > 0 {
 			addRewards := currentRewards.Sub(token.CurrentRewards)
 			token.CurrentRewards = currentRewards
-			token.TotalRewards.Add(addRewards)
+			token.TotalRewards = token.TotalRewards.Add(addRewards)
 
 			if err := tx.Save(&token).Error; err != nil {
+				log.Warnf("error when update rewards for token id %v", tokenId)
 				tx.Rollback()
 				return err
 			}

@@ -226,7 +226,8 @@ func GetUserMysteryBoxList(wallet string, pagination model.PaginationRequest) (r
 			data := &model.UserMysteryBox{
 				TokenId:   token.TokenId,
 				BoxType:   token.BoxType,
-				Earning:   token.CurrentRewards, // TODO: Earning 是什么意思?
+				Earning:   token.CurrentRewards,
+				Claimed:   token.ClaimedRewards,
 				IsStaking: token.IsStaking,
 			}
 			if token.IsStaking {
