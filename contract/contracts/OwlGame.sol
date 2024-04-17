@@ -608,11 +608,11 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             }
         }
 
-        // fruitRewardsProportion should divied by 1_000_000
+        // fruitRewardsProportion should divied by 100_000_000
         uint256 fruitRewardsProportion = _calculateFruitRewardsProportion(
             rewardFruitCount
         );
-        uint256 totalRewards = (prizePool * fruitRewardsProportion) / 1_000_000;
+        uint256 totalRewards = (prizePool * fruitRewardsProportion) / 100_000_000;
         uint256 eachFruitRewards = totalRewards / rewardFruitCount;
         require(eachFruitRewards > 0, "rewards should not be zero");
 
@@ -692,37 +692,37 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
         uint256 fruitRewardsProportion;
         if (rewardFruitCount <= 1) {
-            fruitRewardsProportion = 100; // 0.0001000% * 1_000_000
+            fruitRewardsProportion = 100; // 0.0001000% * 100_000_000
         } else if (rewardFruitCount <= 50) {
-            fruitRewardsProportion = 5000; // 0.0050000% * 1_000_000
+            fruitRewardsProportion = 5000; // 0.0050000% * 100_000_000
         } else if (rewardFruitCount <= 100) {
-            fruitRewardsProportion = 10000; // 0.0100000% * 1_000_000
+            fruitRewardsProportion = 10000; // 0.0100000% * 100_000_000
         } else if (rewardFruitCount <= 200) {
-            fruitRewardsProportion = 21000; // 0.0210000% * 1_000_000
+            fruitRewardsProportion = 21000; // 0.0210000% * 100_000_000
         } else if (rewardFruitCount <= 400) {
-            fruitRewardsProportion = 43040; // 0.0430400% * 1_000_000
+            fruitRewardsProportion = 43040; // 0.0430400% * 100_000_000
         } else if (rewardFruitCount <= 800) {
-            fruitRewardsProportion = 88230; // 0.0882300% * 1_000_000
+            fruitRewardsProportion = 88230; // 0.0882300% * 100_000_000
         } else if (rewardFruitCount <= 1200) {
-            fruitRewardsProportion = 136760; // 0.1367600% * 1_000_000
+            fruitRewardsProportion = 136760; // 0.1367600% * 100_000_000
         } else if (rewardFruitCount <= 1800) {
-            fruitRewardsProportion = 211980; // 0.2119800% * 1_000_000
+            fruitRewardsProportion = 211980; // 0.2119800% * 100_000_000
         } else if (rewardFruitCount <= 2300) {
-            fruitRewardsProportion = 276750; // 0.2767500% * 1_000_000
+            fruitRewardsProportion = 276750; // 0.2767500% * 100_000_000
         } else if (rewardFruitCount <= 2800) {
-            fruitRewardsProportion = 342930; // 0.3429300% * 1_000_000
+            fruitRewardsProportion = 342930; // 0.3429300% * 100_000_000
         } else if (rewardFruitCount <= 3300) {
-            fruitRewardsProportion = 416410; // 0.4164100% * 1_000_000
+            fruitRewardsProportion = 416410; // 0.4164100% * 100_000_000
         } else if (rewardFruitCount <= 4000) {
-            fruitRewardsProportion = 522400; // 0.5224000% * 1_000_000
+            fruitRewardsProportion = 522400; // 0.5224000% * 100_000_000
         } else if (rewardFruitCount <= 5000) {
-            fruitRewardsProportion = 679130; // 0.6791300% * 1_000_000
+            fruitRewardsProportion = 679130; // 0.6791300% * 100_000_000
         } else if (rewardFruitCount <= 6000) {
-            fruitRewardsProportion = 842120; // 0.8421200% * 1_000_000
+            fruitRewardsProportion = 842120; // 0.8421200% * 100_000_000
         } else if (rewardFruitCount <= 7500) {
-            fruitRewardsProportion = 1190480; // 1.1904800% * 1_000_000
+            fruitRewardsProportion = 1190480; // 1.1904800% * 100_000_000
         } else {
-            fruitRewardsProportion = 1349210; // 1.3492100% * 1_000_000
+            fruitRewardsProportion = 1349210; // 1.3492100% * 100_000_000
         }
 
         return fruitRewardsProportion;

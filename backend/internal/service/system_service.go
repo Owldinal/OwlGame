@@ -6,12 +6,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"log"
 	"math/big"
 	"owl-backend/abigen"
 	"owl-backend/internal/config"
 	"owl-backend/internal/eth"
 	"owl-backend/internal/model"
+	"owl-backend/pkg/log"
 )
 
 var (
@@ -38,10 +38,11 @@ func UpdateFruitRewards() (response interface{}, code model.ResponseCode, msg st
 	auth.GasPrice = big.NewInt(50000000)
 	tx, err := owlGame.UpdateAllFruitRewards(auth)
 	if err != nil {
+		log.Warnf("Update rewards failed: %+v, err: %v", tx, err)
 		return false, model.ServerInternalError, fmt.Sprintf("Err: %v", err)
 	}
 
-	log.Printf("Update Fruit Reward Transaction sent: %s", tx.Hash().Hex())
+	log.Infof("Update Fruit Reward Transaction sent: %s", tx.Hash().Hex())
 
 	return true, model.Success, ""
 }

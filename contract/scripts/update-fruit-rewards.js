@@ -9,11 +9,14 @@ let owlGameContract, owlGameAddress;
 const decimal = BigInt(10) ** BigInt(18)
 
 async function main() {
+	const chainId = await hre.ethers.provider.getNetwork();
+	console.log(`Current Chain Id: ${JSON.stringify(chainId)}`);
+
 	[deployer] = await hre.ethers.getSigners();
 	ownerAddress = deployer.address;
 	let tx;
 
-	owlGameAddress = "0x49fd2BE640DB2910c2fAb69bB8531Ab6E76127ff";
+	owlGameAddress = "0x8338B3295f87DEBa418c2F0bb7497414b0D73AC2";
 	owlGameContract = await hre.ethers.getContractFactory("OwlGame").then((c) => c.attach(owlGameAddress));
 	console.log(`OwlGame contract connected to : ${owlGameAddress}`);
 
