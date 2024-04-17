@@ -35,7 +35,7 @@ func GetGameInfo() (response *model.GetGameInfoResponse, code model.ResponseCode
 	// TODO: TotalMarketCap should equal to TotalPoolAmount * UsdPrice, But UsdPrice is get from frontend, so here use
 	// TotalPoolAmount instead
 	response = &model.GetGameInfoResponse{
-		TotalRewards:   today.AllocatedRewards,
+		TotalRewards:   today.TotalPoolAmount,
 		TotalMarketCap: today.TotalPoolAmount,
 		TotalBurned:    today.TotalBurn,
 	}

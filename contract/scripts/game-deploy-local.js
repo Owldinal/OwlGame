@@ -15,6 +15,9 @@ async function main() {
 	[deployer, playerB, playerC] = await hre.ethers.getSigners();
 	ownerAddress = deployer.address;
 	backendAddress = process.env.BACKEND_WALLET;
+	// backendAddress = deployer.address;
+	// await sendEth(deployer, backendAddress, "0.1");
+
 	let tx;
 	console.log(`Address = ${deployer.address}`);
 
@@ -212,7 +215,7 @@ async function deployOrConnect() {
 		owlGameContract = await hre.ethers.getContractFactory("OwlGame").then((c) => c.attach(owlGameAddress));
 		console.log(`OwlGame contract connected to : ${owlGameAddress}`);
 	} else {
-		const params = [ownerAddress];
+		const params = [backendAddress];
 		[owlGameContract, owlGameAddress] = await deploy("OwlGame", params);
 		console.log(`OwlGame contract deployed to : ${owlGameAddress}\nParams = ${params.join(" ")}`);
 	}
