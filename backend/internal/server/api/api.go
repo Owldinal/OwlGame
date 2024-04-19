@@ -175,7 +175,7 @@ func UpdateRewards(c *gin.Context) {
 		return
 	}
 
-	if req.Secret != config.C.BackendWalletPrivateKey[0:6] {
+	if req.Secret != config.C.Secret {
 		ErrorResponse(c, model.WrongParam, "Wrong Param")
 		return
 	}

@@ -14,6 +14,7 @@ type Config struct {
 	Port int    `env:"PORT" envDefault:"8080"`
 
 	BackendWalletPrivateKey string `env:"BACKEND_WALLET_PRIVATE_KEY" envDefault:""`
+	Secret                  string `env:"SECRET" envDefault:""`
 
 	HCaptchaKey     string `env:"HCAPTCHA_KEY" envDefault:""`
 	DisableHCaptcha bool   `env:"DISABLE_HCAPTCHA" envDefault:"false"`
