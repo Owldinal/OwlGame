@@ -615,13 +615,15 @@ func updateAprSnapshot(fruitRewardEvent *model.OwlGameFruitRewardUpdateEvent) {
 	snapshot.FruitApr = fruitApr
 	snapshot.FruitApy = fruitApy
 
-	// Elf APR 计算公式： 1- 上次4h给每个水果发了多少奖励X; 2- 妖精成本10w; 3- 上次4h总质押的妖精数量Y
-	// 注意 X 是水果的奖励，而非妖精的
-	// APR= (（16% * X * 6）/ Y / 100000) * 365
+	// Elf APR 计算公式：
+	// 1- 上次4h给所有水果发了多少奖励Z
+	// 2- 妖精成本10w
+	// 3- 上次4h总质押的妖精数量Y
+	// APR=（16%*Z*6）/Y/100000 *365
 	// APY = (1 + APR/365) ^ 365 - 1
 	if int64(fruitRewardEvent.TotalElfCount) > 0 {
-		elfRewards := fruitRewardEvent.Amount
-		elfAprDecimal := elfRewards.
+		totalFruitRewards := fruitRewardEvent.Amount.Mul(decimal.NewFromInt(int64(fruitRewardEvent.Count)))
+		elfAprDecimal := totalFruitRewards.
 			Mul(decimal.NewFromInt(6)).
 			Mul(decimal.NewFromFloatWithExponent(16, -2)).
 			Div(decimal.NewFromInt(int64(fruitRewardEvent.TotalElfCount))).
