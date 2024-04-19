@@ -276,16 +276,18 @@ CREATE TABLE IF NOT EXISTS owl_game_owl_token_burned_events
 
 CREATE TABLE IF NOT EXISTS owl_game_fruit_reward_update_events
 (
-    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tx_hash      CHAR(66)        NOT NULL,
-    log_index    BIGINT          NOT NULL,
-    block_number BIGINT          NOT NULL,
-    block_hash   CHAR(66)        NOT NULL,
-    count        BIGINT UNSIGNED NOT NULL,
-    amount       DECIMAL(36, 18) NOT NULL,
-    created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at   TIMESTAMP       NULL DEFAULT NULL,
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash           CHAR(66)        NOT NULL,
+    log_index         BIGINT          NOT NULL,
+    block_number      BIGINT          NOT NULL,
+    block_hash        CHAR(66)        NOT NULL,
+    count             BIGINT UNSIGNED NOT NULL,
+    total_fruit_count BIGINT UNSIGNED NOT NULL,
+    total_elf_count   BIGINT UNSIGNED NOT NULL,
+    amount            DECIMAL(36, 18) NOT NULL,
+    created_at        TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at        TIMESTAMP       NULL DEFAULT NULL,
     UNIQUE (tx_hash, log_index)
 );
 
