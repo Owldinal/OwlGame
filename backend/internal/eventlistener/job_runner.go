@@ -1,6 +1,7 @@
 package eventlistener
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -22,10 +23,12 @@ import (
 
 var (
 	privateKey *ecdsa.PrivateKey
+	ethClient  *ethclient.Client
 )
 
 func StartJobListening() {
-	client, err := ethclient.Dial(config.C.NodeUrl)
+	var err error
+	ethClient, err = ethclient.Dial(config.C.NodeUrl)
 	if err != nil {
 		log.Fatal("Failed to connect to the Ethereum client: %v", err)
 	}
@@ -33,7 +36,7 @@ func StartJobListening() {
 	privateKey, err = crypto.HexToECDSA(config.C.BackendWalletPrivateKey)
 
 	owlGameAddr := common.HexToAddress(config.C.OwlGameAddr)
-	owlGame, err := abigen.NewOwlGame(owlGameAddr, client)
+	owlGame, err := abigen.NewOwlGame(owlGameAddr, ethClient)
 
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
@@ -91,9 +94,33 @@ func processJobs(owlGame *abigen.OwlGame) {
 			job.Result = job.Result + fmt.Sprintf("Err: %v;", err)
 		} else {
 			job.Status = constant.MintJobStatusSuccess
-			job.Result = fmt.Sprintf("Success: %v", tx.Hash().String())
+			job.Result = job.Result + fmt.Sprintf("Success;")
+			job.JobTxHash = tx.Hash().Hex()
+
+			// receipt:
+			if true {
+				receipt, err := bind.WaitMined(context.Background(), ethClient, tx)
+				if err != nil {
+					// do nothing
+					//job.Status = constant.MintJobStatusFailed
+					job.Result = job.Result + fmt.Sprintf("WaitMined Err: %v;", err)
+				} else {
+					job.Status = constant.MintJobStatusSuccess
+					job.Result = job.Result + fmt.Sprintf("Success Mint")
+
+					job.JobBlockHash = receipt.BlockHash.Hex()
+					job.JobBlockNumber = receipt.BlockNumber.Uint64()
+					for _, eventLog := range receipt.Logs {
+						if eventLog.Topics[0].Hex() == "0xdf3efac43e1fbda7cd95675458501cb76f194c5347392348f2275a375a5f9863" {
+							job.JobLogIndex = eventLog.Index
+							break
+						}
+					}
+				}
+			}
 		}
 
 		database.DB.Save(&job)
+		time.Sleep(time.Millisecond * 500)
 	}
 }

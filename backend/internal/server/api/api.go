@@ -152,6 +152,22 @@ func GetRewardHistory(c *gin.Context) {
 	}
 }
 
+func GetRequestMintTx(c *gin.Context) {
+	var req model.GetMintTxRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	data, code, msg := service.GetMintTx(req.Tx)
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}
+
 func UpdateRewards(c *gin.Context) {
 	var req model.AdminSecret
 	if err := c.ShouldBind(&req); err != nil {

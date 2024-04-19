@@ -287,6 +287,33 @@ func GetUserInviteList(wallet string, pagination model.PaginationRequest) (respo
 	return result, model.Success, ""
 }
 
+func GetMintTx(requestTx string) (response *model.GetMintTxResponse, code model.ResponseCode, msg string) {
+	job := model.RequestMintJob{
+		RequestTxHash: requestTx,
+	}
+	if err := database.DB.Where(&job).First(&job).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, model.NotFound, "Can not find this request tx"
+		} else {
+			return nil, model.ServerInternalError, fmt.Sprintf("failed to get mint tx: %v", err)
+		}
+	}
+
+	response = &model.GetMintTxResponse{
+		RequestTx: requestTx,
+		MintTx:    job.JobTxHash,
+		JobMsg:    job.Result,
+	}
+
+	if job.Status == constant.MintJobStatusFailed && job.RetryCount < 3 {
+		response.JobStatus = constant.MintJobStatusProcessing
+	} else {
+		response.JobStatus = job.Status
+	}
+
+	return response, model.Success, ""
+}
+
 func getCurrentUser(wallet string) (userInfo *model.UserInfo, notFound bool, err error) {
 	userInfoItem := model.UserInfo{
 		Address: wallet,
