@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"owl-backend/internal/constant"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
 	"time"
@@ -57,6 +58,26 @@ func GetGameInfo() (response *model.GetGameInfoResponse, code model.ResponseCode
 	//
 	//response.OwlPrice = decimal.NewFromFloat(0.001)
 	//response.OwlPriceChange = decimal.NewFromFloat(0)
+
+	type Result struct {
+		BoxType constant.BoxType
+		Count   uint64
+	}
+	var results []Result
+	if err := database.DB.Model(&model.MysteryBoxToken{}).
+		Select("box_type, count(*) as count").
+		Where("is_staking = ?", true).
+		Group("box_type").
+		Find(&results).Error; err != nil {
+		return nil, model.ServerInternalError, fmt.Sprintf("Internal Error (%v)", err)
+	}
+	for _, count := range results {
+		if count.BoxType == constant.BoxTypeElf {
+			response.StakedElfCount = count.Count
+		} else if count.BoxType == constant.BoxTypeFruit {
+			response.StakedFruitCount = count.Count
+		}
+	}
 
 	return response, model.Success, ""
 }

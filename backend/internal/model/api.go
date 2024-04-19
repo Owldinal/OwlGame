@@ -156,6 +156,8 @@ type GetGameInfoResponse struct {
 	TotalMarketCapChange decimal.Decimal `json:"total_market_cap_change"`
 	TotalBurned          decimal.Decimal `json:"total_burned"`
 	TotalBurnedChange    decimal.Decimal `json:"total_burned_change"`
+	StakedFruitCount     uint64          `json:"staked_fruit_count"`
+	StakedElfCount       uint64          `json:"staked_elf_count"`
 }
 
 type DataPoint struct {
