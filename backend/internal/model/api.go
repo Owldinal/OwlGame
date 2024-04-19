@@ -136,6 +136,17 @@ type GetUserInviterResponse struct {
 	// maybe incoming here
 }
 
+type GetMintTxRequest struct {
+	Tx string `json:"tx" form:"tx" binding:"required"`
+}
+
+type GetMintTxResponse struct {
+	RequestTx string                 `json:"request_tx"`
+	MintTx    string                 `json:"mint_tx"`
+	JobStatus constant.MintJobStatus `json:"job_status"`
+	JobMsg    string                 `json:"job_msg"`
+}
+
 type GetGameInfoResponse struct {
 	TotalRewards         decimal.Decimal `json:"total_rewards"`
 	TotalRewardUSD       decimal.Decimal `json:"total_reward_usd"`
@@ -145,6 +156,8 @@ type GetGameInfoResponse struct {
 	TotalMarketCapChange decimal.Decimal `json:"total_market_cap_change"`
 	TotalBurned          decimal.Decimal `json:"total_burned"`
 	TotalBurnedChange    decimal.Decimal `json:"total_burned_change"`
+	StakedFruitCount     uint64          `json:"staked_fruit_count"`
+	StakedElfCount       uint64          `json:"staked_elf_count"`
 }
 
 type DataPoint struct {

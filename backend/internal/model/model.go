@@ -88,6 +88,25 @@ type RewardPoolTransactionRecord struct {
 	Event
 }
 
-// region ---- Enums ----
+type RequestMintJob struct {
+	database.Model
+	User      string
+	RequestId uint64
+	Count     uint64
+	// Status: 0 means waiting to do ; 1 means processing ; 2 means success; 3 means failed
+	Status constant.MintJobStatus
+	// Result: if success, there will be a json string like {elf:[1,2,3], fruit:[5,6,7], burn:[8,9]}
+	// Failed: if failed, there will be a error msg
+	Result     string
+	RetryCount uint8
 
-// endregion
+	RequestTxHash      string `gorm:"size:66;"`
+	RequestLogIndex    uint
+	RequestBlockNumber uint64
+	RequestBlockHash   string `gorm:"size:66;"`
+
+	JobTxHash      string `gorm:"size:66;"`
+	JobLogIndex    uint
+	JobBlockNumber uint64
+	JobBlockHash   string `gorm:"size:66"`
+}

@@ -9,7 +9,7 @@ const config: HardhatUserConfig = {
     version: "0.8.24",
     settings: {
       optimizer: {
-        enabled: false,
+        enabled: true,
         runs: 200
       }
     }
@@ -24,7 +24,7 @@ const config: HardhatUserConfig = {
       accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
     },
     localhost: {
-      url: 'http://127.0.0.1:7545',
+      url: 'http://127.0.0.1:8545',
       accounts: { mnemonic: process.env.GANACHE_MNEMONIC }
     },
     ganache: {

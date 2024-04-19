@@ -136,6 +136,22 @@ CREATE TABLE IF NOT EXISTS owl_game_prize_pool_decreased_events
     UNIQUE (tx_hash, log_index)
 );
 
+CREATE TABLE IF NOT EXISTS owl_game_request_mint_events
+(
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tx_hash      CHAR(66)        NOT NULL,
+    log_index    BIGINT          NOT NULL,
+    block_number BIGINT          NOT NULL,
+    block_hash   CHAR(66)        NOT NULL,
+    user         CHAR(42)        NOT NULL,
+    request_id   BIGINT UNSIGNED NOT NULL,
+    count        BIGINT UNSIGNED NOT NULL,
+    created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at   TIMESTAMP       NULL DEFAULT NULL,
+    UNIQUE (tx_hash, log_index)
+);
+
 CREATE TABLE IF NOT EXISTS owl_game_mint_mystery_box_events
 (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -437,6 +453,28 @@ CREATE TABLE reward_pool_transaction_records
     INDEX idx_tx_hash (tx_hash),
     INDEX idx_log_index (log_index),
     INDEX idx_block_number (block_number)
+);
+
+CREATE TABLE request_mint_jobs
+(
+    id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user                 VARCHAR(255)    NOT NULL,
+    request_id           BIGINT UNSIGNED NOT NULL,
+    count                BIGINT UNSIGNED NOT NULL,
+    status               INT UNSIGNED    NOT NULL,
+    retry_count          INT UNSIGNED    NOT NULL,
+    result               TEXT,
+    request_tx_hash      CHAR(66),
+    request_log_index    INT UNSIGNED,
+    request_block_number BIGINT UNSIGNED,
+    request_block_hash   CHAR(66),
+    job_tx_hash          CHAR(66),
+    job_log_index        INT UNSIGNED,
+    job_block_number     BIGINT UNSIGNED,
+    job_block_hash       CHAR(66),
+    created_at           TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at           TIMESTAMP       NULL DEFAULT NULL
 );
 
 -- initial date

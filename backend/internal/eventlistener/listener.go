@@ -38,6 +38,8 @@ const (
 	eventOwlGameBindInvitation     = "0x3144fc7320adf238514c761c91814e301f210c0e4e0bb5f9fd88bec051b4f100"
 	eventOwlGameJoinGame           = "0x3518b1830e6ec9f510e24a95f032e27013c745334b813b19f15405c90923f4bc"
 	eventOwlGamePrizePoolIncreased = "0x3c231f64b16483d16ca517ccd881f34f86dd04ccc1305e65b854fe82189b7625"
+
+	eventOwlGameRequestMint        = "0x79ab85c2314dba73749962c93d6920c946a5f6f0532f5e675fd7b1ff530ee058"
 	eventOwlGameMintMysteryBox     = "0xdf3efac43e1fbda7cd95675458501cb76f194c5347392348f2275a375a5f9863"
 	eventOwlGameStakeMysteryBox    = "0xca6d3ba2c5c2c5da541c637a6da9bccafef99671140cd5fd444322bdaca03336"
 	eventOwlGamePrizePoolDecreased = "0xf0870791f79c9e860000c2e3005d55ab8944ec1a18a6b61d4ad60ce184654f42"
@@ -118,6 +120,8 @@ func registerHandlers(eventProcessor *EventProcessor) {
 	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameBindInvitation, &OwlGameBindInvitationHandler{})
 	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGamePrizePoolIncreased, &OwlGamePrizePoolIncreasedHandler{})
 	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGamePrizePoolDecreased, &OwlGamePrizePoolDecreasedHandler{})
+
+	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameRequestMint, &OwlGameRequestMintHandler{})
 	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameMintMysteryBox, &OwlGameMintMysteryBoxHandler{})
 
 	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameStakeOwldinalNft, &OwlGameStakeOwldinalNftHandler{})

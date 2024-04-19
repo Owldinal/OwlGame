@@ -70,12 +70,6 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 		amount = &amountDecimal
 	}
 
-	// check moon boost
-	isMoonBoost := false
-	if config.C.NeedCheckMoonBoost && !notFound {
-		isMoonBoost = moonBoostAddress[wallet]
-	}
-
 	// Get Owldinal Nft
 	var nftTokens []model.OwldinalNftToken
 	result := database.DB.Where("owner = ?", wallet).Find(&nftTokens)
@@ -92,6 +86,12 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 		} else {
 			owlInfo.UnstakedIdList = append(owlInfo.UnstakedIdList, owldinal.TokenId)
 		}
+	}
+
+	// check moon boost
+	isMoonBoost := false
+	if config.C.NeedCheckMoonBoost && !notFound {
+		isMoonBoost = moonBoostAddress[wallet] || owlInfo.Total > 0
 	}
 
 	// get mystery box info & total_earned
@@ -285,6 +285,33 @@ func GetUserInviteList(wallet string, pagination model.PaginationRequest) (respo
 	}
 
 	return result, model.Success, ""
+}
+
+func GetMintTx(requestTx string) (response *model.GetMintTxResponse, code model.ResponseCode, msg string) {
+	job := model.RequestMintJob{
+		RequestTxHash: requestTx,
+	}
+	if err := database.DB.Where(&job).First(&job).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, model.NotFound, "Can not find this request tx"
+		} else {
+			return nil, model.ServerInternalError, fmt.Sprintf("failed to get mint tx: %v", err)
+		}
+	}
+
+	response = &model.GetMintTxResponse{
+		RequestTx: requestTx,
+		MintTx:    job.JobTxHash,
+		JobMsg:    job.Result,
+	}
+
+	if job.Status == constant.MintJobStatusFailed && job.RetryCount < 3 {
+		response.JobStatus = constant.MintJobStatusProcessing
+	} else {
+		response.JobStatus = job.Status
+	}
+
+	return response, model.Success, ""
 }
 
 func getCurrentUser(wallet string) (userInfo *model.UserInfo, notFound bool, err error) {

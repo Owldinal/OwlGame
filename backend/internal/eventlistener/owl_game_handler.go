@@ -168,6 +168,50 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 	return nil
 }
 
+type OwlGameRequestMintHandler struct{}
+
+func (h *OwlGameRequestMintHandler) Handle(vlog types.Log) error {
+	event, err := owlGameContract.ParseRequestMint(vlog)
+	if err != nil {
+		return err
+	}
+
+	eventItem := model.OwlGameRequestMintEvent{
+		Event:     model.NewEvent(&event.Raw),
+		User:      event.User.Hex(),
+		Count:     event.Count.Uint64(),
+		RequestId: event.RequestId.Uint64(),
+	}
+	eventResult := database.DB.Clauses().Create(&eventItem)
+	if eventResult.Error != nil {
+		if errors.Is(eventResult.Error, gorm.ErrDuplicatedKey) {
+			return nil
+		} else {
+			log.Warnf("Error Is: %v", eventResult.Error)
+			return eventResult.Error
+		}
+	}
+
+	job := &model.RequestMintJob{
+		RequestTxHash:      eventItem.TxHash,
+		RequestLogIndex:    eventItem.LogIndex,
+		RequestBlockNumber: eventItem.BlockNumber,
+		RequestBlockHash:   eventItem.BlockHash,
+
+		RequestId: eventItem.RequestId,
+		User:      eventItem.User,
+		Count:     eventItem.Count,
+		Status:    constant.MintJobStatusNotStart,
+	}
+
+	itemResult := database.DB.Clauses().Create(&job)
+	if itemResult.Error != nil {
+		return itemResult.Error
+	}
+
+	return nil
+}
+
 type OwlGameMintMysteryBoxHandler struct{}
 
 func (h *OwlGameMintMysteryBoxHandler) Handle(vlog types.Log) error {
@@ -393,9 +437,13 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		log.Warnf("Error Is: %v", err)
 		return err
 	}
+	if !eventItem.Rewards.Equal(tokenItem.CurrentRewards) {
+		log.Warnf("Cliam: rewards not equal as db. event=%v, db=%v", eventItem.Rewards, tokenItem.CurrentRewards)
+	}
 	tokenItem.IsStaking = false
 	tokenItem.StakingTime = nil
 	tokenItem.ClaimedRewards = tokenItem.ClaimedRewards.Add(eventItem.Rewards)
+	tokenItem.CurrentRewards = decimal.Zero
 
 	if err := database.DB.Save(&tokenItem).Error; err != nil {
 		log.Warnf("Error updating unstake box: %v", err)
@@ -571,13 +619,15 @@ func updateAprSnapshot(fruitRewardEvent *model.OwlGameFruitRewardUpdateEvent) {
 	snapshot.FruitApr = fruitApr
 	snapshot.FruitApy = fruitApy
 
-	// Elf APR 计算公式： 1- 上次4h给每个水果发了多少奖励X; 2- 妖精成本10w; 3- 上次4h总质押的妖精数量Y
-	// 注意 X 是水果的奖励，而非妖精的
-	// APR= (（16% * X * 6）/ Y / 100000) * 365
+	// Elf APR 计算公式：
+	// 1- 上次4h给所有水果发了多少奖励Z
+	// 2- 妖精成本10w
+	// 3- 上次4h总质押的妖精数量Y
+	// APR=（16%*Z*6）/Y/100000 *365
 	// APY = (1 + APR/365) ^ 365 - 1
 	if int64(fruitRewardEvent.TotalElfCount) > 0 {
-		elfRewards := fruitRewardEvent.Amount
-		elfAprDecimal := elfRewards.
+		totalFruitRewards := fruitRewardEvent.Amount.Mul(decimal.NewFromInt(int64(fruitRewardEvent.Count)))
+		elfAprDecimal := totalFruitRewards.
 			Mul(decimal.NewFromInt(6)).
 			Mul(decimal.NewFromFloatWithExponent(16, -2)).
 			Div(decimal.NewFromInt(int64(fruitRewardEvent.TotalElfCount))).

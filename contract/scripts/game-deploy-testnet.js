@@ -29,10 +29,10 @@ async function main() {
 	await deployOrConnect();
 
 	console.log(`
-owlTokenAddress= "${owlTokenAddress}";
 owldinalNftAddress= "${owldinalNftAddress}";
-owlGameAddress= "${owlGameAddress}";
+owlTokenAddress= "${owlTokenAddress}";
 genOneBoxAddress= "${genOneBoxAddress}";
+owlGameAddress= "${owlGameAddress}";
 		`);
 
 	console.log(`
@@ -51,8 +51,6 @@ OWL_GAME_ADDR=${owlGameAddress}
 	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
 	await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
 	await owlGameContract.connect(deployer).addPrize(prizeAmount);
-
-	console.log(`\nconst [owlTokenAddress, owldinalNftAddress, genOneBoxAddress, owlGameAddress] = ["${owlTokenAddress}", "${owldinalNftAddress}", "${genOneBoxAddress}", "${owlGameAddress}"];\n`);
 
 	return;
 }

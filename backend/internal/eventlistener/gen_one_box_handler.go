@@ -84,7 +84,11 @@ func (h *GenOneBoxTransferHandler) Handle(vlog types.Log) error {
 
 	// When FromUser=0x0， means this is a mint. don't update db (mint will do this.)
 	if eventItem.FromUser == constant.NoneAddr {
-		//
+		return nil
+	}
+
+	// When ToUser=0x0， means this is a burn. don't update db
+	if eventItem.ToUser == constant.NoneAddr {
 		return nil
 	}
 

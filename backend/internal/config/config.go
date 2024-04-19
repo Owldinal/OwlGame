@@ -14,6 +14,7 @@ type Config struct {
 	Port int    `env:"PORT" envDefault:"8080"`
 
 	BackendWalletPrivateKey string `env:"BACKEND_WALLET_PRIVATE_KEY" envDefault:""`
+	Secret                  string `env:"SECRET" envDefault:""`
 
 	HCaptchaKey     string `env:"HCAPTCHA_KEY" envDefault:""`
 	DisableHCaptcha bool   `env:"DISABLE_HCAPTCHA" envDefault:"false"`
@@ -28,6 +29,7 @@ type Config struct {
 	LogFile    string `env:"LOG_FILE" envDefault:"app.log"`   // Only required if LogOutput is set to "file"
 
 	NodeUrl         string `env:"NODE_URL" envDefault:""`
+	ChainId         int64  `env:"CHAIN_ID" envDefault:"1337"`
 	EventStartBlock int64  `env:"EVENT_START_BLOCK" envDefault:"0"`
 
 	NftOwlAddr        string `env:"NFT_OWL_ADDR" envDefault:""`
@@ -35,7 +37,8 @@ type Config struct {
 	NftMysteryBoxAddr string `env:"NFT_MYSTERY_BOX_ADDR" envDefault:""`
 	OwlGameAddr       string `env:"OWL_GAME_ADDR" envDefault:""`
 
-	NeedCheckMoonBoost bool `env:"NEED_CHECK_MOON_BOOST" envDefault:"false"`
+	NeedCheckMoonBoost bool  `env:"NEED_CHECK_MOON_BOOST" envDefault:"false"`
+	GasPrice           int64 `env:"GAS_PRICE" envDefault:"50000000"`
 }
 
 func init() {
