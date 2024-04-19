@@ -437,9 +437,13 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		log.Warnf("Error Is: %v", err)
 		return err
 	}
+	if !eventItem.Rewards.Equal(tokenItem.CurrentRewards) {
+		log.Warnf("Cliam: rewards not equal as db. event=%v, db=%v", eventItem.Rewards, tokenItem.CurrentRewards)
+	}
 	tokenItem.IsStaking = false
 	tokenItem.StakingTime = nil
 	tokenItem.ClaimedRewards = tokenItem.ClaimedRewards.Add(eventItem.Rewards)
+	tokenItem.CurrentRewards = decimal.Zero
 
 	if err := database.DB.Save(&tokenItem).Error; err != nil {
 		log.Warnf("Error updating unstake box: %v", err)
