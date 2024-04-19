@@ -85,7 +85,8 @@ func processJobs(owlGame *abigen.OwlGame) {
 			continue
 		}
 
-		auth.GasPrice = big.NewInt(50000000)
+		//auth.GasPrice = big.NewInt(50000000)
+		auth.GasPrice = big.NewInt(config.C.GasPrice)
 
 		tx, err := owlGame.MintMysteryBox(auth, big.NewInt(int64(job.RequestId)))
 		if err != nil {
@@ -106,7 +107,7 @@ func processJobs(owlGame *abigen.OwlGame) {
 					job.Result = job.Result + fmt.Sprintf("WaitMined Err: %v;", err)
 				} else {
 					job.Status = constant.MintJobStatusSuccess
-					job.Result = job.Result + fmt.Sprintf("Success Mint")
+					job.Result = job.Result + fmt.Sprintf("Success Mint (Gas = %v)", receipt.GasUsed)
 
 					job.JobBlockHash = receipt.BlockHash.Hex()
 					job.JobBlockNumber = receipt.BlockNumber.Uint64()

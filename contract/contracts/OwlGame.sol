@@ -429,6 +429,13 @@ contract OwlGame is AccessControl, ReentrancyGuard {
                     break;
                 }
             }
+
+            if (!hasMoonBoost) {
+                uint256 nftBalance = owldinalNftContract.balanceOf(msg.sender);
+                if (nftBalance > 0) {
+                    hasMoonBoost = true;
+                }
+            }
         }
 
         uint256 length = tokenIdList.length;

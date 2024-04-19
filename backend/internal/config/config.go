@@ -37,7 +37,8 @@ type Config struct {
 	NftMysteryBoxAddr string `env:"NFT_MYSTERY_BOX_ADDR" envDefault:""`
 	OwlGameAddr       string `env:"OWL_GAME_ADDR" envDefault:""`
 
-	NeedCheckMoonBoost bool `env:"NEED_CHECK_MOON_BOOST" envDefault:"false"`
+	NeedCheckMoonBoost bool  `env:"NEED_CHECK_MOON_BOOST" envDefault:"false"`
+	GasPrice           int64 `env:"GAS_PRICE" envDefault:"50000000"`
 }
 
 func init() {

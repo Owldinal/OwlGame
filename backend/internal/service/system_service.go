@@ -30,19 +30,21 @@ func init() {
 }
 
 func UpdateFruitRewards() (response interface{}, code model.ResponseCode, msg string) {
+	log.Infof("UpdateFruitRewards: Start")
+
 	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
 	if err != nil {
 		return false, model.ServerInternalError, fmt.Sprintf("Err: %v", err)
 	}
 
-	auth.GasPrice = big.NewInt(50000000)
+	auth.GasPrice = big.NewInt(config.C.GasPrice)
 	tx, err := owlGame.UpdateAllFruitRewards(auth)
 	if err != nil {
-		log.Warnf("Update rewards failed: %+v, err: %v", tx, err)
+		log.Warnf("UpdateFruitRewards: Failed: tx=%+v, err=%v", tx, err)
 		return false, model.ServerInternalError, fmt.Sprintf("Err: %v", err)
 	}
 
-	log.Infof("Update Fruit Reward Transaction sent: %s", tx.Hash().Hex())
+	log.Warnf("UpdateFruitRewards: Transaction sent: %s", tx.Hash().Hex())
 
 	return true, model.Success, ""
 }

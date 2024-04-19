@@ -70,12 +70,6 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 		amount = &amountDecimal
 	}
 
-	// check moon boost
-	isMoonBoost := false
-	if config.C.NeedCheckMoonBoost && !notFound {
-		isMoonBoost = moonBoostAddress[wallet]
-	}
-
 	// Get Owldinal Nft
 	var nftTokens []model.OwldinalNftToken
 	result := database.DB.Where("owner = ?", wallet).Find(&nftTokens)
@@ -92,6 +86,12 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 		} else {
 			owlInfo.UnstakedIdList = append(owlInfo.UnstakedIdList, owldinal.TokenId)
 		}
+	}
+
+	// check moon boost
+	isMoonBoost := false
+	if config.C.NeedCheckMoonBoost && !notFound {
+		isMoonBoost = moonBoostAddress[wallet] || owlInfo.Total > 0
 	}
 
 	// get mystery box info & total_earned
