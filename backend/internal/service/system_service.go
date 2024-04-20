@@ -37,7 +37,9 @@ func UpdateFruitRewards() (response interface{}, code model.ResponseCode, msg st
 		return false, model.ServerInternalError, fmt.Sprintf("Err: %v", err)
 	}
 
-	auth.GasPrice = big.NewInt(config.C.GasPrice)
+	if config.C.GasPrice > 0 {
+		auth.GasPrice = big.NewInt(config.C.GasPrice)
+	}
 	tx, err := owlGame.UpdateAllFruitRewards(auth)
 	if err != nil {
 		log.Warnf("UpdateFruitRewards: Failed: tx=%+v, err=%v", tx, err)

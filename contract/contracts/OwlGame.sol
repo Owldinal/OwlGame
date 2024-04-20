@@ -173,6 +173,10 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         mysteryBoxContract = OwldinalGenOneBox(mysteryBoxAddr);
     }
 
+    function setServer(address server) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(SERVER_ROLE, server);
+    }
+
     function addPrize(
         uint256 prizeAmount
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {

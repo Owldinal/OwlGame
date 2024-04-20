@@ -38,7 +38,7 @@ type Config struct {
 	OwlGameAddr       string `env:"OWL_GAME_ADDR" envDefault:""`
 
 	NeedCheckMoonBoost bool  `env:"NEED_CHECK_MOON_BOOST" envDefault:"false"`
-	GasPrice           int64 `env:"GAS_PRICE" envDefault:"50000000"`
+	GasPrice           int64 `env:"GAS_PRICE" envDefault:"0"`
 }
 
 func init() {

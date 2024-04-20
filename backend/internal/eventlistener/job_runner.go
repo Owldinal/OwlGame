@@ -85,8 +85,11 @@ func processJobs(owlGame *abigen.OwlGame) {
 			continue
 		}
 
-		//auth.GasPrice = big.NewInt(50000000)
-		auth.GasPrice = big.NewInt(config.C.GasPrice)
+		// Print Gas Limit
+		if config.C.GasPrice > 0 {
+			auth.GasPrice = big.NewInt(config.C.GasPrice)
+		}
+		//auth.GasLimit = 100000
 
 		tx, err := owlGame.MintMysteryBox(auth, big.NewInt(int64(job.RequestId)))
 		if err != nil {
