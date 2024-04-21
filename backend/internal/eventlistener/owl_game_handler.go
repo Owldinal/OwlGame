@@ -640,6 +640,16 @@ func updateAprSnapshot(fruitRewardEvent *model.OwlGameFruitRewardUpdateEvent) {
 		snapshot.ElfApy = elfApy
 	}
 
+	if math.IsInf(snapshot.FruitApy, 1) {
+		log.Warnf("apr_snapshots: fruit apy is inf. %+v", snapshot)
+		snapshot.FruitApy = math.MaxFloat64
+	}
+
+	if math.IsInf(snapshot.ElfApy, 1) {
+		log.Warnf("apr_snapshots: elf apy is inf. %+v", snapshot)
+		snapshot.ElfApy = math.MaxFloat64
+	}
+
 	if err := database.DB.Create(&snapshot).Error; err != nil {
 		log.Warnf("Error saving updateAprSnapshot: %v", err)
 	}
