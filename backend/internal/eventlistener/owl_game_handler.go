@@ -629,7 +629,7 @@ func updateAprSnapshot(fruitRewardEvent *model.OwlGameFruitRewardUpdateEvent) {
 		totalFruitRewards := fruitRewardEvent.Amount.Mul(decimal.NewFromInt(int64(fruitRewardEvent.Count)))
 		elfAprDecimal := totalFruitRewards.
 			Mul(decimal.NewFromInt(6)).
-			Mul(decimal.NewFromFloatWithExponent(16, -2)).
+			Mul(decimal.NewFromFloat32(0.16)).
 			Div(decimal.NewFromInt(int64(fruitRewardEvent.TotalElfCount))).
 			Div(decimal.NewFromInt(100000)).
 			Mul(decimal.NewFromInt(365))
