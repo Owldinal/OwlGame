@@ -124,6 +124,14 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 	elfInfo.Apy = lastApr.ElfApr
 	elfInfo.Apy = lastApr.ElfApy
 
+	// calculate referral
+	totalReferral := user.ClaimedReferral.Add(user.UnclaimedReferral)
+	lockedReferral := user.UnclaimedReferral.Sub(user.UnlockableReferral)
+	if lockedReferral.IsNegative() {
+		lockedReferral = decimal.Zero
+	}
+	availableReferral := user.UnclaimedReferral.Sub(lockedReferral)
+
 	response = &model.GetUserInfoResponse{
 		Wallet:         wallet,
 		HasJoined:      !notFound,
@@ -137,10 +145,10 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 		ElfInfo:        elfInfo,
 		FruitInfo:      fruitInfo,
 		ReferralRewards: model.UserReferralRewards{
-			Total:     user.ClaimedReferral.Add(user.LockedReferral).Add(user.AvailableReferral).IntPart(),
+			Total:     totalReferral.IntPart(),
 			Claimed:   user.ClaimedReferral.IntPart(),
-			Available: user.AvailableReferral.IntPart(),
-			Locked:    user.LockedReferral.IntPart(),
+			Available: availableReferral.IntPart(),
+			Locked:    lockedReferral.IntPart(),
 		},
 	}
 
