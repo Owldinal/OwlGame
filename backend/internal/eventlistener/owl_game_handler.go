@@ -227,10 +227,11 @@ func (h *OwlGameMintMysteryBoxHandler) Handle(vlog types.Log) error {
 		tokenIds[i] = bigInt.Uint64()
 	}
 	eventItem := model.OwlGameMintMysteryBoxEvent{
-		Event:    model.NewEvent(&event.Raw),
-		User:     event.User.Hex(),
-		Count:    event.Count.Int64(),
-		TokenIds: tokenIds,
+		Event:     model.NewEvent(&event.Raw),
+		User:      event.User.Hex(),
+		Count:     event.Count.Uint64(),
+		RequestId: event.RequestId.Uint64(),
+		TokenIds:  tokenIds,
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -242,12 +243,27 @@ func (h *OwlGameMintMysteryBoxHandler) Handle(vlog types.Log) error {
 		}
 	}
 
+	// update job
+	job := model.RequestMintJob{
+		RequestId: eventItem.RequestId,
+	}
+	if err := database.DB.Where(&job).First(&job).Error; err != nil {
+		log.Warnf("Failed to load job %v: %v", eventItem.RequestId, err)
+		//return err
+	}
+	job.HasConfirmed = true
+	if err := database.DB.Model(&job).Select("HasConfirmed").Updates(job).Error; err != nil {
+		log.Warnf("Failed to confirm job %v: %v", eventItem.RequestId, err)
+		//return err
+	}
+
+	// insert poll transaction
 	transactionDetail := &model.RewardPoolTransactionRecord{
 		User:        eventItem.User,
 		Operation:   "Mint",
 		Description: "Gen1 Mystery Box",
 		Count:       eventItem.Count,
-		Amount:      decimal.NewFromInt(eventItem.Count).Mul(PrizeIncreasedForEachMint),
+		Amount:      decimal.NewFromInt(int64(eventItem.Count)).Mul(PrizeIncreasedForEachMint),
 		Event:       eventItem.Event,
 	}
 

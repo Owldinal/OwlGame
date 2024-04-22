@@ -89,9 +89,10 @@ type OwlGamePrizePoolDecreasedEvent struct {
 type OwlGameMintMysteryBoxEvent struct {
 	Event
 	database.Model
-	User     string `gorm:"size:42"`
-	Count    int64
-	TokenIds database.IdList
+	RequestId uint64
+	User      string `gorm:"size:42"`
+	Count     uint64
+	TokenIds  database.IdList
 }
 
 // eventOwlGameStakeOwldinalNft

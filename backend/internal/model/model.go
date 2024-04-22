@@ -86,7 +86,7 @@ type RewardPoolTransactionRecord struct {
 	User        string
 	Operation   string
 	Description string
-	Count       int64
+	Count       uint64
 	Amount      decimal.Decimal `gorm:"type:decimal(36,18)"`
 	Event
 }
@@ -97,7 +97,9 @@ type RequestMintJob struct {
 	RequestId uint64
 	Count     uint64
 	// Status: 0 means waiting to do ; 1 means processing ; 2 means success; 3 means failed
-	Status constant.MintJobStatus
+	Status       constant.MintJobStatus
+	HasConfirmed bool
+
 	// Result: if success, there will be a json string like {elf:[1,2,3], fruit:[5,6,7], burn:[8,9]}
 	// Failed: if failed, there will be a error msg
 	Result     string

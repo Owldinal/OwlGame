@@ -470,6 +470,7 @@ CREATE TABLE request_mint_jobs
     request_id           BIGINT UNSIGNED NOT NULL,
     count                BIGINT UNSIGNED NOT NULL,
     status               INT UNSIGNED    NOT NULL,
+    has_confirmed        BOOLEAN         NOT NULL,
     retry_count          INT UNSIGNED    NOT NULL,
     result               TEXT,
     request_tx_hash      CHAR(66),

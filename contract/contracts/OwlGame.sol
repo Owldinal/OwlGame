@@ -46,6 +46,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     event MintMysteryBox(
         address indexed user,
+        uint256 requestId,
         uint256 count,
         uint256[] tokenId
     );
@@ -674,7 +675,12 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             request.count,
             addUnlockedAmount
         );
-        emit MintMysteryBox(request.user, request.count, tokenIdList);
+        emit MintMysteryBox(
+            request.user,
+            mintRequestId,
+            request.count,
+            tokenIdList
+        );
 
         delete requestMintMap[mintRequestId];
     }

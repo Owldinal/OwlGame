@@ -74,14 +74,14 @@ func processJobs(owlGame *abigen.OwlGame) {
 
 	for _, job := range jobs {
 		job.Status = constant.MintJobStatusProcessing
-		database.DB.Save(&job)
+		database.DB.Model(&job).Omit("HasConfirmed").Updates(job)
 
 		auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
 		if err != nil {
 			job.Status = constant.MintJobStatusFailed
 			job.RetryCount++
 			job.Result = job.Result + fmt.Sprintf("Err: %v;", err)
-			database.DB.Save(&job)
+			database.DB.Model(&job).Omit("HasConfirmed").Updates(job)
 			continue
 		}
 
@@ -124,7 +124,7 @@ func processJobs(owlGame *abigen.OwlGame) {
 			}
 		}
 
-		database.DB.Save(&job)
+		database.DB.Model(&job).Omit("HasConfirmed").Updates(job)
 		time.Sleep(time.Millisecond * 500)
 	}
 }
