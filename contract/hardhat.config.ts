@@ -38,8 +38,7 @@ const config: HardhatUserConfig = {
     },
     merlinMainnet: {
       url: 'https://rpc.merlinchain.io',
-      timeout: 200000000,
-      gasPrice: 50000000,
+      gasPrice: 250000000,
       accounts: [process.env.MERLIN_MAIN_PRIVATE_KEY || ''],
     }
   },

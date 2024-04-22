@@ -15,19 +15,19 @@ let addressList = [];
 const decimal = BigInt(10) ** BigInt(18)
 
 async function initAddress() {
-	owldinalNftAddress = "0x3cb8094fb209d21Aab2E474e91476EE9EEc332C9";
-	owlTokenAddress = "0xf254dcD9e270B8E0B92A68e197BE7C6355e8d87b";
-	genOneBoxAddress = "0x850DA4D6cC3d1EdADA39C48d42B4b664d51F3c4d";
-	owlGameAddress = "0xf0d330DB633b58446c895ff957a355FEC45b9511";
+	owldinalNftAddress = "0x3FD1e177e98017902fc1a0F51De10Dc28645D034";
+	owlTokenAddress = "0xe13481571787F0fdb2C7AD8D295c18856cA76494";
+	genOneBoxAddress = "0x0b8264Fedb988c82Af6EdC439E89180D795a5F92";
+	owlGameAddress = "0xA595E996C30f713f9D856421318589E293A3792C";
 
 	addressList = [
-		"0xf3bBE5dBB9db8Ca9B04BBE0e9c814c1609572a74",
+		// "0xf3bBE5dBB9db8Ca9B04BBE0e9c814c1609572a74",
 	];
 
-	// for (j = 1; j < 100; j++) {
-	// 	var user = (await hre.ethers.getSigners())[j];
-	// 	addressList.push(user.address);
-	// }
+	for (j = 1; j < 100; j++) {
+		var user = (await hre.ethers.getSigners())[j];
+		addressList.push(user.address);
+	}
 }
 
 async function main() {

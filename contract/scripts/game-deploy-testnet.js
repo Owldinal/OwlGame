@@ -29,10 +29,10 @@ async function main() {
 	await deployOrConnect();
 
 	console.log(`
-owldinalNftAddress= "${owldinalNftAddress}";
-owlTokenAddress= "${owlTokenAddress}";
-genOneBoxAddress= "${genOneBoxAddress}";
-owlGameAddress= "${owlGameAddress}";
+owldinalNftAddress = "${owldinalNftAddress}";
+owlTokenAddress = "${owlTokenAddress}";
+genOneBoxAddress = "${genOneBoxAddress}";
+owlGameAddress = "${owlGameAddress}";
 		`);
 
 	console.log(`
@@ -47,18 +47,14 @@ OWL_GAME_ADDR=${owlGameAddress}
 	await owlGameContract.connect(deployer).setMoonBoost(true);
 
 	const prizeAmount = BigInt(6_0000_0000n) * decimal;
-	console.log(`prizeAmount = ${prizeAmount}`);
 	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
+	console.log(`mint prizeAmount success`);
 	await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
+	console.log(`approve prizeAmount success`);
 	await owlGameContract.connect(deployer).addPrize(prizeAmount);
+	console.log(`prizeAmount = ${prizeAmount}`);
 
 	return;
-}
-
-async function printTxDetail(tx, msg) {
-	const receipt = await tx.wait();
-	const gasUsed = receipt.gasUsed;
-	console.log(`${msg} [Gas=${gasUsed}, DataLen=${tx.data.length}]`);
 }
 
 async function deployOrConnect() {
@@ -69,8 +65,6 @@ async function deployOrConnect() {
 		const params = [ownerAddress];
 		[owlTokenContract, owlTokenAddress] = await deploy("OwlToken", params);
 		console.log(`OwlToken contract deployed to : ${owlTokenAddress}\nParams = ${params.join(" ")}`);
-
-		await owlTokenContract.connect(deployer).mint(deployer.address, BigInt(100000000) * decimal);
 	}
 
 	if (owldinalNftAddress) {
@@ -80,10 +74,6 @@ async function deployOrConnect() {
 		const params = [10000000, owlTokenAddress, deployer.address, backendAddress];
 		[owldinalNftContract, owldinalNftAddress] = await deploy("Owldinal", params);
 		console.log(`Owldinal contract deployed to : ${owldinalNftAddress}\nParams = ${params.join(" ")}`);
-
-		await owldinalNftContract.connect(deployer).mintByAdmin();
-		await owldinalNftContract.connect(deployer).mintByAdmin();
-		await owldinalNftContract.connect(deployer).mintByAdmin();
 	}
 
 	if (owlGameAddress) {
@@ -104,28 +94,6 @@ async function deployOrConnect() {
 		console.log(`OwldinalGenOneBox contract deployed to : ${genOneBoxAddress}\nParams = ${params.join(" ")}`);
 	}
 
-}
-
-function decodeInviteCode(encoded) {
-	let inviteCode = '';
-	for (let i = 0; i < 5; i++) {
-		const charValue = Number((encoded >> (BigInt(i) * 5n)) & 0x1Fn);
-		inviteCode += String.fromCharCode(charValue + 0x41);
-	}
-	return inviteCode;
-}
-
-function encodeInviteCode(inviteCode) {
-	if (inviteCode.length !== 5) {
-		throw new Error("Invalid invite code length");
-	}
-	let encoded = 0;
-	for (let i = 0; i < 5; i++) {
-		let char = inviteCode[i];
-		let charValue = char.charCodeAt(0) - 0x41;
-		encoded |= (charValue << (i * 5));
-	}
-	return encoded;
 }
 
 main().catch((error) => {
