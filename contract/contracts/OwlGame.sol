@@ -94,8 +94,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     Owldinal public owldinalNftContract;
     OwldinalGenOneBox public mysteryBoxContract;
 
+    // 3 hours and 55 minutes
+    uint256 public constant FRUIT_REWARD_INTERVAL = 3600 * 4 - 300;
     // The price that needs to be spent for each mint.
-    uint256 public constant FRUIT_REWARD_INTERVAL = 3600;
     uint256 public constant MINT_PRICE = 100000 * 10 ** 18;
     uint256 public constant MINT_REBATE = 10000 * 10 ** 18;
 
