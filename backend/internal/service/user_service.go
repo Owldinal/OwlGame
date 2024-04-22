@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
-	"math"
 	"owl-backend/abigen"
 	"owl-backend/internal/config"
 	"owl-backend/internal/constant"
@@ -15,7 +14,6 @@ import (
 	"owl-backend/internal/eth"
 	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
-	"time"
 )
 
 var (
@@ -221,6 +219,11 @@ func GetUserMysteryBoxList(wallet string, pagination model.PaginationRequest) (r
 		}
 	} else {
 
+		var lastApr model.AprSnapshot
+		if err := database.DB.Order("id DESC").First(&lastApr).Error; err != nil {
+			return nil, model.ServerInternalError, fmt.Sprintf("failed to load apr: %v", err)
+		}
+
 		resultList := make([]model.UserMysteryBox, 0, len(list))
 		for _, token := range list {
 			data := &model.UserMysteryBox{
@@ -230,20 +233,29 @@ func GetUserMysteryBoxList(wallet string, pagination model.PaginationRequest) (r
 				Claimed:   token.ClaimedRewards,
 				IsStaking: token.IsStaking,
 			}
-			if token.IsStaking {
-				// 单个ELF的APR= （单个ELF的日平均Earning/100000）*365
-				stakingRewards := token.CurrentRewards
-				stakingDays := int64(time.Now().Sub(*token.StakingTime).Hours()) / 24
-				if stakingDays == 0 {
-					stakingDays = 1
-				}
-				apr := stakingRewards.
-					Div(decimal.NewFromInt(stakingDays)).
-					Div(constant.MysteryBoxMintPrice).
-					Mul(decimal.NewFromInt32(365))
-				data.Apr = apr.InexactFloat64()
-				data.Apy = math.Pow(1+(data.Apr/365), 365) - 1
+
+			if token.BoxType == constant.BoxTypeFruit {
+				data.Apr = lastApr.FruitApr
+				data.Apy = lastApr.FruitApy
+			} else if token.BoxType == constant.BoxTypeElf {
+				data.Apr = lastApr.ElfApr
+				data.Apy = lastApr.ElfApy
 			}
+
+			//if token.IsStaking {
+			//	// 单个ELF的APR= （单个ELF的日平均Earning/100000）*365
+			//	stakingRewards := token.CurrentRewards
+			//	stakingDays := int64(time.Now().Sub(*token.StakingTime).Hours()) / 24
+			//	if stakingDays == 0 {
+			//		stakingDays = 1
+			//	}
+			//	apr := stakingRewards.
+			//		Div(decimal.NewFromInt(stakingDays)).
+			//		Div(constant.MysteryBoxMintPrice).
+			//		Mul(decimal.NewFromInt32(365))
+			//	data.Apr = apr.InexactFloat64()
+			//	data.Apy = math.Pow(1+(data.Apr/365), 365) - 1
+			//}
 			resultList = append(resultList, *data)
 		}
 
