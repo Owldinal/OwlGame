@@ -157,7 +157,7 @@ type OwlGameUnlockableRebateIncreasedEvent struct {
 }
 
 // eventOwlGameRebateClaimed
-type OwlGameClaimRebateClaimedEvent struct {
+type OwlGameRebateClaimedEvent struct {
 	Event
 	database.Model
 	User   string          `gorm:"size:42"`

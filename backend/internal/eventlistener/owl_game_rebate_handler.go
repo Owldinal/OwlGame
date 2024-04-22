@@ -129,7 +129,7 @@ func (h *OwlGameClaimRebateClaimedHandler) Handle(vlog types.Log) error {
 	}
 	// save event to database
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
-	eventItem := model.OwlGameClaimRebateClaimedEvent{
+	eventItem := model.OwlGameRebateClaimedEvent{
 		Event:  model.NewEvent(&event.Raw),
 		User:   event.User.Hex(),
 		Amount: decimal.NewFromBigInt(event.Amount, -18),
