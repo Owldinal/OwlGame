@@ -121,7 +121,7 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 	}
 	fruitInfo.Apr = lastApr.FruitApr
 	fruitInfo.Apy = lastApr.FruitApy
-	elfInfo.Apy = lastApr.ElfApr
+	elfInfo.Apr = lastApr.ElfApr
 	elfInfo.Apy = lastApr.ElfApy
 
 	// calculate referral
