@@ -17,8 +17,8 @@ const decimal = BigInt(10) ** BigInt(18)
 async function initAddress() {
 	owldinalNftAddress = "0x3FD1e177e98017902fc1a0F51De10Dc28645D034";
 	owlTokenAddress = "0xe13481571787F0fdb2C7AD8D295c18856cA76494";
-	genOneBoxAddress = "0x0b8264Fedb988c82Af6EdC439E89180D795a5F92";
-	owlGameAddress = "0xA595E996C30f713f9D856421318589E293A3792C";
+	genOneBoxAddress = "0xB73b4C72Dfc10B46cdF4CCDe63Def3336566B3BD";
+	owlGameAddress = "0xfF454DbF7aBe0aF44C78c16DDccD6f3F80166F12";
 
 	addressList = [
 		// "0xf3bBE5dBB9db8Ca9B04BBE0e9c814c1609572a74",

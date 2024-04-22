@@ -21,10 +21,10 @@ async function main() {
 	const blockNumber = await hre.ethers.provider.getBlockNumber();
 	console.log(`Current Block number: ${blockNumber}`);
 
-	// owlTokenAddress = "0xF86EA7e636f43dd6dCD35B7E04742f5508F9CF73";
-	// owldinalNftAddress = "0x96fB752fc565c740F8b09a1760FE5a3D89dD18E5";
-	// owlGameAddress = "0xC0E5d058eeF687B0c3cEf2967D0B55AD81eb9C21";
-	// genOneBoxAddress = "0xC9761572c264ADE5253d4F56a574fa0F4905ca5d";
+	owldinalNftAddress = "0x3FD1e177e98017902fc1a0F51De10Dc28645D034";
+	owlTokenAddress = "0xe13481571787F0fdb2C7AD8D295c18856cA76494";
+	// genOneBoxAddress = "0x0b8264Fedb988c82Af6EdC439E89180D795a5F92";
+	// owlGameAddress = "0xA595E996C30f713f9D856421318589E293A3792C";
 
 	await deployOrConnect();
 
@@ -45,6 +45,17 @@ OWL_GAME_ADDR=${owlGameAddress}
 
 	await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress);
 	await owlGameContract.connect(deployer).setMoonBoost(true);
+	await genOneBoxContract.connect(deployer).addTransferWhiteList([
+		"0xb78EA3993200e1e241A4c0670a89cFfDFB5CD560",
+		"0xf3EB4f8d15cd76bA3130806Cc7ddE1EE4b8f6e42",
+	]);
+
+	let addressList = [];
+	for (j = 1; j < 10; j++) {
+		var user = (await hre.ethers.getSigners())[j];
+		addressList.push(user.address);
+	}
+	await genOneBoxContract.connect(deployer).addTransferWhiteList(addressList);
 
 	const prizeAmount = BigInt(6_0000_0000n) * decimal;
 	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);

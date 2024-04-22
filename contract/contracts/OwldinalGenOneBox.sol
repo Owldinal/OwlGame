@@ -28,6 +28,9 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
 
     mapping(uint256 => BoxType) public tokenBoxTypes;
 
+    mapping(address => bool) public transferWhiteListMap;
+    bool public isTransferEnable = false;
+
     event MintBox(address indexed user, uint256 tokenId, BoxType boxType);
 
     constructor(
@@ -39,6 +42,28 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
 
         owlToken = _owlToken;
         gameContract = _gameContract;
+    }
+
+    function setTransferEnable(
+        bool isEnable
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        isTransferEnable = isEnable;
+    }
+
+    function addTransferWhiteList(
+        address[] calldata addrs
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        for (uint i = 0; i < addrs.length; i++) {
+            transferWhiteListMap[addrs[i]] = true;
+        }
+    }
+
+    function deleteTransferWhiteList(
+        address[] calldata addrs
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        for (uint i = 0; i < addrs.length; i++) {
+            delete transferWhiteListMap[addrs[i]];
+        }
     }
 
     function mintAndOpenBoxes(
@@ -104,11 +129,14 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
         address to,
         uint256 tokenId
     ) public override {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
-                hasRole(GAME_CONTRACT_ROLE, msg.sender),
-            "OwldinalGenOneBox: transfer disabled"
-        );
+        if (!isTransferEnable) {
+            require(
+                transferWhiteListMap[msg.sender] ||
+                    hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
+                    hasRole(GAME_CONTRACT_ROLE, msg.sender),
+                "OwldinalGenOneBox: transfer disabled"
+            );
+        }
         super.transferFrom(from, to, tokenId);
     }
 
@@ -118,11 +146,14 @@ contract OwldinalGenOneBox is ERC721, AccessControl {
         uint256 tokenId,
         bytes memory _data
     ) public override {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
-                hasRole(GAME_CONTRACT_ROLE, msg.sender),
-            "OwldinalGenOneBox: transfer disabled"
-        );
+        if (!isTransferEnable) {
+            require(
+                transferWhiteListMap[msg.sender] ||
+                    hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
+                    hasRole(GAME_CONTRACT_ROLE, msg.sender),
+                "OwldinalGenOneBox: transfer disabled"
+            );
+        }
         super.safeTransferFrom(from, to, tokenId, _data);
     }
 }

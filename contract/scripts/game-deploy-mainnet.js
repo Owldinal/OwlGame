@@ -21,18 +21,18 @@ async function main() {
 	const blockNumber = await hre.ethers.provider.getBlockNumber();
 	console.log(`Current Block number: ${blockNumber}`);
 
-	// owlTokenAddress = "0xF86EA7e636f43dd6dCD35B7E04742f5508F9CF73";
-	// owldinalNftAddress = "0x96fB752fc565c740F8b09a1760FE5a3D89dD18E5";
-	// owlGameAddress = "0xC0E5d058eeF687B0c3cEf2967D0B55AD81eb9C21";
-	// genOneBoxAddress = "0xC9761572c264ADE5253d4F56a574fa0F4905ca5d";
+	owldinalNftAddress = "0x3cb8094fb209d21Aab2E474e91476EE9EEc332C9";
+	owlTokenAddress = "0xf254dcD9e270B8E0B92A68e197BE7C6355e8d87b";
+	genOneBoxAddress = "0x850DA4D6cC3d1EdADA39C48d42B4b664d51F3c4d";
+	owlGameAddress = "0xf0d330DB633b58446c895ff957a355FEC45b9511";
 
 	await deployOrConnect();
 
 	console.log(`
-owldinalNftAddress= "${owldinalNftAddress}";
-owlTokenAddress= "${owlTokenAddress}";
-genOneBoxAddress= "${genOneBoxAddress}";
-owlGameAddress= "${owlGameAddress}";
+owldinalNftAddress = "${owldinalNftAddress}";
+owlTokenAddress = "${owlTokenAddress}";
+genOneBoxAddress = "${genOneBoxAddress}";
+owlGameAddress = "${owlGameAddress}";
 		`);
 
 	console.log(`
@@ -45,20 +45,20 @@ OWL_GAME_ADDR=${owlGameAddress}
 
 	await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress);
 	await owlGameContract.connect(deployer).setMoonBoost(true);
+	await genOneBoxContract.connect(deployer).addTransferWhiteList([
+		"0xb78EA3993200e1e241A4c0670a89cFfDFB5CD560",
+		"0xf3EB4f8d15cd76bA3130806Cc7ddE1EE4b8f6e42",
+	]);
 
 	const prizeAmount = BigInt(6_0000_0000n) * decimal;
-	console.log(`prizeAmount = ${prizeAmount}`);
 	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
+	console.log(`mint prizeAmount success`);
 	await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
+	console.log(`approve prizeAmount success`);
 	await owlGameContract.connect(deployer).addPrize(prizeAmount);
+	console.log(`prizeAmount = ${prizeAmount}`);
 
 	return;
-}
-
-async function printTxDetail(tx, msg) {
-	const receipt = await tx.wait();
-	const gasUsed = receipt.gasUsed;
-	console.log(`${msg} [Gas=${gasUsed}, DataLen=${tx.data.length}]`);
 }
 
 async function deployOrConnect() {
@@ -69,9 +69,8 @@ async function deployOrConnect() {
 		const params = [ownerAddress];
 		[owlTokenContract, owlTokenAddress] = await deploy("OwlToken", params);
 		console.log(`OwlToken contract deployed to : ${owlTokenAddress}\nParams = ${params.join(" ")}`);
-
-		await owlTokenContract.connect(deployer).mint(deployer.address, BigInt(100000000) * decimal);
 	}
+
 
 	if (owldinalNftAddress) {
 		owldinalNftContract = await hre.ethers.getContractFactory("Owldinal").then((c) => c.attach(owldinalNftAddress));
@@ -80,10 +79,6 @@ async function deployOrConnect() {
 		const params = [10000000, owlTokenAddress, deployer.address, backendAddress];
 		[owldinalNftContract, owldinalNftAddress] = await deploy("Owldinal", params);
 		console.log(`Owldinal contract deployed to : ${owldinalNftAddress}\nParams = ${params.join(" ")}`);
-
-		// await owldinalNftContract.connect(deployer).mintByAdmin();
-		// await owldinalNftContract.connect(deployer).mintByAdmin();
-		// await owldinalNftContract.connect(deployer).mintByAdmin();
 	}
 
 	if (owlGameAddress) {
