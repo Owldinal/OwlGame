@@ -79,6 +79,7 @@ func (h *OwlGameBindInvitationHandler) Handle(vlog types.Log) error {
 	}
 
 	inviteItem := model.InviteRelation{
+		Event:   eventItem.Event,
 		Inviter: eventItem.Inviter,
 		Invitee: eventItem.Invitee,
 	}
@@ -600,6 +601,8 @@ func globalUpdateRewards(boxType constant.BoxType, count uint64, amount decimal.
 
 func updateAprSnapshot(fruitRewardEvent *model.OwlGameFruitRewardUpdateEvent) {
 	snapshot := model.AprSnapshot{
+		Event:           fruitRewardEvent.Event,
+		RewardCount:     fruitRewardEvent.Count,
 		TotalFruitCount: fruitRewardEvent.TotalFruitCount,
 		TotalElfCount:   fruitRewardEvent.TotalElfCount,
 		FruitRewards:    fruitRewardEvent.Amount,

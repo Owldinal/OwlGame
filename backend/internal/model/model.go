@@ -33,6 +33,7 @@ type MysteryBoxToken struct {
 
 type InviteRelation struct {
 	database.Model
+	Event
 	Inviter         string          `gorm:"size:42;index:idx_Inviter"`
 	Invitee         string          `gorm:"size:42;"`
 	ReferralRewards decimal.Decimal `json:"referral_rewards" gorm:"type:decimal(36,18);"`
@@ -69,6 +70,8 @@ type DailyPoolSnapshot struct {
 
 type AprSnapshot struct {
 	database.Model
+	Event
+	RewardCount     uint64
 	TotalFruitCount uint64
 	TotalElfCount   uint64
 	FruitRewards    decimal.Decimal `gorm:"type:decimal(36,18)"`

@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const { deploy, sendEth } = require('./utils');
+const { deploy, sendEth, sleep } = require('./utils');
 
 let deployer, ownerAddress, backendAddress, playerB, playerC;
 
@@ -166,11 +166,6 @@ OWL_GAME_ADDR=${owlGameAddress}
 	tx = await owlGameContract.connect(deployer).unstakeOwldinalNft([2, 3, 4], { gasLimit: 100_000_000_000 });
 	await printTxDetail(tx, 'unstakeOwldinalNft 2,3,4');
 }
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 
 async function printTxDetail(tx, msg) {
 	const receipt = await tx.wait();

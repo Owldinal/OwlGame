@@ -7,6 +7,11 @@ async function deploy(name, args) {
 	return [contract, addr];
 }
 
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function generateSignForMint(signer, boxGen0Contract) {
 	const privateKey = process.env.BACKEND_PRIVATE_KEY;
 	const wallet = new ethers.Wallet(privateKey);
@@ -36,7 +41,12 @@ async function sendEth(signer, receiverAddress, amountInEther) {
 	console.log(`Transaction successful with hash: ${transactionResponse.hash}`);
 }
 
+async function printTxDetail(tx, msg) {
+	const receipt = await tx.wait();
+	const gasUsed = receipt.gasUsed;
+	console.log(`${msg} [Gas=${gasUsed}, DataLen=${tx.data.length}]`);
+}
 
 module.exports = {
-	deploy, generateSignForMint, sendEth
+	deploy, generateSignForMint, sendEth, sleep, printTxDetail
 };

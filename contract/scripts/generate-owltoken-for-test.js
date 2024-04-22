@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const { deploy } = require('./utils');
+const { deploy, sleep } = require('./utils');
 const { ethers } = require("hardhat");
 
 let deployer, ownerAddress;
@@ -10,62 +10,68 @@ let owldinalNftContract, owldinalNftAddress;
 let owlGameContract, owlGameAddress;
 let genOneBoxContract, genOneBoxAddress;
 
+let addressList = [];
+
 const decimal = BigInt(10) ** BigInt(18)
+
+async function initAddress() {
+	owldinalNftAddress = "0x3cb8094fb209d21Aab2E474e91476EE9EEc332C9";
+	owlTokenAddress = "0xf254dcD9e270B8E0B92A68e197BE7C6355e8d87b";
+	genOneBoxAddress = "0x850DA4D6cC3d1EdADA39C48d42B4b664d51F3c4d";
+	owlGameAddress = "0xf0d330DB633b58446c895ff957a355FEC45b9511";
+
+	addressList = [
+		"0xf3bBE5dBB9db8Ca9B04BBE0e9c814c1609572a74",
+	];
+
+	// for (j = 1; j < 100; j++) {
+	// 	var user = (await hre.ethers.getSigners())[j];
+	// 	addressList.push(user.address);
+	// }
+}
 
 async function main() {
 	[deployer] = await hre.ethers.getSigners();
 	ownerAddress = deployer.address;
 	backendAddress = process.env.BACKEND_WALLET;
-	let tx;
-	console.log(`Address = ${deployer.address}`);
+	console.log(`Deployer Address = ${deployer.address}`);
 
 	const blockNumber = await hre.ethers.provider.getBlockNumber();
 	console.log(`Current Block number: ${blockNumber}`);
-
-	// Server 
-	owlTokenAddress = "0x5d99cfFf65f6fb075A997486E54db92C8886cCEb";
-	owldinalNftAddress = "0x6C2C2B29f5eB761335755EE606B19aF877732654";
-	owlGameAddress = "0xE02b95093027cefCa0938440C5B4cC3D95fdC896";
-	genOneBoxAddress = "0x17B4d30f123bB1BB3b1101c36c09C3d45eb8024C";
+	await initAddress();
 
 	await deployOrConnect();
 
-	console.log(`
-owlTokenAddress= "${owlTokenAddress}";
-owldinalNftAddress= "${owldinalNftAddress}";
-owlGameAddress= "${owlGameAddress}";
-genOneBoxAddress= "${genOneBoxAddress}";
-		`);
+	const userList = [];
 
-	console.log(`
-EVENT_START_BLOCK=${blockNumber}
-NFT_OWL_ADDR=${owldinalNftAddress}
-OWL_TOKEN_ADDR=${owlTokenAddress}
-NFT_MYSTERY_BOX_ADDR=${genOneBoxAddress}
-OWL_GAME_ADDR=${owlGameAddress}
-			`);
+	let tx;
 
-	const userList = []
-	for (j = 1; j < 100; j++) {
-		var user = (await hre.ethers.getSigners())[j];
-		console.log(`User: ${user.address}`);
+	for (j = 0; j < addressList.length; j++) {
+		var addr = addressList[j];
+		console.log(`User: ${addr}`);
 
 		var userObj = {
-			address: user.address,
+			address: addr,
 			tokenIds: []
 		}
 
 		try {
-			await owlTokenContract.connect(deployer).mint(user.address, BigInt(100000 * 100000) * decimal);
+			tx = await owlTokenContract.connect(deployer).mint(addr, BigInt(100000 * 100000) * decimal);
+			await tx.wait();
 		} catch (e) {
-			console.log(`Failed mint owlToken for User: ${user.address}`);
+			console.log(`Failed mint owlToken for User: ${addr}`);
+			console.log(e);
 		}
+		console.log(`done mint, balance = ${await owlTokenContract.balanceOf(addr)}`);
+		await sleep(500);
 
 		for (i = 0; i < 3; i++) {
 			try {
 
-				const tx = await owldinalNftContract.connect(deployer).mintByAdmin();
+				tx = await owldinalNftContract.connect(deployer).mintByAdmin();
 				const receipt = await tx.wait();
+				console.log("done mint nft");
+				await sleep(500);
 
 				var mintBoxLogs = receipt.logs.filter(log => log.topics[0] === "0xf5d3f864a50c2df29b92152f2936fc5520ee555438f668048785c1868cd34230");
 				// console.log(`Logs: ${JSON.stringify(mintBoxLogs)}`);
@@ -80,11 +86,14 @@ OWL_GAME_ADDR=${owlGameAddress}
 				);
 
 				const tokenId = decodedEventData[0];
-				await owldinalNftContract.connect(deployer).transferFrom(deployer.address, user.address, tokenId);
+				tx = await owldinalNftContract.connect(deployer).transferFrom(deployer.address, addr, tokenId);
+				await tx.wait();
+				console.log(`done transfer nft, tokenId = ${tokenId}`);
 
 				userObj.tokenIds.push(Number(tokenId));
+				await sleep(500);
 			} catch (e) {
-				console.log(`Failed mint nft for User: ${user.address}`);
+				console.log(`Failed mint nft for User: ${addr}`);
 			}
 		}
 
@@ -93,12 +102,6 @@ OWL_GAME_ADDR=${owlGameAddress}
 
 	console.log("All Done: \n");
 	console.log(JSON.stringify(userList));
-}
-
-async function printTxDetail(tx, msg) {
-	const receipt = await tx.wait();
-	const gasUsed = receipt.gasUsed;
-	console.log(`${msg} [Gas=${gasUsed}, DataLen=${tx.data.length}]`);
 }
 
 async function deployOrConnect() {
@@ -144,28 +147,6 @@ async function deployOrConnect() {
 		console.log(`OwldinalGenOneBox contract deployed to : ${genOneBoxAddress}\nParams = ${params.join(" ")}`);
 	}
 
-}
-
-function decodeInviteCode(encoded) {
-	let inviteCode = '';
-	for (let i = 0; i < 5; i++) {
-		const charValue = Number((encoded >> (BigInt(i) * 5n)) & 0x1Fn);
-		inviteCode += String.fromCharCode(charValue + 0x41);
-	}
-	return inviteCode;
-}
-
-function encodeInviteCode(inviteCode) {
-	if (inviteCode.length !== 5) {
-		throw new Error("Invalid invite code length");
-	}
-	let encoded = 0;
-	for (let i = 0; i < 5; i++) {
-		let char = inviteCode[i];
-		let charValue = char.charCodeAt(0) - 0x41;
-		encoded |= (charValue << (i * 5));
-	}
-	return encoded;
 }
 
 main().catch((error) => {

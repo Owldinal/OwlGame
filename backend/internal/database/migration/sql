@@ -397,6 +397,10 @@ CREATE TABLE user_infos
 CREATE TABLE invite_relations
 (
     id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tx_hash          CHAR(66)  NOT NULL,
+    log_index        BIGINT    NOT NULL,
+    block_number     BIGINT    NOT NULL,
+    block_hash       CHAR(66)  NOT NULL,
     inviter          VARCHAR(42),
     invitee          VARCHAR(42),
     referral_rewards DECIMAL(36, 18),
@@ -422,16 +426,21 @@ CREATE TABLE daily_pool_snapshots
 CREATE TABLE apr_snapshots
 (
     id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tx_hash           CHAR(66)        NULL,
+    log_index         BIGINT          NULL,
+    block_number      BIGINT          NULL,
+    block_hash        CHAR(66)        NULL,
+    reward_count      BIGINT UNSIGNED NOT NULL,
     total_fruit_count BIGINT UNSIGNED NOT NULL,
     total_elf_count   BIGINT UNSIGNED NOT NULL,
     fruit_rewards     DECIMAL(36, 18) NOT NULL,
-    fruit_apr         DOUBLE NOT NULL,
-    fruit_apy         DOUBLE NOT NULL,
-    elf_apr           DOUBLE NOT NULL,
-    elf_apy           DOUBLE NOT NULL,
-    created_at        TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at        TIMESTAMP NULL DEFAULT NULL
+    fruit_apr         DOUBLE          NOT NULL,
+    fruit_apy         DOUBLE          NOT NULL,
+    elf_apr           DOUBLE          NOT NULL,
+    elf_apy           DOUBLE          NOT NULL,
+    created_at        TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at        TIMESTAMP       NULL DEFAULT NULL
 );
 
 
@@ -481,5 +490,7 @@ CREATE TABLE request_mint_jobs
 INSERT INTO daily_pool_snapshots (date, total_pool_amount, allocated_rewards, total_market_cap, total_burn)
 VALUES ('1970-01-01', 0.0, 0.0, 0.0, 0.0);
 
-INSERT INTO apr_snapshots (total_fruit_count, total_elf_count, fruit_rewards, fruit_apr, fruit_apy, elf_apr, elf_apy)
-VALUES (0, 0, 0.0, 0.0, 0.0, 0.0, 0.0);
+
+INSERT INTO apr_snapshots (reward_count, total_fruit_count, total_elf_count, fruit_rewards, fruit_apr, fruit_apy,
+                           elf_apr, elf_apy)
+VALUES (0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0);
