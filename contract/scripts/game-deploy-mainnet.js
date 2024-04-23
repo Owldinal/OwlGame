@@ -68,7 +68,7 @@ async function deployOrConnect() {
 	} else {
 		const params = [ownerAddress];
 		[owlTokenContract, owlTokenAddress] = await deploy("OwlToken", params);
-		console.log(`OwlToken contract deployed to : ${owlTokenAddress}\nParams = ${params.join(" ")}`);
+		console.log(`OwlToken contract deployed to : ${owlTokenAddress}\nParams = ${params.join(" ")}\n`);
 	}
 
 
@@ -78,7 +78,7 @@ async function deployOrConnect() {
 	} else {
 		const params = [10000000, owlTokenAddress, deployer.address, backendAddress];
 		[owldinalNftContract, owldinalNftAddress] = await deploy("Owldinal", params);
-		console.log(`Owldinal contract deployed to : ${owldinalNftAddress}\nParams = ${params.join(" ")}`);
+		console.log(`Owldinal contract deployed to : ${owldinalNftAddress}\nParams = ${params.join(" ")}\n`);
 	}
 
 	if (owlGameAddress) {
@@ -87,7 +87,7 @@ async function deployOrConnect() {
 	} else {
 		const params = [backendAddress];
 		[owlGameContract, owlGameAddress] = await deploy("OwlGame", params);
-		console.log(`OwlGame contract deployed to : ${owlGameAddress}\nParams = ${params.join(" ")}`);
+		console.log(`OwlGame contract deployed to : ${owlGameAddress}\nParams = ${params.join(" ")}\n`);
 	}
 
 	if (genOneBoxAddress) {
@@ -96,7 +96,7 @@ async function deployOrConnect() {
 	} else {
 		const params = [owlTokenAddress, owlGameAddress];
 		[genOneBoxContract, genOneBoxAddress] = await deploy("OwldinalGenOneBox", params);
-		console.log(`OwldinalGenOneBox contract deployed to : ${genOneBoxAddress}\nParams = ${params.join(" ")}`);
+		console.log(`OwldinalGenOneBox contract deployed to : ${genOneBoxAddress}\nParams = ${params.join(" ")}\n`);
 	}
 
 }
