@@ -161,6 +161,7 @@ CREATE TABLE IF NOT EXISTS owl_game_mint_mystery_box_events
     block_hash   CHAR(66)        NOT NULL,
     user         CHAR(42)        NOT NULL,
     count        BIGINT UNSIGNED NOT NULL,
+    request_id   BIGINT UNSIGNED NOT NULL,
     token_ids    TEXT,
     created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
