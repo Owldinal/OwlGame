@@ -44,7 +44,7 @@ async function sendEth(signer, receiverAddress, amountInEther) {
 async function printTxDetail(tx, msg) {
 	const receipt = await tx.wait();
 	const gasUsed = receipt.gasUsed;
-	console.log(`${msg} [Gas=${gasUsed}, DataLen=${tx.data.length}]`);
+	console.log(`${msg} [Gas=${gasUsed}, DataLen=${tx.data.length}, tx=${tx.hash}]`);
 }
 
 module.exports = {

@@ -38,7 +38,6 @@ const config: HardhatUserConfig = {
     },
     merlinMainnet: {
       url: 'https://rpc.merlinchain.io',
-      gasPrice: 250000000,
       accounts: [process.env.MERLIN_MAIN_PRIVATE_KEY || ''],
     }
   },

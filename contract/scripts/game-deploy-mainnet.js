@@ -23,8 +23,8 @@ async function main() {
 
 	owldinalNftAddress = "0x6b18e87beb44a72eb48da76a881f9104cb97a180";
 	owlTokenAddress = "0x62e99191071Fc1C5947CF1e21Aa95708dcc51AdB";
-	genOneBoxAddress = "0xdc34339327122f9f862e0553Dd35156cF78f6a03";
-	owlGameAddress = "0x0F85ef658068Da66908d6435aA93D1f4Db8b9937";
+	// genOneBoxAddress = "0xdc34339327122f9f862e0553Dd35156cF78f6a03";
+	// owlGameAddress = "0x0F85ef658068Da66908d6435aA93D1f4Db8b9937";
 
 	await deployOrConnect();
 
@@ -44,19 +44,25 @@ OWL_GAME_ADDR=${owlGameAddress}
 			`);
 
 	await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress);
-	await owlGameContract.connect(deployer).setMoonBoost(true);
-	await genOneBoxContract.connect(deployer).addTransferWhiteList([
-		"0xb78EA3993200e1e241A4c0670a89cFfDFB5CD560",
-		"0xf3EB4f8d15cd76bA3130806Cc7ddE1EE4b8f6e42",
-	]);
+	// await owlGameContract.connect(deployer).setMoonBoost(true);
+	// await genOneBoxContract.connect(deployer).addTransferWhiteList([
+	// 	"0xb78EA3993200e1e241A4c0670a89cFfDFB5CD560",
+	// 	"0xf3EB4f8d15cd76bA3130806Cc7ddE1EE4b8f6e42",
+	// ]);
 
-	const prizeAmount = BigInt(6_0000_0000n) * decimal;
-	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
-	console.log(`mint prizeAmount success`);
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
-	console.log(`approve prizeAmount success`);
-	await owlGameContract.connect(deployer).addPrize(prizeAmount);
-	console.log(`prizeAmount = ${prizeAmount}`);
+	// const prizeAmount = BigInt(6_0000_0000n) * decimal;
+	// await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
+	// console.log(`mint prizeAmount success`);
+	// await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
+	// console.log(`approve prizeAmount success`);
+	// await owlGameContract.connect(deployer).addPrize(prizeAmount);
+	// console.log(`prizeAmount = ${prizeAmount}`);
+
+
+	await owlTokenContract.connect(deployer).approve(owlGameAddress, BigInt(100000 * 1) * decimal);
+	console.log("done approve");
+	tx = await owlGameContract.connect(deployer).requestMint(1);
+	await printTxDetail(tx, 'requestMint Count=1');
 
 	return;
 }

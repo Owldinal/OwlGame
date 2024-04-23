@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -91,7 +91,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     bytes32 public constant SERVER_ROLE = keccak256("SERVER_ROLE");
 
-    ERC20Burnable public owlToken;
+    ERC20 public owlToken;
     Owldinal public owldinalNftContract;
     OwldinalGenOneBox public mysteryBoxContract;
 
@@ -136,7 +136,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     // prize pool
     uint256 public prizePool;
 
-    address deadAddress = address(0x0000000000000000000000000000000000000000);
+    address deadAddress = address(0x00000000000000000000000000000000dEaD);
 
     struct MintRequest {
         address user;
@@ -335,7 +335,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         address payable owldinalNftAddr,
         address mysteryBoxAddr
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        owlToken = ERC20Burnable(owlTokenAddr);
+        owlToken = ERC20(owlTokenAddr);
         owldinalNftContract = Owldinal(owldinalNftAddr);
         mysteryBoxContract = OwldinalGenOneBox(mysteryBoxAddr);
     }
