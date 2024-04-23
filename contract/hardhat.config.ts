@@ -60,7 +60,7 @@ const config: HardhatUserConfig = {
         network: "merlinMainnet",
         chainId: 4200,
         urls: {
-          apiURL: "https://scan-v1.merlinchain.io/api",
+          apiURL: "https://scan.merlinchain.io/api",
           browserURL: "https://scan-v1.merlinchain.io"
         }
       }
