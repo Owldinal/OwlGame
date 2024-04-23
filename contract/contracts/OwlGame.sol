@@ -136,6 +136,8 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     // prize pool
     uint256 public prizePool;
 
+    address deadAddress = address(0x0000000000000000000000000000000000000000);
+
     struct MintRequest {
         address user;
         uint256 count;
@@ -459,7 +461,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         }
 
         // burn cost
-        owlToken.burn(burnAmount);
+        owlToken.transfer(deadAddress, burnAmount);
         emit OwlTokenBurned(msg.sender, count, burnAmount);
 
         mintRequestCounter++;
@@ -715,7 +717,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
             owlToken.transfer(msg.sender, totalRewardsCanClaim);
         }
         if (totalRewardsToBurn > 0) {
-            owlToken.burn(totalRewardsToBurn);
+            owlToken.transfer(deadAddress, totalRewardsToBurn);
             emit OwlTokenBurned(msg.sender, totalRewardsToBurn, 0);
         }
         if (totalRewardsForElf > 0 && elfIdList.length > 0) {
