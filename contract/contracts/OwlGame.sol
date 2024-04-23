@@ -230,7 +230,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     // in the relationship. It returns the inviter's wallet address upon successful binding.
     function handleInviteCode(
         uint32 inviteCode
-    ) external returns (address inviter) {
+    ) external nonReentrant returns (address inviter) {
         address sender = msg.sender;
 
         // check if is first in game
@@ -310,7 +310,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     }
 
     // GAS=329550: tokenIdList.length=3
-    function stakeOwldinalNft(uint256[] calldata tokenIdList) external {
+    function stakeOwldinalNft(
+        uint256[] calldata tokenIdList
+    ) external nonReentrant {
         require(tokenIdList.length > 0, "Param is empty");
         // check a maximum of 3 Owldinal NFTs can be staked.
         require(
@@ -347,7 +349,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         emit StakeOwldinalNft(msg.sender, tokenIdList);
     }
 
-    function stakeMysteryBox(uint256[] calldata tokenIdList) external {
+    function stakeMysteryBox(
+        uint256[] calldata tokenIdList
+    ) external nonReentrant {
         require(tokenIdList.length > 0, "Param is empty");
         // check a maximum of 3 Owldinal NFTs can be staked.
         _handleFirstInGame(msg.sender);
@@ -393,7 +397,9 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         emit StakeMysteryBox(msg.sender, tokenIdList, buffLevel);
     }
 
-    function unstakeOwldinalNft(uint256[] calldata tokenIdList) external {
+    function unstakeOwldinalNft(
+        uint256[] calldata tokenIdList
+    ) external nonReentrant {
         require(tokenIdList.length > 0, "Param is empty");
         uint256 length = tokenIdList.length;
         for (uint256 i = 0; i < length; i++) {
@@ -419,7 +425,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
 
     function claimAndUnstakeMysteryBox(
         uint256[] calldata tokenIdList
-    ) external {
+    ) external nonReentrant {
         require(tokenIdList.length > 0, "Param is empty");
 
         uint256 totalRewardsCanClaim = 0;
@@ -559,7 +565,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
         }
     }
 
-    function claimInviterReward() external {
+    function claimInviterReward() external nonReentrant {
         Rebate storage rebate = inviterRebateMap[msg.sender];
         require(rebate.rebatePendingWithdrawal > 0, "no reward");
         require(rebate.unlockedRebateToClaim > 0, "need more unlock");
@@ -587,7 +593,11 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     // region ---- Server ----
 
     // After staking, Owl rewards are distributed every 4 hours.
-    function updateAllFruitRewards() external onlyRole(SERVER_ROLE) {
+    function updateAllFruitRewards()
+        external
+        nonReentrant
+        onlyRole(SERVER_ROLE)
+    {
         require(fruitIdList.length > 0, "No fruit need rewards"); // TODO: use return instead
 
         // calculate how many fruit can get rewards. Loop twice to reduce the gas cost
