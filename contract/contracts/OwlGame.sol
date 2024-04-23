@@ -136,7 +136,7 @@ contract OwlGame is AccessControl, ReentrancyGuard {
     // prize pool
     uint256 public prizePool;
 
-    address deadAddress = address(0x00000000000000000000000000000000dEaD);
+    address deadAddress = address(0x000000000000000000000000000000000000dEaD);
 
     struct MintRequest {
         address user;

@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const { deploy } = require('./utils');
+const { deploy, printTxDetail } = require('./utils');
 
 let deployer, ownerAddress;
 
