@@ -18,6 +18,7 @@ import (
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -43,18 +44,24 @@ func StartJobListening() {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
+	// Timer used to check for unconfirmed mint jobs.
+	checkUnconfirmJobTicker := time.NewTicker(10 * time.Minute)
+	defer checkUnconfirmJobTicker.Stop()
+
 	done := make(chan bool)
 	go func() {
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 		<-quit
-
 		done <- true
 	}()
+
 	for {
 		select {
 		case <-ticker.C:
 			processJobs(owlGame)
+		case <-checkUnconfirmJobTicker.C:
+			CheckUnconfirmedJob()
 		case <-done:
 			log.Infof("Job listener stopped.")
 		}
@@ -127,6 +134,38 @@ func processJobs(owlGame *abigen.OwlGame) {
 
 		database.DB.Model(&job).Omit("HasConfirmed").Updates(job)
 		time.Sleep(time.Millisecond * 500)
+	}
+}
+
+func CheckUnconfirmedJob() {
+	var jobs []model.RequestMintJob
+	now := time.Now()
+	err := database.DB.
+		Where("created_at <= ?", now.Add(-5*time.Minute)).
+		Where("has_confirmed = ?", false).
+		Where("status = ? OR (status = ? AND retry_count >= ?)", constant.MintJobStatusSuccess, constant.MintJobStatusFailed, 3).
+		Find(&jobs).Error
+	if err != nil {
+		log.Warnf("Error retrieving jobs: %v", err)
+		return
+	}
+
+	for _, job := range jobs {
+		// This situation indicates that the contract has already processed this request and can be skipped directly.
+		if strings.Contains(job.Result, "no request") {
+			job.Status = constant.MintJobStatusSuccess
+			job.HasConfirmed = true
+			job.Result = job.Result + fmt.Sprintf("Confirmed by checker;")
+			database.DB.Model(&job).Updates(job)
+			continue
+		}
+
+		if job.Status == constant.MintJobStatusSuccess {
+			job.Result = job.Result + fmt.Sprintf("Prev Tx: %v;", job.JobTxHash)
+		}
+
+		job.Status = constant.MintJobStatusNotStart
+		database.DB.Model(&job).Updates(job)
 	}
 }
 
