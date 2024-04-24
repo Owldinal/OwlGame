@@ -573,6 +573,11 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 			log.Warnf("Error update transferRecord for burna: %v", err)
 			return err
 		}
+
+		err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Burn: burnRewards})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -675,7 +680,7 @@ func burnOwlToken(
 	if err != nil {
 		return
 	}
-
+	txHash = tx.Hash().Hex()
 	receipt, err := bind.WaitMined(context.Background(), ethClient, tx)
 	blockHash = receipt.BlockHash.Hex()
 	blockNumber = receipt.BlockNumber.Uint64()
