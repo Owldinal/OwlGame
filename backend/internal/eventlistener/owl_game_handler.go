@@ -488,7 +488,7 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	if err := database.DB.Where(&userInfo).First(&userInfo).Error; err != nil {
 		return err
 	}
-	userInfo.TotalEarned = userInfo.TotalEarned.Add(eventItem.Rewards)
+	userInfo.TotalEarned = userInfo.TotalEarned.Add(actualRewards)
 	if err := database.DB.Save(&userInfo).Error; err != nil {
 		return err
 	}
@@ -646,7 +646,7 @@ func transferRewardsToUser(
 	if err != nil {
 		return
 	}
-
+	txHash = tx.Hash().Hex()
 	receipt, err := bind.WaitMined(context.Background(), ethClient, tx)
 	blockHash = receipt.BlockHash.Hex()
 	blockNumber = receipt.BlockNumber.Uint64()
