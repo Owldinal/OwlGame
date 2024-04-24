@@ -131,7 +131,6 @@ func processJobs(owlGame *abigen.OwlGame) {
 }
 
 func UpdateFruitReward() {
-
 	var fruits []model.MysteryBoxToken
 	now := time.Now()
 	err := database.DB.
@@ -170,8 +169,6 @@ func UpdateFruitReward() {
 		}
 	}
 
-	// TODO： 如果这里需要实时操作奖池的话，那么必须要先提款、再存款、再执行下列操作。但如果是要实时操作奖池，那么通过正常的 PrizePool Decrease
-	// 和 increase 事件就能计算当前奖池的容量，就不需要在这里更新了。这里仅当不需要实时操作奖池的时候才有用
 	err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Decrease: totalRewards})
 	if err != nil {
 		log.Warnf("Failed to update daily pool snapshot, %v", err)

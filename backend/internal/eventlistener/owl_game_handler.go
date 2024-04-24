@@ -1,8 +1,11 @@
 package eventlistener
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
@@ -162,11 +165,11 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	// TODO: 这里可能不需要更新了，得想一想
-	err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Decrease: eventItem.Amount})
-	if err != nil {
-		return err
-	}
+	// 改成中心化计算收益之后，奖池的逻辑移动到了 UpdateFruitReward 方法里面，这里就不需要处理了（实际上应该也不会变）
+	//err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Decrease: eventItem.Amount})
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }
@@ -511,12 +514,17 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		return err
 	}
 
-	//TODO: Transfer to user
-	transferRewardsToUser(&tokenItem, actualRewards, burnRewards)
-	//transferRecord.TransferTxHash = ""
-	//transferRecord.TransferBlockNumber=
-	//transferRecord.TransferBlockHash =
-	//transferRecord.TransferLogIndex =
+	txHash, blockHash, blockNumber, err := transferRewardsToUser(&tokenItem, actualRewards)
+	if err != nil {
+		transferRecord.Result = transferRecord.Result + fmt.Sprintf("Error : %v;", err)
+		// 不需要 return，这个可以之后再重试，先进行后续的处理
+	} else {
+		transferRecord.TransferTxHash = txHash
+		transferRecord.TransferBlockNumber = blockNumber
+		transferRecord.TransferBlockHash = blockHash
+		transferRecord.Result = transferRecord.Result + fmt.Sprintf("Success;")
+	}
+
 	if err := database.DB.Save(&transferRecord).Error; err != nil {
 		log.Warnf("Error update transferRecord for transfer: %v", err)
 		return err
@@ -554,8 +562,13 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		}
 
 	} else if tokenItem.BoxType == constant.BoxTypeElf {
-		// TODO: burn
-		transferRecord.BurnTxHash = ""
+		burnTxHash, _, _, err := burnOwlToken(burnRewards)
+		if err != nil {
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnError : %v;", err)
+		} else {
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnSuccess;")
+		}
+		transferRecord.BurnTxHash = burnTxHash
 		if err := database.DB.Save(&transferRecord).Error; err != nil {
 			log.Warnf("Error update transferRecord for burna: %v", err)
 			return err
@@ -613,9 +626,61 @@ func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal
 }
 
 func transferRewardsToUser(
-	token *model.MysteryBoxToken, reward decimal.Decimal, burnedRewards decimal.Decimal,
-) {
+	token *model.MysteryBoxToken, reward decimal.Decimal,
+) (txHash string, blockHash string, blockNumber uint64, err error) {
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
+	if err != nil {
+		return
+	}
 
+	targetAddress := common.HexToAddress(token.Owner)
+	targetCount := new(big.Int)
+	targetCount.SetString(reward.Mul(decimal.NewFromFloat(1e18)).StringFixed(0), 10)
+
+	if config.C.GasPrice > 0 {
+		auth.GasPrice = big.NewInt(config.C.GasPrice)
+	}
+
+	var tx *types.Transaction
+	tx, err = owlTokenContract.Transfer(auth, targetAddress, targetCount)
+	if err != nil {
+		return
+	}
+
+	receipt, err := bind.WaitMined(context.Background(), ethClient, tx)
+	blockHash = receipt.BlockHash.Hex()
+	blockNumber = receipt.BlockNumber.Uint64()
+
+	return
+}
+
+func burnOwlToken(
+	burnAmount decimal.Decimal,
+) (txHash string, blockHash string, blockNumber uint64, err error) {
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
+	if err != nil {
+		return
+	}
+
+	targetAddress := common.HexToAddress(constant.BurnAddr)
+	targetCount := new(big.Int)
+	targetCount.SetString(burnAmount.Mul(decimal.NewFromFloat(1e18)).StringFixed(0), 10)
+
+	if config.C.GasPrice > 0 {
+		auth.GasPrice = big.NewInt(config.C.GasPrice)
+	}
+
+	var tx *types.Transaction
+	tx, err = owlTokenContract.Transfer(auth, targetAddress, targetCount)
+	if err != nil {
+		return
+	}
+
+	receipt, err := bind.WaitMined(context.Background(), ethClient, tx)
+	blockHash = receipt.BlockHash.Hex()
+	blockNumber = receipt.BlockNumber.Uint64()
+
+	return
 }
 
 type OwlGameOwlTokenBurnedHandler struct{}

@@ -126,6 +126,8 @@ type TransferRewards struct {
 	BuffLevel     uint8
 	MoonBoost     bool
 	IsConfirmed   bool
+	Status        uint8
+	Result        string
 
 	ClaimTxHash      string `gorm:"size:66;"`
 	ClaimLogIndex    uint

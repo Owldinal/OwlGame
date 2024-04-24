@@ -498,6 +498,8 @@ CREATE TABLE `transfer_rewards`
     `buff_level`            TINYINT UNSIGNED NOT NULL,
     `moon_boost`            BOOLEAN          NOT NULL,
     `is_confirmed`          BOOLEAN          NOT NULL,
+    `status`                INT UNSIGNED     NOT NULL,
+    `result`                TEXT,
     `claim_tx_hash`         VARCHAR(66),
     `claim_log_index`       INT UNSIGNED,
     `claim_block_number`    BIGINT UNSIGNED,
