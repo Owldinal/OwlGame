@@ -487,6 +487,31 @@ CREATE TABLE request_mint_jobs
     deleted_at           TIMESTAMP       NULL DEFAULT NULL
 );
 
+CREATE TABLE `transfer_rewards`
+(
+    `id`                    BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `user`                  VARCHAR(255)     NOT NULL,
+    `token_id`              BIGINT UNSIGNED  NOT NULL,
+    `box_type`              TINYINT UNSIGNED NOT NULL,
+    `rewards`               DECIMAL(36, 18)  NOT NULL,
+    `burned_rewards`        DECIMAL(36, 18)  NOT NULL,
+    `buff_level`            TINYINT UNSIGNED NOT NULL,
+    `moon_boost`            BOOLEAN          NOT NULL,
+    `is_confirmed`          BOOLEAN          NOT NULL,
+    `claim_tx_hash`         VARCHAR(66),
+    `claim_log_index`       INT UNSIGNED,
+    `claim_block_number`    BIGINT UNSIGNED,
+    `claim_block_hash`      VARCHAR(66),
+    `transfer_tx_hash`      VARCHAR(66),
+    `transfer_log_index`    INT UNSIGNED,
+    `transfer_block_number` BIGINT UNSIGNED,
+    `transfer_block_hash`   VARCHAR(66),
+    `burn_tx_hash`          VARCHAR(66),
+    `created_at`            TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`            TIMESTAMP             DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at`            TIMESTAMP        NULL DEFAULT NULL
+);
+
 -- initial date
 INSERT INTO daily_pool_snapshots (date, total_pool_amount, allocated_rewards, total_market_cap, total_burn)
 VALUES ('1970-01-01', 0.0, 0.0, 0.0, 0.0);

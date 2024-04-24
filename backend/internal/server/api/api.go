@@ -4,6 +4,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	"owl-backend/internal/config"
+	"owl-backend/internal/eventlistener"
 	"owl-backend/internal/model"
 	"owl-backend/internal/service"
 )
@@ -180,13 +181,15 @@ func UpdateRewards(c *gin.Context) {
 		return
 	}
 
-	data, code, msg := service.UpdateFruitRewards()
+	//data, code, msg := service.UpdateFruitRewards()
+	eventlistener.UpdateFruitReward()
 
-	if code == model.Success {
-		SuccessResponse(c, data)
-	} else {
-		ErrorResponse(c, code, msg)
-	}
+	SuccessResponse(c, nil)
+	//if code == model.Success {
+	//	SuccessResponse(c, data)
+	//} else {
+	//	ErrorResponse(c, code, msg)
+	//}
 }
 
 func RetryAllJobs(c *gin.Context) {
