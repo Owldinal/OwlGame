@@ -195,3 +195,15 @@ type UpdateFruitRequest struct {
 	Secret      string     `json:"secret" form:"secret"`
 	CompareTime *time.Time `json:"compare_time" form:"compare_time" time_format:"2006-01-02T15:04:05Z" time_utc:"1"`
 }
+
+type RequestJobRequest struct {
+	Tx string `json:"tx" form:"tx"`
+}
+
+type RequestJobResponse struct {
+	RequestTx  string     `json:"request_tx"`
+	JobTx      string     `json:"job_tx"`
+	JobUrl     string     `json:"job_url"`
+	IsSuccess  bool       `json:"is_success"`
+	LastUpdate *time.Time `json:"last_update"`
+}

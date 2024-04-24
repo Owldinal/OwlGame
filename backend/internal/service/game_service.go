@@ -191,3 +191,24 @@ func GetTreasuryRevenueHistory(cursor model.CursorRequest) (response *model.Curs
 
 	return response, model.Success, ""
 }
+
+func GetRequestJobStatus(requestTxHash string) (response *model.RequestJobResponse, code model.ResponseCode, msg string) {
+	job := model.RequestMintJob{
+		RequestTxHash: requestTxHash,
+	}
+
+	if err := database.DB.Where(&job).First(&job).Error; err != nil {
+		return nil, model.NotFound, fmt.Sprintf("failed to find job with tx %v. err: %v", requestTxHash, err)
+	}
+
+	response = &model.RequestJobResponse{
+		RequestTx:  requestTxHash,
+		JobTx:      job.JobTxHash,
+		IsSuccess:  job.HasConfirmed,
+		LastUpdate: &job.UpdatedAt,
+	}
+	if response.JobTx != "" {
+		response.JobUrl = fmt.Sprintf("https://scan.merlinchain.io/tx/%v", response.JobTx)
+	}
+	return response, model.Success, ""
+}

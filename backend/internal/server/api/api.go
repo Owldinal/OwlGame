@@ -213,3 +213,18 @@ func RetryAllJobs(c *gin.Context) {
 		ErrorResponse(c, code, msg)
 	}
 }
+
+func GetRequestJob(c *gin.Context) {
+	var req model.RequestJobRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+	data, code, msg := service.GetRequestJobStatus(req.Tx)
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}

@@ -42,11 +42,13 @@ func registerRouters(engine *gin.Engine) {
 		apiGroup.GET("/user/owldinals", api.GetUserOwldinalList)
 		apiGroup.GET("/user/boxes", api.GetUserBoxList)
 		apiGroup.GET("/user/inviter", api.GetUserInviteList)
+		apiGroup.GET("/user/mint_tx", api.GetRequestMintTx)
+
+		apiGroup.GET("/job/mint", api.GetRequestJob)
 
 		apiGroup.GET("/game/info", api.GetGameInfo)
 		apiGroup.GET("/game/rewards_trend", api.GetRewardTrend)
 		apiGroup.GET("/game/rewards_history", api.GetRewardHistory)
-		apiGroup.GET("/user/mint_tx", api.GetRequestMintTx)
 
 		apiGroup.POST("/admin/update_rewards", api.UpdateRewards)
 		apiGroup.POST("/admin/retry_all_jobs", api.RetryAllJobs)
