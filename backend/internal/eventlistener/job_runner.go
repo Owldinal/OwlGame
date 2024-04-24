@@ -130,14 +130,18 @@ func processJobs(owlGame *abigen.OwlGame) {
 	}
 }
 
-func UpdateFruitReward() {
+func UpdateFruitReward(compareTime *time.Time) {
 	var fruits []model.MysteryBoxToken
-	now := time.Now()
-	err := database.DB.
-		Where("is_staking = ?", true).
-		Where("box_type = ?", constant.BoxTypeFruit).
-		Where("staking_time <= ?", now.Add(-230*time.Minute)). // 应该是 -4*time.Hour，保险点留个余量
-		Find(&fruits).Error
+	if compareTime == nil {
+		// 应该是 -4*time.Hour，保险点留个余量
+		t := time.Now().Add(-230 * time.Minute).UTC()
+		compareTime = &t
+	}
+	query := database.DB.
+		Where("is_staking = ?", 1).
+		Where("box_type = ?", constant.BoxTypeFruit)
+	query = query.Where("staking_time <= ?", compareTime)
+	err := query.Find(&fruits).Error
 	if err != nil {
 		log.Warnf("Error retrieiving fruit: %v", err)
 		return
@@ -158,7 +162,16 @@ func UpdateFruitReward() {
 	totalRewards := snapshot.TotalPoolAmount.Mul(fruitRewardsProportion).Div(decimal.NewFromInt(100000000))
 	eachFruitRewards := totalRewards.Div(decimal.NewFromInt(int64(len(fruits))))
 
-	// update current_rewards
+	log.Infof("Update fruit rewards: time=%v, pool=%v, fruits=%v, proportion=%v, rewards=%v, eachRewards=%v",
+		compareTime,
+		snapshot.TotalPoolAmount,
+		len(fruits),
+		fruitRewardsProportion,
+		totalRewards,
+		eachFruitRewards,
+	)
+
+	//update current_rewards
 	for _, fruit := range fruits {
 		fruit.CurrentRewards = fruit.CurrentRewards.Add(eachFruitRewards)
 		fruit.TotalRewards = fruit.TotalRewards.Add(eachFruitRewards)

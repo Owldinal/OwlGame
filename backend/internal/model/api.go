@@ -190,3 +190,8 @@ type TreasuryRevenueHistory struct {
 type AdminSecret struct {
 	Secret string `json:"secret" form:"secret"`
 }
+
+type UpdateFruitRequest struct {
+	Secret      string     `json:"secret" form:"secret"`
+	CompareTime *time.Time `json:"compare_time" form:"compare_time" time_format:"2006-01-02T15:04:05Z" time_utc:"1"`
+}
