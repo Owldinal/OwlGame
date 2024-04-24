@@ -115,3 +115,29 @@ type RequestMintJob struct {
 	JobBlockNumber uint64
 	JobBlockHash   string `gorm:"size:66"`
 }
+
+type TransferRewards struct {
+	database.Model
+	User          string
+	TokenId       uint64
+	BoxType       constant.BoxType `json:"box_type" gorm:"type:TINYINT UNSIGNED NOT NULL"`
+	Rewards       decimal.Decimal  `gorm:"type:decimal(36,18)"`
+	BurnedRewards decimal.Decimal  `gorm:"type:decimal(36,18)"` // for fruit，give it to elf; for elf, burn it.
+	BuffLevel     uint8
+	MoonBoost     bool
+	IsConfirmed   bool
+	Status        uint8
+	Result        string
+
+	ClaimTxHash      string `gorm:"size:66;"`
+	ClaimLogIndex    uint
+	ClaimBlockNumber uint64
+	ClaimBlockHash   string `gorm:"size:66;"`
+
+	TransferTxHash      string `gorm:"size:66;"`
+	TransferLogIndex    uint
+	TransferBlockNumber uint64
+	TransferBlockHash   string `gorm:"size:66"`
+
+	BurnTxHash string `gorm:"size:66;"`
+}

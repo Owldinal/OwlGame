@@ -1,13 +1,17 @@
 package eventlistener
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"math"
 	"math/big"
+	"owl-backend/internal/config"
 	"owl-backend/internal/constant"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
@@ -130,7 +134,7 @@ func (h *OwlGamePrizePoolIncreasedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	err = updateDailyPoolSnapshot(DailyPoolUpdater{Increase: eventItem.Amount})
+	err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Increase: eventItem.Amount})
 	if err != nil {
 		return err
 	}
@@ -161,10 +165,11 @@ func (h *OwlGamePrizePoolDecreasedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	err = updateDailyPoolSnapshot(DailyPoolUpdater{Decrease: eventItem.Amount})
-	if err != nil {
-		return err
-	}
+	// 改成中心化计算收益之后，奖池的逻辑移动到了 UpdateFruitReward 方法里面，这里就不需要处理了（实际上应该也不会变）
+	//err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Decrease: eventItem.Amount})
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }
@@ -396,9 +401,10 @@ func (h *OwlGameStakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		tokenIds[i] = bigInt.Uint64()
 	}
 	eventItem := model.OwlGameStakeMysteryBoxEvent{
-		Event:    model.NewEvent(&event.Raw),
-		User:     event.User.Hex(),
-		TokenIds: tokenIds,
+		Event:     model.NewEvent(&event.Raw),
+		User:      event.User.Hex(),
+		TokenIds:  tokenIds,
+		BuffLevel: uint8(event.BuffLevel),
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -413,6 +419,7 @@ func (h *OwlGameStakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	updateResult := database.DB.Model(&model.MysteryBoxToken{}).
 		Where("token_id IN ?", tokenIds).
 		Update("is_staking", true).
+		Update("buff_level", eventItem.BuffLevel).
 		Update("staking_time", time.Now())
 	if updateResult.Error != nil {
 		return updateResult.Error
@@ -435,6 +442,7 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		User:    event.User.Hex(),
 		TokenId: event.TokenId.Uint64(),
 		Rewards: decimal.NewFromBigInt(event.Rewards, -18),
+		BoxType: event.BoxType,
 	}
 	eventResult := database.DB.Clauses().Create(&eventItem)
 	if eventResult.Error != nil {
@@ -449,17 +457,24 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	tokenItem := model.MysteryBoxToken{
 		TokenId: eventItem.TokenId,
 	}
-
 	if err := database.DB.Where(&tokenItem).First(&tokenItem).Error; err != nil {
 		log.Warnf("Error Is: %v", err)
 		return err
 	}
-	if !eventItem.Rewards.Equal(tokenItem.CurrentRewards) {
-		log.Warnf("Cliam: rewards not equal as db. event=%v, db=%v", eventItem.Rewards, tokenItem.CurrentRewards)
-	}
+	//if !eventItem.Rewards.Equal(tokenItem.CurrentRewards) {
+	// 这里不需要了，因为合约的奖励总是0
+	//log.Warnf("Cliam: rewards not equal as db. event=%v, db=%v", eventItem.Rewards, tokenItem.CurrentRewards)
+	//}
+
 	tokenItem.IsStaking = false
 	tokenItem.StakingTime = nil
-	tokenItem.ClaimedRewards = tokenItem.ClaimedRewards.Add(eventItem.Rewards)
+
+	actualRewards, burnRewards, buffLevel, isMoonBoost, err := calculateRewards(&tokenItem, tokenItem.CurrentRewards)
+	if err != nil {
+		log.Warnf("Failed to calculateRewards, token=%+v, err=%v", tokenItem, err)
+	}
+
+	tokenItem.ClaimedRewards = tokenItem.ClaimedRewards.Add(actualRewards)
 	tokenItem.CurrentRewards = decimal.Zero
 
 	if err := database.DB.Save(&tokenItem).Error; err != nil {
@@ -478,7 +493,194 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		return err
 	}
 
+	transferRecord := model.TransferRewards{
+		User:          tokenItem.Owner,
+		TokenId:       tokenItem.TokenId,
+		BoxType:       tokenItem.BoxType,
+		Rewards:       actualRewards,
+		BurnedRewards: burnRewards,
+		BuffLevel:     buffLevel,
+		MoonBoost:     isMoonBoost,
+		//IsConfirmed:   false,
+
+		ClaimTxHash:      eventItem.TxHash,
+		ClaimLogIndex:    eventItem.LogIndex,
+		ClaimBlockHash:   eventItem.BlockHash,
+		ClaimBlockNumber: eventItem.BlockNumber,
+	}
+
+	if err := database.DB.Create(&transferRecord).Error; err != nil {
+		log.Warnf("Error Create transferRecordr: %v", err)
+		return err
+	}
+
+	txHash, blockHash, blockNumber, err := transferRewardsToUser(&tokenItem, actualRewards)
+	if err != nil {
+		transferRecord.Result = transferRecord.Result + fmt.Sprintf("Error : %v;", err)
+		// 不需要 return，这个可以之后再重试，先进行后续的处理
+	} else {
+		transferRecord.TransferTxHash = txHash
+		transferRecord.TransferBlockNumber = blockNumber
+		transferRecord.TransferBlockHash = blockHash
+		transferRecord.Result = transferRecord.Result + fmt.Sprintf("Success;")
+	}
+
+	if err := database.DB.Save(&transferRecord).Error; err != nil {
+		log.Warnf("Error update transferRecord for transfer: %v", err)
+		return err
+	}
+
+	if tokenItem.BoxType == constant.BoxTypeFruit {
+		// burnRewards 是需要发给所有妖精的奖励
+
+		// 这里 unstake 多个的时候，会有多个事件同时发出来，所以这里加上事务以防修改的时候冲突
+		tx := database.DB.Begin()
+		var elfTokens []model.MysteryBoxToken
+		if err := tx.Set("gorm:query_option", "FOR UPDATE").
+			Where("is_staking = ? AND box_type = ?", true, constant.BoxTypeElf).
+			Find(&elfTokens).
+			Error; err != nil {
+			tx.Rollback()
+			log.Warnf("Error finding MysteryBoxToken with staking: %v", err)
+			return err
+		}
+
+		eachElfRewards := burnRewards.Div(decimal.NewFromInt(int64(len(elfTokens))))
+		for _, elf := range elfTokens {
+			elf.CurrentRewards = elf.CurrentRewards.Add(eachElfRewards)
+			elf.TotalRewards = elf.TotalRewards.Add(eachElfRewards)
+			if err := tx.Save(&elf).Error; err != nil {
+				tx.Rollback()
+				log.Warnf("Error saving updated MysteryBoxToken: %v", err)
+				return err
+			}
+		}
+
+		if err := tx.Commit().Error; err != nil {
+			log.Warnf("Error committing transaction: %v", err)
+			return err
+		}
+
+	} else if tokenItem.BoxType == constant.BoxTypeElf {
+		burnTxHash, _, _, err := burnOwlToken(burnRewards)
+		if err != nil {
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnError : %v;", err)
+		} else {
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnSuccess;")
+		}
+		transferRecord.BurnTxHash = burnTxHash
+		if err := database.DB.Save(&transferRecord).Error; err != nil {
+			log.Warnf("Error update transferRecord for burna: %v", err)
+			return err
+		}
+	}
+
 	return nil
+}
+
+func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal) (
+	actualRewards decimal.Decimal,
+	burnRewards decimal.Decimal,
+	buffLevel uint8,
+	isMoonBoost bool,
+	err error,
+) {
+	// buff level not correct, should check owldinal nft
+	var nftTokens []model.OwldinalNftToken
+	result := database.DB.Where("owner = ?", token.Owner).Find(&nftTokens)
+	if result.Error != nil {
+		err = result.Error
+		return
+	}
+	if config.C.NeedCheckMoonBoost {
+		isMoonBoost = len(nftTokens) > 0 || constant.MoonBoostAddress[token.Owner]
+	}
+	for _, nft := range nftTokens {
+		if nft.IsStaking {
+			buffLevel++
+		}
+	}
+	var rewardProportion int64
+	if token.BoxType == constant.BoxTypeFruit {
+		rewardProportion = 75
+		if buffLevel >= 3 {
+			rewardProportion = 85
+		}
+		if isMoonBoost {
+			rewardProportion += 7
+		}
+	} else if token.BoxType == constant.BoxTypeElf {
+		rewardProportion = 85
+		if buffLevel >= 2 {
+			rewardProportion = 90
+		}
+		if isMoonBoost {
+			rewardProportion += 7
+		}
+	}
+
+	actualRewards = originReward.Mul(decimal.NewFromInt(rewardProportion)).Div(decimal.NewFromInt(100))
+	burnRewards = originReward.Sub(actualRewards)
+
+	return
+}
+
+func transferRewardsToUser(
+	token *model.MysteryBoxToken, reward decimal.Decimal,
+) (txHash string, blockHash string, blockNumber uint64, err error) {
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
+	if err != nil {
+		return
+	}
+
+	targetAddress := common.HexToAddress(token.Owner)
+	targetCount := new(big.Int)
+	targetCount.SetString(reward.Mul(decimal.NewFromFloat(1e18)).StringFixed(0), 10)
+
+	if config.C.GasPrice > 0 {
+		auth.GasPrice = big.NewInt(config.C.GasPrice)
+	}
+
+	var tx *types.Transaction
+	tx, err = owlTokenContract.Transfer(auth, targetAddress, targetCount)
+	if err != nil {
+		return
+	}
+
+	receipt, err := bind.WaitMined(context.Background(), ethClient, tx)
+	blockHash = receipt.BlockHash.Hex()
+	blockNumber = receipt.BlockNumber.Uint64()
+
+	return
+}
+
+func burnOwlToken(
+	burnAmount decimal.Decimal,
+) (txHash string, blockHash string, blockNumber uint64, err error) {
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
+	if err != nil {
+		return
+	}
+
+	targetAddress := common.HexToAddress(constant.BurnAddr)
+	targetCount := new(big.Int)
+	targetCount.SetString(burnAmount.Mul(decimal.NewFromFloat(1e18)).StringFixed(0), 10)
+
+	if config.C.GasPrice > 0 {
+		auth.GasPrice = big.NewInt(config.C.GasPrice)
+	}
+
+	var tx *types.Transaction
+	tx, err = owlTokenContract.Transfer(auth, targetAddress, targetCount)
+	if err != nil {
+		return
+	}
+
+	receipt, err := bind.WaitMined(context.Background(), ethClient, tx)
+	blockHash = receipt.BlockHash.Hex()
+	blockNumber = receipt.BlockNumber.Uint64()
+
+	return
 }
 
 type OwlGameOwlTokenBurnedHandler struct{}
@@ -506,7 +708,7 @@ func (h *OwlGameOwlTokenBurnedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	err = updateDailyPoolSnapshot(DailyPoolUpdater{Burn: eventItem.Amount})
+	err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Burn: eventItem.Amount})
 	if err != nil {
 		return err
 	}
@@ -541,7 +743,7 @@ func (h *OwlGameFruitRewardUpdatedHandler) Handle(vlog types.Log) error {
 		}
 	}
 
-	updateAprSnapshot(&eventItem)
+	UpdateAprSnapshot(&eventItem)
 	return globalUpdateRewards(constant.BoxTypeFruit, eventItem.Count, eventItem.Amount)
 }
 
@@ -615,7 +817,7 @@ func globalUpdateRewards(boxType constant.BoxType, count uint64, amount decimal.
 	return nil
 }
 
-func updateAprSnapshot(fruitRewardEvent *model.OwlGameFruitRewardUpdateEvent) {
+func UpdateAprSnapshot(fruitRewardEvent *model.OwlGameFruitRewardUpdateEvent) {
 	snapshot := model.AprSnapshot{
 		Event:           fruitRewardEvent.Event,
 		RewardCount:     fruitRewardEvent.Count,
@@ -681,7 +883,7 @@ type DailyPoolUpdater struct {
 	MarketCap decimal.Decimal
 }
 
-func updateDailyPoolSnapshot(updater DailyPoolUpdater) error {
+func UpdateDailyPoolSnapshot(updater DailyPoolUpdater) error {
 	currentDate := time.Now().UTC().Truncate(24 * time.Hour)
 	var snapshot model.DailyPoolSnapshot
 	// Get newest data

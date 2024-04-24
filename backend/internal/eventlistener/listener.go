@@ -21,6 +21,7 @@ var (
 	owldinalNftContract *abigen.Owldinal
 	genOneBoxContract   *abigen.OwldinalGenOneBox
 	owlGameContract     *abigen.OwlGame
+	owlTokenContract    *abigen.OwlToken
 )
 
 const (
@@ -70,6 +71,12 @@ func StartEventListening() error {
 	genOneBoxContract, err = abigen.NewOwldinalGenOneBox(genOneBoxAddr, client)
 	if err != nil {
 		log.Fatal("Failed to instantiate contract GenOneBox: ", err)
+	}
+
+	owlTokenAddr := common.HexToAddress(config.C.OwlTokenAddr)
+	owlTokenContract, err = abigen.NewOwlToken(owlTokenAddr, client)
+	if err != nil {
+		log.Fatal("Failed to instantiate contract OwlToken: ", err)
 	}
 
 	OwlGameAddr = config.C.OwlGameAddr

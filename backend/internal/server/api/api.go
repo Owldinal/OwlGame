@@ -4,8 +4,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	"owl-backend/internal/config"
+	"owl-backend/internal/eventlistener"
 	"owl-backend/internal/model"
 	"owl-backend/internal/service"
+	"owl-backend/pkg/log"
 )
 
 func GetUserInfo(c *gin.Context) {
@@ -169,7 +171,7 @@ func GetRequestMintTx(c *gin.Context) {
 }
 
 func UpdateRewards(c *gin.Context) {
-	var req model.AdminSecret
+	var req model.UpdateFruitRequest
 	if err := c.ShouldBind(&req); err != nil {
 		ErrorResponse(c, model.WrongParam, "Missing Param")
 		return
@@ -180,13 +182,15 @@ func UpdateRewards(c *gin.Context) {
 		return
 	}
 
-	data, code, msg := service.UpdateFruitRewards()
+	log.Infof("Start update fruit rewards: %v", req.CompareTime)
+	eventlistener.UpdateFruitReward(req.CompareTime)
 
-	if code == model.Success {
-		SuccessResponse(c, data)
-	} else {
-		ErrorResponse(c, code, msg)
-	}
+	SuccessResponse(c, nil)
+	//if code == model.Success {
+	//	SuccessResponse(c, data)
+	//} else {
+	//	ErrorResponse(c, code, msg)
+	//}
 }
 
 func RetryAllJobs(c *gin.Context) {
