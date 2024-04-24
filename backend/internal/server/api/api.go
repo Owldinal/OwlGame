@@ -188,3 +188,24 @@ func UpdateRewards(c *gin.Context) {
 		ErrorResponse(c, code, msg)
 	}
 }
+
+func RetryAllJobs(c *gin.Context) {
+	var req model.AdminSecret
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	if req.Secret != config.C.Secret {
+		ErrorResponse(c, model.WrongParam, "Wrong Param")
+		return
+	}
+
+	data, code, msg := service.RetryAllJobs()
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}

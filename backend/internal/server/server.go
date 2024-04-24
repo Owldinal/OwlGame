@@ -49,5 +49,6 @@ func registerRouters(engine *gin.Engine) {
 		apiGroup.GET("/user/mint_tx", api.GetRequestMintTx)
 
 		apiGroup.POST("/admin/update_rewards", api.UpdateRewards)
+		apiGroup.POST("/admin/retry_all_jobs", api.RetryAllJobs)
 	}
 }

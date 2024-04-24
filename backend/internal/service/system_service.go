@@ -9,9 +9,11 @@ import (
 	"math/big"
 	"owl-backend/abigen"
 	"owl-backend/internal/config"
+	"owl-backend/internal/database"
 	"owl-backend/internal/eth"
 	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
+	"time"
 )
 
 var (
@@ -49,4 +51,45 @@ func UpdateFruitRewards() (response interface{}, code model.ResponseCode, msg st
 	log.Warnf("UpdateFruitRewards: Transaction sent: %s", tx.Hash().Hex())
 
 	return true, model.Success, ""
+}
+
+func RetryAllJobs() (response interface{}, code model.ResponseCode, msg string) {
+	log.Infof("Retry all job")
+	jobIds := processJobs()
+	return jobIds, model.Success, ""
+}
+
+func processJobs() (jobIds []uint) {
+	jobIds = make([]uint, 0)
+	var jobs []model.RequestMintJob
+	now := time.Now()
+	err := database.DB.
+		Where("created_at <= ?", now.Add(-2*time.Minute)).
+		Where("has_confirmed = ? ", 0).
+		Find(&jobs).Error
+	if err != nil {
+		log.Warnf("Error retrieving jobs: %v", err)
+		return
+	}
+
+	if len(jobs) == 0 {
+		return
+	}
+
+	for _, job := range jobs {
+		jobIds = append(jobIds, job.ID)
+	}
+	//
+	//err = database.DB.Model(&model.RequestMintJob{}).
+	//	Where("id IN ?", jobIds).
+	//	Omit("HasConfirmed").
+	//	Updates(map[string]interface{}{
+	//		"RetryCount": 0,
+	//		"Status":     constant.MintJobStatusFailed,
+	//	}).Error
+	//if err != nil {
+	//	log.Warnf("Error updating jobs: %v", err)
+	//}
+
+	return
 }
