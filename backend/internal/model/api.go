@@ -190,3 +190,8 @@ type TreasuryRevenueHistory struct {
 type AdminSecret struct {
 	Secret string `json:"secret" form:"secret"`
 }
+
+type TransferOwlTokenRequest struct {
+	Wallet string `json:"wallet" form:"wallet" binding:"required"`
+	Count  uint64 `json:"count" form:"count" binding:"required"`
+}

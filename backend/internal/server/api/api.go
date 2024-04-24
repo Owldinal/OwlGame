@@ -209,3 +209,23 @@ func RetryAllJobs(c *gin.Context) {
 		ErrorResponse(c, code, msg)
 	}
 }
+
+func TransferOwlToken(c *gin.Context) {
+	var req model.TransferOwlTokenRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	if !common.IsHexAddress(req.Wallet) {
+		ErrorResponse(c, model.WrongParam, "Wrong Param 'wallet'")
+		return
+	}
+
+	code, msg := service.TransferOwlToken(req.Wallet, req.Count)
+	if code == model.Success {
+		SuccessResponse(c, msg)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}

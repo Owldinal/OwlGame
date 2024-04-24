@@ -93,3 +93,29 @@ func processJobs() (jobIds []uint) {
 
 	return
 }
+
+func TransferOwlToken(wallet string, count uint64) (code model.ResponseCode, msg string) {
+	log.Infof("TransferOwlToken: Start")
+
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
+	if err != nil {
+		return model.ServerInternalError, fmt.Sprintf("Auth Err: %v", err)
+	}
+
+	targetAddress := common.HexToAddress(wallet)
+	targetCount := big.NewInt(int64(count))
+	if config.C.GasPrice > 0 {
+		auth.GasPrice = big.NewInt(config.C.GasPrice)
+	}
+
+	tx, err := owlTokenContract.Transfer(auth, targetAddress, targetCount)
+
+	if err != nil {
+		log.Warnf("TransferOwlToken: Failed: tx=%+v, err=%v", tx, err)
+		return model.ServerInternalError, fmt.Sprintf("Transfer Err: %v", err)
+	}
+
+	log.Infof("TransferOwlToken: Transaction sent: %s", tx.Hash().Hex())
+	//receipt, err := bind.WaitMined(context.Background(), ethClient, tx)
+	return model.Success, fmt.Sprintf("Transaction sent: %s", tx.Hash().Hex())
+}

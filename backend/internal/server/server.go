@@ -50,5 +50,7 @@ func registerRouters(engine *gin.Engine) {
 
 		apiGroup.POST("/admin/update_rewards", api.UpdateRewards)
 		apiGroup.POST("/admin/retry_all_jobs", api.RetryAllJobs)
+
+		apiGroup.POST("/user/transfer_owl", api.TransferOwlToken)
 	}
 }
