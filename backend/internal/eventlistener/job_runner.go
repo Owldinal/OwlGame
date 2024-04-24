@@ -154,7 +154,7 @@ func UpdateFruitReward() {
 		return
 	}
 
-	fruitRewardsProportion := calculateFruitRewardsProportion(snapshot.TotalPoolAmount)
+	fruitRewardsProportion := calculateFruitRewardsProportion(len(fruits))
 	totalRewards := snapshot.TotalPoolAmount.Mul(fruitRewardsProportion).Div(decimal.NewFromInt(100000000))
 	eachFruitRewards := totalRewards.Div(decimal.NewFromInt(int64(len(fruits))))
 
@@ -199,38 +199,38 @@ func UpdateFruitReward() {
 	})
 }
 
-func calculateFruitRewardsProportion(rewardFruitCount decimal.Decimal) decimal.Decimal {
+func calculateFruitRewardsProportion(rewardFruitCount int) decimal.Decimal {
 	var fruitRewardsProportion decimal.Decimal
 	switch {
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(1)):
+	case rewardFruitCount <= 1:
 		fruitRewardsProportion = decimal.NewFromInt(100) // 0.0001000% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(50)):
+	case rewardFruitCount <= 50:
 		fruitRewardsProportion = decimal.NewFromInt(5000) // 0.0050000% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(100)):
+	case rewardFruitCount <= 100:
 		fruitRewardsProportion = decimal.NewFromInt(10000) // 0.0100000% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(200)):
+	case rewardFruitCount <= 200:
 		fruitRewardsProportion = decimal.NewFromInt(21000) // 0.0210000% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(400)):
+	case rewardFruitCount <= 400:
 		fruitRewardsProportion = decimal.NewFromInt(43040) // 0.0430400% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(800)):
+	case rewardFruitCount <= 800:
 		fruitRewardsProportion = decimal.NewFromInt(88230) // 0.0882300% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(1200)):
+	case rewardFruitCount <= 1200:
 		fruitRewardsProportion = decimal.NewFromInt(136760) // 0.1367600% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(1800)):
+	case rewardFruitCount <= 1800:
 		fruitRewardsProportion = decimal.NewFromInt(211980) // 0.2119800% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(2300)):
+	case rewardFruitCount <= 2300:
 		fruitRewardsProportion = decimal.NewFromInt(276750) // 0.2767500% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(2800)):
+	case rewardFruitCount <= 2800:
 		fruitRewardsProportion = decimal.NewFromInt(342930) // 0.3429300% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(3300)):
+	case rewardFruitCount <= 3300:
 		fruitRewardsProportion = decimal.NewFromInt(416410) // 0.4164100% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(4000)):
+	case rewardFruitCount <= 4000:
 		fruitRewardsProportion = decimal.NewFromInt(522400) // 0.5224000% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(5000)):
+	case rewardFruitCount <= 5000:
 		fruitRewardsProportion = decimal.NewFromInt(679130) // 0.6791300% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(6000)):
+	case rewardFruitCount <= 6000:
 		fruitRewardsProportion = decimal.NewFromInt(842120) // 0.8421200% * 100_000_000
-	case rewardFruitCount.LessThanOrEqual(decimal.NewFromInt(7500)):
+	case rewardFruitCount <= 7500:
 		fruitRewardsProportion = decimal.NewFromInt(1190480) // 1.1904800% * 100_000_000
 	default:
 		fruitRewardsProportion = decimal.NewFromInt(1349210) // 1.3492100% * 100_000_000
