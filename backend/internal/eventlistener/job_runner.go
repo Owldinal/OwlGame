@@ -150,6 +150,7 @@ func CheckUnconfirmedJob() {
 		return
 	}
 
+	requestIdList := make([]uint64, 0)
 	for _, job := range jobs {
 		// This situation indicates that the contract has already processed this request and can be skipped directly.
 		if strings.Contains(job.Result, "no request") {
@@ -169,7 +170,11 @@ func CheckUnconfirmedJob() {
 			"Status": constant.MintJobStatusNotStart,
 			"Result": job.Result,
 		})
+
+		requestIdList = append(requestIdList, job.RequestId)
 	}
+
+	log.Infof("JobRetry: size=%v, id=%v", len(requestIdList), requestIdList)
 }
 
 func UpdateFruitReward(compareTime *time.Time) {
