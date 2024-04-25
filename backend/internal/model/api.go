@@ -207,3 +207,9 @@ type RequestJobResponse struct {
 	IsSuccess  bool       `json:"is_success"`
 	LastUpdate *time.Time `json:"last_update"`
 }
+
+type ReloadLogRequest struct {
+	//FromBlock int64 `json:"from_block"`
+	//ToBlock   int64 `json:"to_block"`
+	Block int64 `json:"block" form:"block"`
+}

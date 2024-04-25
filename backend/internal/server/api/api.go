@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
+	"math/big"
 	"owl-backend/internal/config"
 	"owl-backend/internal/eventlistener"
 	"owl-backend/internal/model"
@@ -227,4 +228,16 @@ func GetRequestJob(c *gin.Context) {
 	} else {
 		ErrorResponse(c, code, msg)
 	}
+}
+
+func ReloadLog(c *gin.Context) {
+	var req model.ReloadLogRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	block := big.NewInt(req.Block)
+	eventlistener.ProcessLogs(block, block)
+	SuccessResponse(c, nil)
 }

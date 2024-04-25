@@ -18,10 +18,15 @@ import (
 var (
 	OwlGameAddr string
 
+	client *ethclient.Client
+
 	owldinalNftContract *abigen.Owldinal
 	genOneBoxContract   *abigen.OwldinalGenOneBox
 	owlGameContract     *abigen.OwlGame
 	owlTokenContract    *abigen.OwlToken
+
+	contractAddress []common.Address
+	eventProcessors *EventProcessor
 )
 
 const (
@@ -54,9 +59,9 @@ const (
 	eventOwlGameRebateClaimed             = "0x8ec2a9ed236322c625516e43eab59fcb8145e38ee8d489a28d0aacaeecc298d6"
 )
 
-func StartEventListening() error {
-	// Init client and contracts
-	client, err := ethclient.Dial(config.C.NodeUrl)
+func init() {
+	var err error
+	client, err = ethclient.Dial(config.C.NodeUrl)
 	if err != nil {
 		log.Fatal("Failed to connect to the Ethereum client: %v", err)
 	}
@@ -86,20 +91,22 @@ func StartEventListening() error {
 		log.Fatal("Failed to instantiate contract OwlGame: ", err)
 	}
 
-	contractAddress := []common.Address{genOneBoxAddr, owldinalNftAddr, owlGameAddr}
+	contractAddress = []common.Address{genOneBoxAddr, owldinalNftAddr, owlGameAddr}
 
+	eventProcessors = NewEventProcessor()
+	registerHandlers(eventProcessors)
+}
+
+func StartEventListening() error {
 	startBlock := big.NewInt(config.C.EventStartBlock)
-	eventProcessor := NewEventProcessor()
-	registerHandlers(eventProcessor)
-	header, err := getCurrentBlock(client)
+	header, err := getCurrentBlock()
 	if err != nil {
 		log.Fatal("Failed to get the latest block header: %v", err)
 	}
-	currentBlock := handleHistoryEvents(client, startBlock, header, contractAddress, eventProcessor)
-	// Poll the latest events starting from the newest block.
-	pollEvents(client, currentBlock, contractAddress, eventProcessor)
+	currentBlock := handleHistoryEvents(startBlock, header)
+	pollEvents(currentBlock)
 
-	//err = subscribeEvents(client, contractAddress, eventProcessor)
+	//err = subscribeEvents(client, contractAddress, eventProcessors)
 	//if err != nil {
 	//	log.Fatal("Failed to subscribe events: %v", err)
 	//}
@@ -145,7 +152,7 @@ func registerHandlers(eventProcessor *EventProcessor) {
 	eventProcessor.RegisterHandler(owlGameAddr, eventOwlGameRebateClaimed, &OwlGameClaimRebateClaimedHandler{})
 }
 
-func getCurrentBlock(client *ethclient.Client) (*big.Int, error) {
+func getCurrentBlock() (*big.Int, error) {
 	header, err := client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return nil, err
@@ -154,57 +161,9 @@ func getCurrentBlock(client *ethclient.Client) (*big.Int, error) {
 	return header.Number, nil
 }
 
-// subscribe events ... fuck merlin chain didn't support subscribe event.
-//func subscribeEvents(
-//	client *ethclient.Client,
-//	addresses []common.Address,
-//	processors *EventProcessor,
-//) error {
-//	subs := make([]*EventSubscription, 0, len(addresses))
-//	for _, addr := range addresses {
-//		logs := make(chan types.Log)
-//		query := ethereum.FilterQuery{
-//			Addresses: []common.Address{addr},
-//		}
-//		sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
-//		if err != nil {
-//			return err
-//		}
-//		subs = append(subs, &EventSubscription{subscription: sub, eventChannel: logs})
-//	}
-//
-//	for _, sub := range subs {
-//		go func(sub *EventSubscription) {
-//			defer sub.subscription.Unsubscribe()
-//
-//			logsChan := sub.eventChannel.(chan types.Log)
-//			for {
-//				select {
-//				case err := <-sub.subscription.Err():
-//					log.Warnf("Subscription error: %v", err)
-//					return
-//				case vLog := <-logsChan:
-//					if handler, exists := processors.handlers[vLog.Topics[0]]; exists {
-//						if err := handler.Handle(vLog); err != nil {
-//							log.Warnf("Failed to process log: %v", err)
-//						}
-//					} else {
-//						//log.Warnf("No handler for event: %s", vLog.Topics[0].Hex())
-//					}
-//				}
-//			}
-//		}(sub)
-//	}
-//
-//	return nil
-//}
-
 func handleHistoryEvents(
-	client *ethclient.Client,
 	startBlock *big.Int,
 	endBlock *big.Int,
-	addresses []common.Address,
-	processors *EventProcessor,
 ) *big.Int {
 
 	// Merlin chain only supports pulling events for up to 1024 blocks at a time, so need to loop to fetch them.
@@ -219,7 +178,7 @@ func handleHistoryEvents(
 		eventQuery := ethereum.FilterQuery{
 			FromBlock: startBlock,
 			ToBlock:   nextBlock,
-			Addresses: addresses,
+			Addresses: contractAddress,
 		}
 
 		logs, err := client.FilterLogs(context.Background(), eventQuery)
@@ -228,14 +187,14 @@ func handleHistoryEvents(
 		}
 
 		for _, vLog := range logs {
-			if err := processors.ProcessLog(vLog); err != nil {
+			if err := eventProcessors.ProcessLog(vLog); err != nil {
 				log.Warnf("Failed to process log: %v, %v", err, vLog)
 			}
 		}
 
 		startBlock = big.NewInt(0).Add(nextBlock, big.NewInt(1))
 
-		header, err := getCurrentBlock(client)
+		header, err := getCurrentBlock()
 		if err != nil {
 			log.Fatal("Failed to get the latest block header: %v", err)
 		}
@@ -249,10 +208,8 @@ func handleHistoryEvents(
 	return startBlock
 }
 
-func pollEvents(client *ethclient.Client,
-	startBlock *big.Int,
-	addresses []common.Address,
-	processors *EventProcessor) {
+func pollEvents(
+	startBlock *big.Int) {
 
 	pollInterval := 3 * time.Second
 	toBlock := startBlock
@@ -277,7 +234,7 @@ func pollEvents(client *ethclient.Client,
 				logs, err := client.FilterLogs(context.Background(), ethereum.FilterQuery{
 					FromBlock: startBlock,
 					ToBlock:   toBlock,
-					Addresses: addresses,
+					Addresses: contractAddress,
 				})
 				if err != nil {
 					log.Infof("Failed to filter logs: %v", err)
@@ -285,7 +242,7 @@ func pollEvents(client *ethclient.Client,
 				}
 
 				for _, vLog := range logs {
-					if err := processors.ProcessLog(vLog); err != nil {
+					if err := eventProcessors.ProcessLog(vLog); err != nil {
 						log.Infof("Failed to process log: %v", err)
 					}
 				}
@@ -294,4 +251,24 @@ func pollEvents(client *ethclient.Client,
 	}()
 
 	return
+}
+
+func ProcessLogs(startBlock *big.Int, endBlock *big.Int) {
+	log.Debugf("Indexer: handle history from %v to %v", startBlock, endBlock)
+	eventQuery := ethereum.FilterQuery{
+		FromBlock: startBlock,
+		ToBlock:   endBlock,
+		Addresses: contractAddress,
+	}
+
+	logs, err := client.FilterLogs(context.Background(), eventQuery)
+	if err != nil {
+		log.Fatal("Failed to filter logs: %v", err)
+	}
+
+	for _, vLog := range logs {
+		if err := eventProcessors.ProcessLog(vLog); err != nil {
+			log.Warnf("Failed to process log: %v, %v", err, vLog)
+		}
+	}
 }
