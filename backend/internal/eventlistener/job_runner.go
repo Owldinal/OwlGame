@@ -165,7 +165,10 @@ func CheckUnconfirmedJob() {
 		}
 
 		job.Status = constant.MintJobStatusNotStart
-		database.DB.Model(&job).Updates(job)
+		database.DB.Model(&job).Updates(map[string]interface{}{
+			"Status": constant.MintJobStatusNotStart,
+			"Result": job.Result,
+		})
 	}
 }
 
