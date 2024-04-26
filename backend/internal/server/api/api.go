@@ -136,7 +136,7 @@ func GetRewardTrend(c *gin.Context) {
 }
 
 func GetRewardHistory(c *gin.Context) {
-	var req model.CursorRequest
+	var req model.RewardsHistoryRequest
 	if err := c.ShouldBind(&req); err != nil {
 		ErrorResponse(c, model.WrongParam, "Missing Param")
 		return

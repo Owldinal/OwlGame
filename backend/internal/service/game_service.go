@@ -150,11 +150,14 @@ func generateRewardsTrending(start time.Time, interval time.Duration, count int)
 	}
 }
 
-func GetTreasuryRevenueHistory(cursor model.CursorRequest) (response *model.CursorResponse[model.TreasuryRevenueHistory], code model.ResponseCode, msg string) {
+func GetTreasuryRevenueHistory(cursor model.RewardsHistoryRequest) (response *model.CursorResponse[model.TreasuryRevenueHistory], code model.ResponseCode, msg string) {
 	var records []model.RewardPoolTransactionRecord
 	query := database.DB.Model(&model.RewardPoolTransactionRecord{}).Order("id DESC")
 	if cursor.Cursor > 0 {
 		query = query.Where("id < ?", cursor.Cursor)
+	}
+	if len(cursor.Address) > 0 {
+		query = query.Where("user = ?", cursor.Address)
 	}
 	var totalCount int64
 	query.Count(&totalCount)

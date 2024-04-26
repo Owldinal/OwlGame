@@ -172,6 +172,11 @@ type GetGameRewardsTrendingResponse struct {
 	Monthly *RewardTrendingDetail `json:"monthly"`
 }
 
+type RewardsHistoryRequest struct {
+	CursorRequest
+	Address string `json:"address,omitempty" form:"address"`
+}
+
 type RewardTrendingDetail struct {
 	From       *time.Time  `json:"from"`
 	To         *time.Time  `json:"to"`
