@@ -469,6 +469,16 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	tokenItem.IsStaking = false
 	tokenItem.StakingTime = nil
 
+	if tokenItem.CurrentRewards.IsZero() {
+		if err := database.DB.Save(&tokenItem).Error; err != nil {
+			log.Warnf("Error updating unstake box: %v", err)
+			return err
+		}
+
+		return nil
+	}
+
+	// Has rewards. do transfer
 	actualRewards, burnRewards, buffLevel, isMoonBoost, err := calculateRewards(&tokenItem, tokenItem.CurrentRewards)
 	if err != nil {
 		log.Warnf("Failed to calculateRewards, token=%+v, err=%v", tokenItem, err)
@@ -482,6 +492,22 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		return err
 	}
 
+	err = claimSingleTokenRewards(&tokenItem, &eventItem, actualRewards, burnRewards, buffLevel, isMoonBoost)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func claimSingleTokenRewards(
+	tokenItem *model.MysteryBoxToken,
+	eventItem *model.OwlGameUnstakeMysteryBoxEvent,
+	actualRewards decimal.Decimal,
+	burnRewards decimal.Decimal,
+	buffLevel uint8,
+	isMoonBoost bool,
+) error {
 	userInfo := model.UserInfo{
 		Address: eventItem.User,
 	}
@@ -514,7 +540,7 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		return err
 	}
 
-	txHash, blockHash, blockNumber, err := transferRewardsToUser(&tokenItem, actualRewards)
+	txHash, blockHash, blockNumber, err := transferRewardsToUser(tokenItem, actualRewards)
 	if err != nil {
 		transferRecord.Result = transferRecord.Result + fmt.Sprintf("Error : %v;", err)
 		// 不需要 return，这个可以之后再重试，先进行后续的处理
