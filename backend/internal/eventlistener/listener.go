@@ -425,7 +425,8 @@ func checkLogExist(vlog types.Log) {
 			err = database.DB.Where(&item).First(&item).Error
 		case eventOwlGameUnlockableRebateIncreased:
 			event, _ := owlGameContract.ParseUnlockableRebateIncreased(vlog)
-			item := model.OwlGameUnlockableRebateIncreasedEvent{
+			// 这里故意写错的，详见 owl_game_rebate_handler -> OwlGameUnlockableRebateIncreasedHandler
+			item := model.OwlGameRebateRewardsIncreasedEvent{
 				Event: model.NewEvent(&event.Raw),
 			}
 			err = database.DB.Where(&item).First(&item).Error

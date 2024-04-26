@@ -84,6 +84,11 @@ func (h *OwlGameUnlockableRebateIncreasedHandler) Handle(vlog types.Log) error {
 	}
 	// save event to database
 	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.TokenId.Uint64())
+
+	// 这里犯了个错误，上线的时候对于这条事件写错表了。但因为后续对 user_info 表的修改是正常的，所以目前不影响使用。
+	// 如果在不提前修复数据库事件的前提下，将这里改对，会导致数据重复入库，导致用户解锁量加倍
+	// 为了避免引入新问题，这里暂不做修改，将错就错。
+	// 如果需要修复，那么需要分两步，首先只索引历史事件而不进行后续处理，然后对新的事件才能正常进行处理。
 	eventItem := model.OwlGameRebateRewardsIncreasedEvent{
 		Event:     model.NewEvent(&event.Raw),
 		User:      event.User.Hex(),
