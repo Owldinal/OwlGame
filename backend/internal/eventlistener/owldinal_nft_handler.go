@@ -19,7 +19,7 @@ func (h *OwldinalNftMintBoxHandler) Handle(vlog types.Log) error {
 		return err
 	}
 	// save event to database
-	//log.Infof("[%v-%v] Mint box: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.BoxId.Uint64())
+	log.Debugf("[%v-%v] OwldinalNftMintBoxHandler: user = %v, boxId = %v", event.Raw.TxHash, event.Raw.Index, event.User, event.BoxId.Uint64())
 	eventItem := model.OwldinalNftMintBoxEvent{
 		Event:    model.NewEvent(&event.Raw),
 		User:     event.User.Hex(),

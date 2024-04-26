@@ -2,21 +2,29 @@ package eventlistener
 
 import (
 	"context"
+	"errors"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"gorm.io/gorm"
 	"math/big"
 	"os"
 	"os/signal"
 	"owl-backend/abigen"
 	"owl-backend/internal/config"
+	"owl-backend/internal/database"
+	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
 	"syscall"
 	"time"
 )
 
 var (
-	OwlGameAddr string
+	OwlGameAddr     string
+	owldinalNftAddr common.Address
+	genOneBoxAddr   common.Address
+	owlGameAddr     common.Address
 
 	client *ethclient.Client
 
@@ -66,13 +74,13 @@ func init() {
 		log.Fatal("Failed to connect to the Ethereum client: %v", err)
 	}
 
-	owldinalNftAddr := common.HexToAddress(config.C.NftOwlAddr)
+	owldinalNftAddr = common.HexToAddress(config.C.NftOwlAddr)
 	owldinalNftContract, err = abigen.NewOwldinal(owldinalNftAddr, client)
 	if err != nil {
 		log.Fatal("Failed to instantiate contract OwldinalNft: ", err)
 	}
 
-	genOneBoxAddr := common.HexToAddress(config.C.NftMysteryBoxAddr)
+	genOneBoxAddr = common.HexToAddress(config.C.NftMysteryBoxAddr)
 	genOneBoxContract, err = abigen.NewOwldinalGenOneBox(genOneBoxAddr, client)
 	if err != nil {
 		log.Fatal("Failed to instantiate contract GenOneBox: ", err)
@@ -85,14 +93,13 @@ func init() {
 	}
 
 	OwlGameAddr = config.C.OwlGameAddr
-	owlGameAddr := common.HexToAddress(config.C.OwlGameAddr)
+	owlGameAddr = common.HexToAddress(config.C.OwlGameAddr)
 	owlGameContract, err = abigen.NewOwlGame(owlGameAddr, client)
 	if err != nil {
 		log.Fatal("Failed to instantiate contract OwlGame: ", err)
 	}
 
 	contractAddress = []common.Address{genOneBoxAddr, owldinalNftAddr, owlGameAddr}
-
 	eventProcessors = NewEventProcessor()
 	registerHandlers(eventProcessors)
 }
@@ -106,16 +113,26 @@ func StartEventListening() error {
 	currentBlock := handleHistoryEvents(startBlock, header)
 	pollEvents(currentBlock)
 
-	//err = subscribeEvents(client, contractAddress, eventProcessors)
-	//if err != nil {
-	//	log.Fatal("Failed to subscribe events: %v", err)
-	//}
-
 	// Prevent main exit.
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 
+	return nil
+}
+
+func StartEventChecker() error {
+	startBlock := big.NewInt(config.C.EventStartBlock)
+	header, err := getCurrentBlock()
+	if err != nil {
+		log.Fatal("Failed to get the latest block header: %v", err)
+	}
+	_ = checkHistoryEvents(startBlock, header)
+
+	// Prevent main exit.
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
 	return nil
 }
 
@@ -270,5 +287,191 @@ func ProcessLogs(startBlock *big.Int, endBlock *big.Int) {
 		if err := eventProcessors.ProcessLog(vLog); err != nil {
 			log.Warnf("Failed to process log: %v, %v", err, vLog)
 		}
+	}
+}
+
+func checkHistoryEvents(
+	startBlock *big.Int,
+	endBlock *big.Int,
+) *big.Int {
+	// Merlin chain only supports pulling events for up to 1024 blocks at a time, so need to loop to fetch them.
+	maxBlocks := big.NewInt(1024)
+	for startBlock.Cmp(endBlock) < 0 {
+		nextBlock := big.NewInt(0).Add(startBlock, maxBlocks)
+		if nextBlock.Cmp(endBlock) > 0 {
+			nextBlock.Set(endBlock)
+		}
+
+		log.Debugf("Indexer: handle history from %v to %v", startBlock, nextBlock)
+		eventQuery := ethereum.FilterQuery{
+			FromBlock: startBlock,
+			ToBlock:   nextBlock,
+			Addresses: contractAddress,
+		}
+
+		logs, err := client.FilterLogs(context.Background(), eventQuery)
+		if err != nil {
+			log.Fatal("Failed to filter logs: %v", err)
+		}
+
+		for _, vLog := range logs {
+			checkLogExist(vLog)
+		}
+
+		startBlock = big.NewInt(0).Add(nextBlock, big.NewInt(1))
+
+		header, err := getCurrentBlock()
+		if err != nil {
+			log.Fatal("Failed to get the latest block header: %v", err)
+		}
+		// If the header is much larger than the endblock, it will result in subsequent subscriptions exceeding 1024
+		// blocks and thus throw an exception, so the endblock needs to be updated.
+		if header.Cmp(big.NewInt(0).Add(endBlock, big.NewInt(100))) > 0 {
+			endBlock = header
+		}
+	}
+
+	return startBlock
+}
+
+func checkLogExist(vlog types.Log) {
+	eventHash := vlog.Topics[0].Hex()
+	var err error
+	if vlog.Address == owlGameAddr {
+		switch eventHash {
+		case eventOwlGameJoinGame:
+			event, _ := owlGameContract.ParseJoinGame(vlog)
+			item := model.OwlGameJoinGameEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameBindInvitation:
+			event, _ := owlGameContract.ParseBindInvitation(vlog)
+			item := model.OwlGameBindInvitationEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGamePrizePoolIncreased:
+			event, _ := owlGameContract.ParsePrizePoolIncreased(vlog)
+			item := model.OwlGamePrizePoolIncreasedEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGamePrizePoolDecreased:
+			event, _ := owlGameContract.ParsePrizePoolDecreased(vlog)
+			item := model.OwlGamePrizePoolDecreasedEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameRequestMint:
+			event, _ := owlGameContract.ParseRequestMint(vlog)
+			item := model.OwlGameRequestMintEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameMintMysteryBox:
+			event, _ := owlGameContract.ParseMintMysteryBox(vlog)
+			item := model.OwlGameMintMysteryBoxEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameStakeOwldinalNft:
+			event, _ := owlGameContract.ParseStakeOwldinalNft(vlog)
+			item := model.OwlGameStakeOwldinalNftEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameUnstakeOwldinalNft:
+			event, _ := owlGameContract.ParseUnstakeOwldinalNft(vlog)
+			item := model.OwlGameUnstakeOwldinalNftEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameStakeMysteryBox:
+			event, _ := owlGameContract.ParseStakeMysteryBox(vlog)
+			item := model.OwlGameStakeMysteryBoxEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameUnstakeMysteryBox:
+			event, _ := owlGameContract.ParseUnstakeMysteryBox(vlog)
+			item := model.OwlGameUnstakeMysteryBoxEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameOwlTokenBurned:
+			event, _ := owlGameContract.ParseOwlTokenBurned(vlog)
+			item := model.OwlGameOwlTokenBurnedEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameFruitRewardUpdated:
+			event, _ := owlGameContract.ParseFruitRewardUpdated(vlog)
+			item := model.OwlGameFruitRewardUpdateEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameElfRewardUpdated:
+			event, _ := owlGameContract.ParseElfRewardUpdated(vlog)
+			item := model.OwlGameElfRewardUpdateEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameRebateRewardsIncreased:
+			event, _ := owlGameContract.ParseRebateRewardsIncreased(vlog)
+			item := model.OwlGameRebateRewardsIncreasedEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameUnlockableRebateIncreased:
+			event, _ := owlGameContract.ParseUnlockableRebateIncreased(vlog)
+			item := model.OwlGameUnlockableRebateIncreasedEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwlGameRebateClaimed:
+			event, _ := owlGameContract.ParseRebateClaimed(vlog)
+			item := model.OwlGameRebateClaimedEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		}
+
+	} else if vlog.Address == owldinalNftAddr {
+		switch eventHash {
+		case eventOwldinalMintBox:
+			event, _ := owldinalNftContract.ParseMintBox(vlog)
+			item := model.OwldinalNftMintBoxEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		case eventOwldinalTransfer:
+			event, _ := owldinalNftContract.ParseTransfer(vlog)
+			item := model.OwldinalNftTransferEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+		}
+
+	} else if vlog.Address == genOneBoxAddr {
+		if eventHash == eventOwldinalGenOneBoxMintBox {
+			event, _ := genOneBoxContract.ParseMintBox(vlog)
+			item := model.GenOneBoxMintBoxEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+
+		} else if eventHash == eventOwldinalTransfer {
+			event, _ := genOneBoxContract.ParseTransfer(vlog)
+			item := model.GenOneBoxTransferEvent{
+				Event: model.NewEvent(&event.Raw),
+			}
+			err = database.DB.Where(&item).First(&item).Error
+
+		}
+	}
+
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Warnf("Missing Event: hash= %v , blockNum= %v", vlog.TxHash, vlog.BlockNumber)
 	}
 }
