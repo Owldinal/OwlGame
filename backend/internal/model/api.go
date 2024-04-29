@@ -220,7 +220,7 @@ type ReloadLogRequest struct {
 }
 
 type CheckSignatureRequest struct {
-	Address   string `json:"address" form:"address"`
-	Message   string `json:"message" form:"message"`
-	Signature string `json:"signature" form:"signature"`
+	Address   string `json:"address" form:"address" binding:"required"`
+	Message   string `json:"message" form:"message" binding:"required"`
+	Signature string `json:"signature" form:"signature" binding:"required"`
 }

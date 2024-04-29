@@ -221,10 +221,11 @@ func GetRequestJobStatus(requestTxHash string) (response *model.RequestJobRespon
 
 func CheckSignature(request model.CheckSignatureRequest) (code model.ResponseCode, msg string) {
 
-	fmt.Printf("request: %+v\n", request)
+	//fmt.Printf("request: %+v\n", request)
 
 	hashedMessage := []byte("\x19Ethereum Signed Message:\n" + strconv.Itoa(len(request.Message)) + request.Message)
 	hash := crypto.Keccak256Hash(hashedMessage)
+	//fmt.Printf("hash: %x\n", hash)
 
 	decodedMessage := hexutil.MustDecode(request.Signature)
 	if decodedMessage[64] == 27 || decodedMessage[64] == 28 {
