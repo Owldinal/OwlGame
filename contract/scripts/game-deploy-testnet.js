@@ -21,10 +21,10 @@ async function main() {
 	const blockNumber = await hre.ethers.provider.getBlockNumber();
 	console.log(`Current Block number: ${blockNumber}`);
 
-	owldinalNftAddress = "0x3FD1e177e98017902fc1a0F51De10Dc28645D034";
-	owlTokenAddress = "0xe13481571787F0fdb2C7AD8D295c18856cA76494";
-	// genOneBoxAddress = "0x0b8264Fedb988c82Af6EdC439E89180D795a5F92";
-	// owlGameAddress = "0xA595E996C30f713f9D856421318589E293A3792C";
+	owldinalNftAddress = "0x06BAaC534601493C0678Ca81a78Fe1BF03d52Bef";
+	owlTokenAddress = "0xf8bB8324Cd226f6229dbB8792C66119832791A59";
+	genOneBoxAddress = "0xfB3ABE390CE28D7749951f2dA7B0A7487D234396";
+	owlGameAddress = "0x73a11097dCf0817909039d2661a15cbc8F6624eF";
 
 	await deployOrConnect();
 
@@ -44,26 +44,18 @@ OWL_GAME_ADDR=${owlGameAddress}
 			`);
 
 	await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress);
-	await owlGameContract.connect(deployer).setMoonBoost(true);
-	await genOneBoxContract.connect(deployer).addTransferWhiteList([
-		"0xb78EA3993200e1e241A4c0670a89cFfDFB5CD560",
-		"0xf3EB4f8d15cd76bA3130806Cc7ddE1EE4b8f6e42",
-	]);
 
-	let addressList = [];
-	for (j = 1; j < 10; j++) {
-		var user = (await hre.ethers.getSigners())[j];
-		addressList.push(user.address);
-	}
-	await genOneBoxContract.connect(deployer).addTransferWhiteList(addressList);
+	// await owlGameContract.connect(deployer).initialize(owlTokenAddress, owldinalNftAddress, genOneBoxAddress);
+	// await owlGameContract.connect(deployer).setMoonBoost(false);
+	// await genOneBoxContract.connect(deployer).setTransferEnable(true);
 
-	const prizeAmount = BigInt(6_0000_0000n) * decimal;
-	await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
-	console.log(`mint prizeAmount success`);
-	await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
-	console.log(`approve prizeAmount success`);
-	await owlGameContract.connect(deployer).addPrize(prizeAmount);
-	console.log(`prizeAmount = ${prizeAmount}`);
+	// const prizeAmount = BigInt(6_0000_0000n) * decimal;
+	// await owlTokenContract.connect(deployer).mint(ownerAddress, prizeAmount);
+	// console.log(`mint prizeAmount success`);
+	// await owlTokenContract.connect(deployer).approve(owlGameAddress, prizeAmount);
+	// console.log(`approve prizeAmount success`);
+	// await owlGameContract.connect(deployer).addPrize(prizeAmount);
+	// console.log(`prizeAmount = ${prizeAmount}`);
 
 	return;
 }
