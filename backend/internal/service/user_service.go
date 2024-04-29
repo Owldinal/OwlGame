@@ -371,5 +371,5 @@ func ClaimToken(user string, tokenIds []uint64) (response *model.ClaimBoxRespons
 		response.Status = constant.ClaimStatusSuccess
 	}
 
-	return nil, model.Success, ""
+	return response, model.Success, ""
 }
