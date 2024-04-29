@@ -115,6 +115,29 @@ func GetUserInviteList(c *gin.Context) {
 	}
 }
 
+func ClaimBoxes(c *gin.Context) {
+	var req model.ClaimBoxRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	if !common.IsHexAddress(req.Address) {
+		ErrorResponse(c, model.WrongParam, "Wrong Param 'wallet'")
+		return
+	}
+
+	// TODO: valid signature
+
+	data, code, msg := service.ClaimToken(req.Address, req.TokenIds)
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}
+
 func GetGameInfo(c *gin.Context) {
 	data, code, msg := service.GetGameInfo()
 

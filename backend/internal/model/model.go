@@ -141,3 +141,23 @@ type TransferRewards struct {
 
 	BurnTxHash string `gorm:"size:66;"`
 }
+
+type TransferMultipleRewards struct {
+	database.Model
+	User           string
+	TokenIdList    database.IdList
+	ClaimedRewards decimal.Decimal `gorm:"type:decimal(36,18)"`
+	ElfRewards     decimal.Decimal `gorm:"type:decimal(36,18)"`
+	BurnedRewards  decimal.Decimal `gorm:"type:decimal(36,18)"`
+
+	BuffLevel uint8
+	MoonBoost bool
+	Result    string
+
+	TransferTxHash      string `gorm:"size:66;"`
+	TransferLogIndex    uint
+	TransferBlockNumber uint64
+	TransferBlockHash   string `gorm:"size:66"`
+
+	BurnTxHash string `gorm:"size:66;"`
+}

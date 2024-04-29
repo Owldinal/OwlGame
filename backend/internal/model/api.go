@@ -54,6 +54,12 @@ type GetMintSignatureRequest struct {
 	HCaptcha string `json:"hcaptcha" binding:"required"`
 }
 
+type SignedRequest struct {
+	Address   string `json:"address" form:"address" binding:"required"`
+	Message   string `json:"message" form:"message" binding:"required"`
+	Signature string `json:"signature" form:"signature" binding:"required"`
+}
+
 type GetMintSignatureResponse struct {
 	Wallet    string `json:"wallet"`
 	Hash      string `json:"hash"`
@@ -217,4 +223,16 @@ type ReloadLogRequest struct {
 	//FromBlock int64 `json:"from_block"`
 	//ToBlock   int64 `json:"to_block"`
 	Block int64 `json:"block" form:"block"`
+}
+
+type ClaimBoxRequest struct {
+	SignedRequest
+	TokenIds []uint64 `json:"token_ids" form:"token_ids"`
+}
+
+type ClaimBoxResponse struct {
+	TotalClaimed    decimal.Decimal   `json:"total_claimed"`
+	TotalBurned     decimal.Decimal   `json:"total_burned"`
+	TransactionHash string            `json:"transaction_hash"`
+	ClaimedBoxes    []MysteryBoxToken `json:"claimed_boxes"`
 }
