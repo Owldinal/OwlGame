@@ -22,7 +22,10 @@ func ValidSignature(address, message, signature string) error {
 	hash := crypto.Keccak256Hash(hashedMessage)
 	//fmt.Printf("hash: %x\n", hash)
 
-	decodedMessage := hexutil.MustDecode(signature)
+	decodedMessage, err := hexutil.Decode(signature)
+	if err != nil {
+		return err
+	}
 	if decodedMessage[64] == 27 || decodedMessage[64] == 28 {
 		decodedMessage[64] -= 27
 	}
