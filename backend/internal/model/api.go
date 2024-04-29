@@ -232,8 +232,9 @@ type ClaimBoxRequest struct {
 }
 
 type ClaimBoxResponse struct {
-	TotalClaimed    decimal.Decimal   `json:"total_claimed"`
-	TotalBurned     decimal.Decimal   `json:"total_burned"`
-	TransactionHash string            `json:"transaction_hash"`
-	ClaimedBoxes    []MysteryBoxToken `json:"claimed_boxes"`
+	Status          constant.ClaimStatus `json:"status"`
+	TotalClaimed    decimal.Decimal      `json:"total_claimed"`
+	TotalBurned     decimal.Decimal      `json:"total_burned"`
+	TransactionHash string               `json:"transaction_hash"`
+	ClaimedBoxes    []MysteryBoxToken    `json:"claimed_boxes"`
 }

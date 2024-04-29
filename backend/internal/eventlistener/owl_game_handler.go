@@ -679,18 +679,6 @@ func ClaimMultipleTokenRewards(
 		return
 	}
 
-	// update user info
-	userInfo := model.UserInfo{
-		Address: user,
-	}
-	if err = database.DB.Where(&userInfo).First(&userInfo).Error; err != nil {
-		return
-	}
-	userInfo.TotalEarned = userInfo.TotalEarned.Add(totalRewards)
-	if err = database.DB.Save(&userInfo).Error; err != nil {
-		return
-	}
-
 	// create transfer record
 	transferRecord := model.TransferMultipleRewards{
 		User:           user,
@@ -736,6 +724,18 @@ func ClaimMultipleTokenRewards(
 	}
 
 	if totalRewards.IsPositive() {
+		// update user info
+		userInfo := model.UserInfo{
+			Address: user,
+		}
+		if err = database.DB.Where(&userInfo).First(&userInfo).Error; err != nil {
+			return
+		}
+		userInfo.TotalEarned = userInfo.TotalEarned.Add(totalRewards)
+		if err = database.DB.Save(&userInfo).Error; err != nil {
+			return
+		}
+
 		txHash, blockHash, blockNumber, err2 := transferRewardsToUser(common.HexToAddress(user), totalRewards)
 		err = err2
 		if err != nil {

@@ -122,9 +122,8 @@ func ClaimBoxes(c *gin.Context) {
 		ErrorResponse(c, model.WrongParam, "Missing Param")
 		return
 	}
-
 	if !common.IsHexAddress(req.Address) {
-		ErrorResponse(c, model.WrongParam, "Wrong Param 'wallet'")
+		ErrorResponse(c, model.WrongParam, "Wrong Param 'address'")
 		return
 	}
 

@@ -20,6 +20,15 @@ const (
 	MintJobStatusFailed
 )
 
+type ClaimStatus uint8
+
+const (
+	ClaimStatusFailed ClaimStatus = iota
+	ClaimStatusSuccess
+	ClaimStatusNoRewards
+	ClaimStatusProcessing
+)
+
 const NoneAddr = "0x0000000000000000000000000000000000000000"
 const BurnAddr = "0x000000000000000000000000000000000000dEaD"
 

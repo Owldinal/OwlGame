@@ -347,17 +347,13 @@ func ClaimToken(user string, tokenIds []uint64) (response *model.ClaimBoxRespons
 		return nil, model.ServerInternalError, fmt.Sprintf("Failed to claim. err: %v", err)
 	}
 
-	if txHash == "" {
-		return nil, model.ServerInternalError, fmt.Sprintf("Your transaction is being processed, the system will handle it automatically.")
-	}
-
 	var tokenList []model.MysteryBoxToken
 	if err = database.DB.
 		Where("token_id IN ?", claimedIdList).
 		Find(&tokenList).
 		Error; err != nil {
 		log.Warnf("Failed to load claimedTokenIds: %v, err: %v", claimedIdList, err)
-		return nil, model.ServerInternalError, fmt.Sprintf("Your transaction is being processed, the system will handle it automatically.")
+		return nil, model.ServerInternalError, fmt.Sprintf("Failed to load tokens. err=%v", err)
 	}
 
 	response = &model.ClaimBoxResponse{
@@ -365,6 +361,14 @@ func ClaimToken(user string, tokenIds []uint64) (response *model.ClaimBoxRespons
 		TotalBurned:     burnedRewards,
 		TransactionHash: txHash,
 		ClaimedBoxes:    tokenList,
+	}
+
+	if totalRewards.IsZero() || len(tokenList) == 0 {
+		response.Status = constant.ClaimStatusNoRewards
+	} else if txHash == "" {
+		response.Status = constant.ClaimStatusProcessing
+	} else {
+		response.Status = constant.ClaimStatusSuccess
 	}
 
 	return nil, model.Success, ""
