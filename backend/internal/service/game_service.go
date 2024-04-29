@@ -3,11 +3,14 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"owl-backend/internal/constant"
 	"owl-backend/internal/database"
 	"owl-backend/internal/model"
+	"strconv"
 	"time"
 )
 
@@ -214,4 +217,33 @@ func GetRequestJobStatus(requestTxHash string) (response *model.RequestJobRespon
 		response.JobUrl = fmt.Sprintf("https://scan.merlinchain.io/tx/%v", response.JobTx)
 	}
 	return response, model.Success, ""
+}
+
+func CheckSignature(request model.CheckSignatureRequest) (code model.ResponseCode, msg string) {
+
+	fmt.Printf("request: %+v\n", request)
+
+	hashedMessage := []byte("\x19Ethereum Signed Message:\n" + strconv.Itoa(len(request.Message)) + request.Message)
+	hash := crypto.Keccak256Hash(hashedMessage)
+
+	decodedMessage := hexutil.MustDecode(request.Signature)
+	if decodedMessage[64] == 27 || decodedMessage[64] == 28 {
+		decodedMessage[64] -= 27
+	}
+
+	sigPublicKeyECDSA, err := crypto.SigToPub(hash.Bytes(), decodedMessage)
+	if sigPublicKeyECDSA == nil {
+		err = errors.New("could not get a public get from the message signature")
+	}
+	if err != nil {
+		return model.ServerInternalError, err.Error()
+	}
+
+	publicKey := crypto.PubkeyToAddress(*sigPublicKeyECDSA).String()
+	if publicKey != request.Address {
+		return model.Success, "false"
+	}
+
+	return model.Success, "true"
+
 }

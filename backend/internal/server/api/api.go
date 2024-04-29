@@ -241,3 +241,17 @@ func ReloadLog(c *gin.Context) {
 	eventlistener.ProcessLogs(block, block)
 	SuccessResponse(c, nil)
 }
+
+func CheckSignature(c *gin.Context) {
+	var req model.CheckSignatureRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+	code, msg := service.CheckSignature(req)
+	if code == model.Success {
+		SuccessResponse(c, msg)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}

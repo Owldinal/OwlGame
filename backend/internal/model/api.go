@@ -218,3 +218,9 @@ type ReloadLogRequest struct {
 	//ToBlock   int64 `json:"to_block"`
 	Block int64 `json:"block" form:"block"`
 }
+
+type CheckSignatureRequest struct {
+	Address   string `json:"address" form:"address"`
+	Message   string `json:"message" form:"message"`
+	Signature string `json:"signature" form:"signature"`
+}
