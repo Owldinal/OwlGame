@@ -479,7 +479,12 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	}
 
 	// Has rewards. do transfer
-	actualRewards, burnRewards, buffLevel, isMoonBoost, err := calculateRewards(&tokenItem, tokenItem.CurrentRewards)
+	isMoonBoost, buffLevel, err := getBuffStatus(tokenItem.Owner)
+	if err != nil {
+		return err
+	}
+	rewardProportion := getTokenRewardProportion(tokenItem.BoxType, buffLevel, isMoonBoost)
+	actualRewards, burnRewards, err := calculateRewards(tokenItem.CurrentRewards, rewardProportion)
 	if err != nil {
 		log.Warnf("Failed to calculateRewards, token=%+v, err=%v", tokenItem, err)
 	}
@@ -609,30 +614,28 @@ func claimSingleTokenRewards(
 	return nil
 }
 
-func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal) (
-	actualRewards decimal.Decimal,
-	burnRewards decimal.Decimal,
-	buffLevel uint8,
-	isMoonBoost bool,
-	err error,
-) {
+func getBuffStatus(user string) (hasMoonBoost bool, owlBuffLevel uint8, err error) {
 	// buff level not correct, should check owldinal nft
 	var nftTokens []model.OwldinalNftToken
-	result := database.DB.Where("owner = ?", token.Owner).Find(&nftTokens)
+	result := database.DB.Where("owner = ?", user).Find(&nftTokens)
 	if result.Error != nil {
 		err = result.Error
 		return
 	}
 	if config.C.NeedCheckMoonBoost {
-		isMoonBoost = len(nftTokens) > 0 || constant.MoonBoostAddress[token.Owner]
+		hasMoonBoost = len(nftTokens) > 0 || constant.MoonBoostAddress[user]
 	}
 	for _, nft := range nftTokens {
 		if nft.IsStaking {
-			buffLevel++
+			owlBuffLevel++
 		}
 	}
-	var rewardProportion int64
-	if token.BoxType == constant.BoxTypeFruit {
+
+	return
+}
+
+func getTokenRewardProportion(boxType constant.BoxType, buffLevel uint8, isMoonBoost bool) (rewardProportion int64) {
+	if boxType == constant.BoxTypeFruit {
 		rewardProportion = 75
 		if buffLevel >= 3 {
 			rewardProportion = 85
@@ -640,7 +643,7 @@ func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal
 		if isMoonBoost {
 			rewardProportion += 7
 		}
-	} else if token.BoxType == constant.BoxTypeElf {
+	} else if boxType == constant.BoxTypeElf {
 		rewardProportion = 85
 		if buffLevel >= 2 {
 			rewardProportion = 90
@@ -650,6 +653,14 @@ func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal
 		}
 	}
 
+	return
+}
+
+func calculateRewards(originReward decimal.Decimal, rewardProportion int64) (
+	actualRewards decimal.Decimal,
+	burnRewards decimal.Decimal,
+	err error,
+) {
 	actualRewards = originReward.Mul(decimal.NewFromInt(rewardProportion)).Div(decimal.NewFromInt(100))
 	burnRewards = originReward.Sub(actualRewards)
 
