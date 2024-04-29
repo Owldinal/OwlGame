@@ -13,6 +13,7 @@ const (
 	WrongParam          ResponseCode = 401
 	NotFound            ResponseCode = 404
 	HCaptchaFailed      ResponseCode = 402
+	InvalidSignature    ResponseCode = 405
 	ServerInternalError ResponseCode = 500
 )
 

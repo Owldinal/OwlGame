@@ -44,6 +44,7 @@ func registerRouters(engine *gin.Engine) {
 		apiGroup.GET("/user/inviter", api.GetUserInviteList)
 		apiGroup.GET("/user/mint_tx", api.GetRequestMintTx)
 		apiGroup.POST("/user/boxes/claim", api.ClaimBoxes)
+		apiGroup.POST("/user/verify_signature", api.CheckSignature)
 
 		apiGroup.GET("/job/mint", api.GetRequestJob)
 

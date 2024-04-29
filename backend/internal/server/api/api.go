@@ -8,6 +8,7 @@ import (
 	"owl-backend/internal/eventlistener"
 	"owl-backend/internal/model"
 	"owl-backend/internal/service"
+	"owl-backend/internal/util"
 	"owl-backend/pkg/log"
 )
 
@@ -127,8 +128,11 @@ func ClaimBoxes(c *gin.Context) {
 		return
 	}
 
-	// TODO: valid signature
-
+	err := util.ValidSignature(req.Address, req.Message, req.Signature)
+	if err != nil {
+		ErrorResponse(c, model.InvalidSignature, err.Error())
+		return
+	}
 	data, code, msg := service.ClaimToken(req.Address, req.TokenIds)
 
 	if code == model.Success {
@@ -263,4 +267,25 @@ func ReloadLog(c *gin.Context) {
 	block := big.NewInt(req.Block)
 	eventlistener.ProcessLogs(block, block)
 	SuccessResponse(c, nil)
+}
+
+func CheckSignature(c *gin.Context) {
+	var req model.SignedRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	if !common.IsHexAddress(req.Address) {
+		ErrorResponse(c, model.WrongParam, "Wrong Param 'wallet'")
+		return
+	}
+
+	err := util.ValidSignature(req.Address, req.Message, req.Signature)
+	if err != nil {
+		ErrorResponse(c, model.InvalidSignature, err.Error())
+		return
+	}
+
+	SuccessResponse(c, true)
 }
