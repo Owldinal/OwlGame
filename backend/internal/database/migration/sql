@@ -524,6 +524,8 @@ CREATE TABLE IF NOT EXISTS transfer_multiple_rewards
     burned_rewards        DECIMAL(36, 18)  NOT NULL,
     buff_level            TINYINT UNSIGNED NOT NULL,
     moon_boost            BOOLEAN          NOT NULL,
+    has_confirmed         BOOLEAN          NOT NULL,
+    status                INT UNSIGNED     NOT NULL,
     result                TEXT,
     transfer_tx_hash      CHAR(66),
     transfer_log_index    INT UNSIGNED     NOT NULL,

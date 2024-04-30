@@ -150,9 +150,11 @@ type TransferMultipleRewards struct {
 	ElfRewards     decimal.Decimal `gorm:"type:decimal(36,18)"`
 	BurnedRewards  decimal.Decimal `gorm:"type:decimal(36,18)"`
 
-	BuffLevel uint8
-	MoonBoost bool
-	Result    string
+	BuffLevel    uint8
+	MoonBoost    bool
+	HasConfirmed bool
+	Status       constant.MintJobStatus
+	Result       string
 
 	TransferTxHash      string `gorm:"size:66;"`
 	TransferLogIndex    uint

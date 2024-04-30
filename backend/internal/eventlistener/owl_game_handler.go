@@ -689,6 +689,13 @@ func ClaimMultipleTokenRewards(
 		BuffLevel:      buffLevel,
 		MoonBoost:      isMoonBoost,
 	}
+
+	if totalRewards.IsZero() {
+		transferRecord.Status = constant.MintJobStatusSuccess
+	} else {
+		transferRecord.Status = constant.MintJobStatusProcessing
+	}
+
 	if err = database.DB.Create(&transferRecord).Error; err != nil {
 		log.Warnf("Error Create transferMultipleRecordr: %v", err)
 		return
@@ -740,6 +747,8 @@ func ClaimMultipleTokenRewards(
 		err = err2
 		if err != nil {
 			transferRecord.Result = transferRecord.Result + fmt.Sprintf("Error : %v;", err)
+			transferRecord.Status = constant.MintJobStatusFailed
+
 			// 不需要 return，这个可以之后再重试，先进行后续的处理
 		} else {
 			transferRecord.TransferTxHash = txHash
@@ -747,6 +756,8 @@ func ClaimMultipleTokenRewards(
 			transferRecord.TransferBlockNumber = blockNumber
 			transferRecord.TransferBlockHash = blockHash
 			transferRecord.Result = transferRecord.Result + fmt.Sprintf("Success;")
+			transferRecord.Status = constant.MintJobStatusSuccess
+
 		}
 
 		if err = database.DB.Save(&transferRecord).Error; err != nil {
