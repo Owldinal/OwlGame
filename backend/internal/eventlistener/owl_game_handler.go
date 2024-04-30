@@ -469,7 +469,22 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	tokenItem.IsStaking = false
 	tokenItem.StakingTime = nil
 
-	actualRewards, burnRewards, buffLevel, isMoonBoost, err := calculateRewards(&tokenItem, tokenItem.CurrentRewards)
+	if tokenItem.CurrentRewards.IsZero() {
+		if err := database.DB.Save(&tokenItem).Error; err != nil {
+			log.Warnf("Error updating unstake box: %v", err)
+			return err
+		}
+
+		return nil
+	}
+
+	// Has rewards. do transfer
+	isMoonBoost, buffLevel, err := getBuffStatus(tokenItem.Owner)
+	if err != nil {
+		return err
+	}
+	rewardProportion := getTokenRewardProportion(tokenItem.BoxType, buffLevel, isMoonBoost)
+	actualRewards, burnRewards, err := calculateRewards(tokenItem.CurrentRewards, rewardProportion)
 	if err != nil {
 		log.Warnf("Failed to calculateRewards, token=%+v, err=%v", tokenItem, err)
 	}
@@ -482,6 +497,22 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		return err
 	}
 
+	err = claimSingleTokenRewards(&tokenItem, &eventItem, actualRewards, burnRewards, buffLevel, isMoonBoost)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func claimSingleTokenRewards(
+	tokenItem *model.MysteryBoxToken,
+	eventItem *model.OwlGameUnstakeMysteryBoxEvent,
+	actualRewards decimal.Decimal,
+	burnRewards decimal.Decimal,
+	buffLevel uint8,
+	isMoonBoost bool,
+) error {
 	userInfo := model.UserInfo{
 		Address: eventItem.User,
 	}
@@ -514,7 +545,7 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 		return err
 	}
 
-	txHash, blockHash, blockNumber, err := transferRewardsToUser(&tokenItem, actualRewards)
+	txHash, blockHash, blockNumber, err := transferRewardsToUser(common.HexToAddress(tokenItem.Owner), actualRewards)
 	if err != nil {
 		transferRecord.Result = transferRecord.Result + fmt.Sprintf("Error : %v;", err)
 		// 不需要 return，这个可以之后再重试，先进行后续的处理
@@ -583,30 +614,204 @@ func (h *OwlGameUnstakeMysteryBoxHandler) Handle(vlog types.Log) error {
 	return nil
 }
 
-func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal) (
-	actualRewards decimal.Decimal,
-	burnRewards decimal.Decimal,
-	buffLevel uint8,
-	isMoonBoost bool,
-	err error,
-) {
+func ClaimMultipleTokenRewards(
+	user string,
+	tokenIdList []uint64,
+) (claimedIdList []uint64, totalRewards decimal.Decimal, burnedRewards decimal.Decimal, transferTxHash string, err error) {
+
+	isMoonBoost, buffLevel, err := getBuffStatus(user)
+	if err != nil {
+		return
+	}
+	fruitProportion := getTokenRewardProportion(constant.BoxTypeFruit, buffLevel, isMoonBoost)
+	elfProportion := getTokenRewardProportion(constant.BoxTypeElf, buffLevel, isMoonBoost)
+
+	tx := database.DB.Begin()
+
+	var tokenList []model.MysteryBoxToken
+	if err = tx.Set("gorm:query_option", "FOR UPDATE").
+		Where("token_id IN ?", tokenIdList).
+		Where("owner = ?", user).
+		Where("is_staking = ?", true).
+		Where("current_rewards > ?", 0).
+		Find(&tokenList).
+		Error; err != nil {
+		tx.Rollback()
+		log.Warnf("Failed to load tokenIds: %v, err: %v", tokenIdList, err)
+		return
+	}
+
+	claimedIdList = make([]uint64, 0)
+	if len(tokenList) == 0 {
+		tx.Rollback()
+		return
+	}
+
+	totalRewards = decimal.Zero
+	burnedRewards = decimal.Zero
+	rewardsForElf := decimal.Zero
+
+	for _, token := range tokenList {
+		claimedIdList = append(claimedIdList, token.TokenId)
+		var actualRewards, remainRewards decimal.Decimal
+		if token.BoxType == constant.BoxTypeFruit {
+			actualRewards, remainRewards, _ = calculateRewards(token.CurrentRewards, fruitProportion)
+			totalRewards = totalRewards.Add(actualRewards)
+			rewardsForElf = rewardsForElf.Add(remainRewards)
+		} else { // Elf
+			// TODO: what if there both have fruits and elfs?
+			actualRewards, remainRewards, _ = calculateRewards(token.CurrentRewards, elfProportion)
+			totalRewards = totalRewards.Add(actualRewards)
+			burnedRewards = burnedRewards.Add(remainRewards)
+		}
+
+		token.ClaimedRewards = token.ClaimedRewards.Add(actualRewards)
+		token.CurrentRewards = decimal.Zero
+		if err = tx.Save(&token).Error; err != nil {
+			tx.Rollback()
+			log.Warnf("Failed to update token ID %d: %v", token.TokenId, err)
+			return
+		}
+	}
+
+	if totalRewards.IsZero() { // Should never happen
+		log.Warnf("ClaimMultiple: rewards is zero: %v", tokenIdList)
+		tx.Rollback()
+		return
+	}
+
+	if err = tx.Commit().Error; err != nil {
+		log.Warnf("Error committing transaction: %v", err)
+		return
+	}
+
+	// create transfer record
+	transferRecord := model.TransferMultipleRewards{
+		User:           user,
+		TokenIdList:    claimedIdList,
+		ClaimedRewards: totalRewards,
+		ElfRewards:     rewardsForElf,
+		BurnedRewards:  burnedRewards,
+		BuffLevel:      buffLevel,
+		MoonBoost:      isMoonBoost,
+		Status:         constant.MintJobStatusProcessing,
+	}
+
+	if err = database.DB.Create(&transferRecord).Error; err != nil {
+		log.Warnf("Error Create transferMultipleRecordr: %v", err)
+		return
+	}
+
+	if rewardsForElf.IsPositive() {
+		tx := database.DB.Begin()
+		var elfTokens []model.MysteryBoxToken
+		if err = tx.Set("gorm:query_option", "FOR UPDATE").
+			Where("is_staking = ? AND box_type = ?", true, constant.BoxTypeElf).
+			Find(&elfTokens).
+			Error; err != nil {
+			tx.Rollback()
+			log.Warnf("Error finding MysteryBoxToken with staking: %v", err)
+			return
+		}
+
+		eachElfRewards := rewardsForElf.Div(decimal.NewFromInt(int64(len(elfTokens))))
+		for _, elf := range elfTokens {
+			elf.CurrentRewards = elf.CurrentRewards.Add(eachElfRewards)
+			elf.TotalRewards = elf.TotalRewards.Add(eachElfRewards)
+			if err = tx.Save(&elf).Error; err != nil {
+				tx.Rollback()
+				log.Warnf("Error saving updated MysteryBoxToken: %v", err)
+				return
+			}
+		}
+
+		if err = tx.Commit().Error; err != nil {
+			log.Warnf("Error committing transaction: %v", err)
+			return
+		}
+	}
+
+	if totalRewards.IsPositive() {
+		// update user info
+		userInfo := model.UserInfo{
+			Address: user,
+		}
+		if err = database.DB.Where(&userInfo).First(&userInfo).Error; err != nil {
+			return
+		}
+		userInfo.TotalEarned = userInfo.TotalEarned.Add(totalRewards)
+		if err = database.DB.Save(&userInfo).Error; err != nil {
+			return
+		}
+
+		txHash, blockHash, blockNumber, err2 := transferRewardsToUser(common.HexToAddress(user), totalRewards)
+		err = err2
+		if err != nil {
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("Error : %v;", err)
+			transferRecord.Status = constant.MintJobStatusFailed
+
+			// 不需要 return，这个可以之后再重试，先进行后续的处理
+		} else {
+			transferRecord.TransferTxHash = txHash
+			transferTxHash = txHash
+			transferRecord.TransferBlockNumber = blockNumber
+			transferRecord.TransferBlockHash = blockHash
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("Success(%v);", txHash)
+			transferRecord.Status = constant.MintJobStatusSuccess
+
+		}
+
+		if err = database.DB.Save(&transferRecord).Error; err != nil {
+			log.Warnf("Error update transferRecord for transfer: %v", err)
+			return
+		}
+	}
+
+	if burnedRewards.IsPositive() {
+		burnTxHash, _, _, err2 := burnOwlToken(burnedRewards)
+		err = err2
+		if err != nil {
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnError : %v;", err)
+		} else {
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnSuccess(%v);", burnTxHash)
+		}
+		transferRecord.BurnTxHash = burnTxHash
+		if err = database.DB.Save(&transferRecord).Error; err != nil {
+			log.Warnf("Error update transferRecord for burna: %v", err)
+			return
+		}
+
+		err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Burn: burnedRewards})
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func getBuffStatus(user string) (hasMoonBoost bool, owlBuffLevel uint8, err error) {
 	// buff level not correct, should check owldinal nft
 	var nftTokens []model.OwldinalNftToken
-	result := database.DB.Where("owner = ?", token.Owner).Find(&nftTokens)
+	result := database.DB.Where("owner = ?", user).Find(&nftTokens)
 	if result.Error != nil {
 		err = result.Error
 		return
 	}
 	if config.C.NeedCheckMoonBoost {
-		isMoonBoost = len(nftTokens) > 0 || constant.MoonBoostAddress[token.Owner]
+		hasMoonBoost = len(nftTokens) > 0 || constant.MoonBoostAddress[user]
 	}
 	for _, nft := range nftTokens {
 		if nft.IsStaking {
-			buffLevel++
+			owlBuffLevel++
 		}
 	}
-	var rewardProportion int64
-	if token.BoxType == constant.BoxTypeFruit {
+
+	return
+}
+
+func getTokenRewardProportion(boxType constant.BoxType, buffLevel uint8, isMoonBoost bool) (rewardProportion int64) {
+	if boxType == constant.BoxTypeFruit {
 		rewardProportion = 75
 		if buffLevel >= 3 {
 			rewardProportion = 85
@@ -614,7 +819,7 @@ func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal
 		if isMoonBoost {
 			rewardProportion += 7
 		}
-	} else if token.BoxType == constant.BoxTypeElf {
+	} else if boxType == constant.BoxTypeElf {
 		rewardProportion = 85
 		if buffLevel >= 2 {
 			rewardProportion = 90
@@ -624,6 +829,14 @@ func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal
 		}
 	}
 
+	return
+}
+
+func calculateRewards(originReward decimal.Decimal, rewardProportion int64) (
+	actualRewards decimal.Decimal,
+	burnRewards decimal.Decimal,
+	err error,
+) {
 	actualRewards = originReward.Mul(decimal.NewFromInt(rewardProportion)).Div(decimal.NewFromInt(100))
 	burnRewards = originReward.Sub(actualRewards)
 
@@ -631,14 +844,13 @@ func calculateRewards(token *model.MysteryBoxToken, originReward decimal.Decimal
 }
 
 func transferRewardsToUser(
-	token *model.MysteryBoxToken, reward decimal.Decimal,
+	targetAddress common.Address, reward decimal.Decimal,
 ) (txHash string, blockHash string, blockNumber uint64, err error) {
 	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(config.C.ChainId))
 	if err != nil {
 		return
 	}
 
-	targetAddress := common.HexToAddress(token.Owner)
 	targetCount := new(big.Int)
 	targetCount.SetString(reward.Mul(decimal.NewFromFloat(1e18)).StringFixed(0), 10)
 
@@ -686,6 +898,55 @@ func burnOwlToken(
 	blockNumber = receipt.BlockNumber.Uint64()
 
 	return
+}
+
+func RetryClaimMultipleTask(taskId int64, doTransfer bool, doBurn bool) error {
+	task := model.TransferMultipleRewards{}
+	task.ID = uint(taskId)
+
+	if err := database.DB.Where(&task).First(&task).Error; err != nil {
+		return err
+	}
+
+	if doTransfer && task.ClaimedRewards.IsPositive() {
+		txHash, blockHash, blockNumber, err := transferRewardsToUser(common.HexToAddress(task.User), task.ClaimedRewards)
+		if err != nil {
+			task.Result = task.Result + fmt.Sprintf("Error : %v;", err)
+			task.Status = constant.MintJobStatusFailed
+		} else {
+			task.TransferTxHash = txHash
+			task.TransferBlockNumber = blockNumber
+			task.TransferBlockHash = blockHash
+			task.Result = task.Result + fmt.Sprintf("Success(%v);", txHash)
+			task.Status = constant.MintJobStatusSuccess
+		}
+
+		if err = database.DB.Save(&task).Error; err != nil {
+			log.Warnf("Error update transferRecord for transfer: %v", err)
+			return err
+		}
+	}
+
+	if doBurn && task.BurnedRewards.IsPositive() {
+		burnTxHash, _, _, err := burnOwlToken(task.BurnedRewards)
+		if err != nil {
+			task.Result = task.Result + fmt.Sprintf("BurnError : %v;", err)
+		} else {
+			task.Result = task.Result + fmt.Sprintf("BurnSuccess(%v);", burnTxHash)
+		}
+		task.BurnTxHash = burnTxHash
+		if err = database.DB.Save(&task).Error; err != nil {
+			log.Warnf("Error update transferRecord for burna: %v", err)
+			return err
+		}
+
+		err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Burn: task.BurnedRewards})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type OwlGameOwlTokenBurnedHandler struct{}

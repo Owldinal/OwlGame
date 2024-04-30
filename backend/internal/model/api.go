@@ -13,6 +13,7 @@ const (
 	WrongParam          ResponseCode = 401
 	NotFound            ResponseCode = 404
 	HCaptchaFailed      ResponseCode = 402
+	InvalidSignature    ResponseCode = 405
 	ServerInternalError ResponseCode = 500
 )
 
@@ -52,6 +53,12 @@ type PaginationResponse[T any] struct {
 type GetMintSignatureRequest struct {
 	Wallet   string `json:"wallet" binding:"required"`
 	HCaptcha string `json:"hcaptcha" binding:"required"`
+}
+
+type SignedRequest struct {
+	Address   string `json:"address" form:"address" binding:"required"`
+	Message   string `json:"message" form:"message" binding:"required"`
+	Signature string `json:"signature" form:"signature" binding:"required"`
 }
 
 type GetMintSignatureResponse struct {
@@ -96,12 +103,14 @@ type UserReferralRewards struct {
 }
 
 type UserBoxInfo struct {
-	Total          int      `json:"total"`
-	Staked         int      `json:"staked"`
-	Apr            float64  `json:"apr"`
-	Apy            float64  `json:"apy"`
-	StakedIdList   []uint64 `json:"staked_id_list"`
-	UnstakedIdList []uint64 `json:"unstaked_id_list"`
+	Total          int             `json:"total"`
+	Staked         int             `json:"staked"`
+	Apr            float64         `json:"apr"`
+	Apy            float64         `json:"apy"`
+	TotalClaimed   decimal.Decimal `json:"total_claimed"`
+	TotalEarning   decimal.Decimal `json:"total_earning"`
+	StakedIdList   []uint64        `json:"staked_id_list"`
+	UnstakedIdList []uint64        `json:"unstaked_id_list"`
 }
 
 type GetUserOwldinalsRequest struct {
@@ -201,6 +210,13 @@ type UpdateFruitRequest struct {
 	CompareTime *time.Time `json:"compare_time" form:"compare_time" time_format:"2006-01-02T15:04:05Z" time_utc:"1"`
 }
 
+type RetryTransferMultipleRequest struct {
+	Secret   string `json:"secret" form:"secret"`
+	TaskId   int64  `json:"task_id" form:"task_id"`
+	Transfer bool   `json:"transfer" form:"transfer"`
+	Burn     bool   `json:"burn" form:"burn"`
+}
+
 type RequestJobRequest struct {
 	Tx string `json:"tx" form:"tx"`
 }
@@ -217,4 +233,17 @@ type ReloadLogRequest struct {
 	//FromBlock int64 `json:"from_block"`
 	//ToBlock   int64 `json:"to_block"`
 	Block int64 `json:"block" form:"block"`
+}
+
+type ClaimBoxRequest struct {
+	SignedRequest
+	TokenIds []uint64 `json:"token_ids" form:"token_ids"`
+}
+
+type ClaimBoxResponse struct {
+	Status          constant.ClaimStatus `json:"status"`
+	TotalClaimed    decimal.Decimal      `json:"total_claimed"`
+	TotalBurned     decimal.Decimal      `json:"total_burned"`
+	TransactionHash string               `json:"transaction_hash"`
+	ClaimedBoxes    []MysteryBoxToken    `json:"claimed_boxes"`
 }

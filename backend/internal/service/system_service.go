@@ -11,6 +11,7 @@ import (
 	"owl-backend/internal/config"
 	"owl-backend/internal/database"
 	"owl-backend/internal/eth"
+	"owl-backend/internal/eventlistener"
 	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
 	"time"
@@ -92,4 +93,10 @@ func processJobs() (jobIds []uint) {
 	//}
 
 	return
+}
+
+func RetryTransferMultiple(taskId int64, doTransfer bool, doBurn bool) (response interface{}, code model.ResponseCode, msg string) {
+	log.Infof("Retry Transfer Multiple for %v", taskId)
+	jobIds := eventlistener.RetryClaimMultipleTask(taskId, doTransfer, doBurn)
+	return jobIds, model.Success, ""
 }

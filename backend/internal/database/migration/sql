@@ -514,6 +514,29 @@ CREATE TABLE `transfer_rewards`
     `deleted_at`            TIMESTAMP        NULL DEFAULT NULL
 );
 
+CREATE TABLE IF NOT EXISTS transfer_multiple_rewards
+(
+    id                    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user                  CHAR(42)         NOT NULL,
+    token_id_list         TEXT,
+    claimed_rewards       DECIMAL(36, 18)  NOT NULL,
+    elf_rewards           DECIMAL(36, 18)  NOT NULL,
+    burned_rewards        DECIMAL(36, 18)  NOT NULL,
+    buff_level            TINYINT UNSIGNED NOT NULL,
+    moon_boost            BOOLEAN          NOT NULL,
+    has_confirmed         BOOLEAN          NOT NULL,
+    status                INT UNSIGNED     NOT NULL,
+    result                TEXT,
+    transfer_tx_hash      CHAR(66),
+    transfer_log_index    INT UNSIGNED     NOT NULL,
+    transfer_block_number BIGINT UNSIGNED  NOT NULL,
+    transfer_block_hash   CHAR(66),
+    burn_tx_hash          CHAR(66),
+    created_at            TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP             DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at            TIMESTAMP        NULL DEFAULT NULL
+);
+
 -- initial date
 INSERT INTO daily_pool_snapshots (date, total_pool_amount, allocated_rewards, total_market_cap, total_burn)
 VALUES ('1970-01-01', 0.0, 0.0, 0.0, 0.0);

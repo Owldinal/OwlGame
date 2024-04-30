@@ -29,7 +29,7 @@ var (
 	owlGame    *abigen.OwlGame
 )
 
-func StartJobListening() {
+func init() {
 	var err error
 	ethClient, err = ethclient.Dial(config.C.NodeUrl)
 	if err != nil {
@@ -37,9 +37,11 @@ func StartJobListening() {
 	}
 
 	privateKey, err = crypto.HexToECDSA(config.C.BackendWalletPrivateKey)
+}
 
-	owlGameAddr := common.HexToAddress(config.C.OwlGameAddr)
-	owlGame, err = abigen.NewOwlGame(owlGameAddr, ethClient)
+func StartJobListening() {
+	owlGameAddr = common.HexToAddress(config.C.OwlGameAddr)
+	owlGame, _ = abigen.NewOwlGame(owlGameAddr, ethClient)
 
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()

@@ -8,6 +8,7 @@ import (
 	"owl-backend/internal/eventlistener"
 	"owl-backend/internal/model"
 	"owl-backend/internal/service"
+	"owl-backend/internal/util"
 	"owl-backend/pkg/log"
 )
 
@@ -107,6 +108,31 @@ func GetUserInviteList(c *gin.Context) {
 	}
 
 	data, code, msg := service.GetUserInviteList(req.Wallet, req.PaginationRequest)
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}
+
+func ClaimBoxes(c *gin.Context) {
+	var req model.ClaimBoxRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+	if !common.IsHexAddress(req.Address) {
+		ErrorResponse(c, model.WrongParam, "Wrong Param 'address'")
+		return
+	}
+
+	err := util.ValidSignature(req.Address, req.Message, req.Signature)
+	if err != nil {
+		ErrorResponse(c, model.InvalidSignature, err.Error())
+		return
+	}
+	data, code, msg := service.ClaimToken(req.Address, req.TokenIds)
 
 	if code == model.Success {
 		SuccessResponse(c, data)
@@ -215,6 +241,27 @@ func RetryAllJobs(c *gin.Context) {
 	}
 }
 
+func RetryTransferMultiple(c *gin.Context) {
+	var req model.RetryTransferMultipleRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	if req.Secret != config.C.Secret {
+		ErrorResponse(c, model.WrongParam, "Wrong Param")
+		return
+	}
+
+	data, code, msg := service.RetryTransferMultiple(req.TaskId, req.Transfer, req.Burn)
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}
+
 func GetRequestJob(c *gin.Context) {
 	var req model.RequestJobRequest
 	if err := c.ShouldBind(&req); err != nil {
@@ -240,4 +287,25 @@ func ReloadLog(c *gin.Context) {
 	block := big.NewInt(req.Block)
 	eventlistener.ProcessLogs(block, block)
 	SuccessResponse(c, nil)
+}
+
+func CheckSignature(c *gin.Context) {
+	var req model.SignedRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	if !common.IsHexAddress(req.Address) {
+		ErrorResponse(c, model.WrongParam, "Wrong Param 'wallet'")
+		return
+	}
+
+	err := util.ValidSignature(req.Address, req.Message, req.Signature)
+	if err != nil {
+		ErrorResponse(c, model.InvalidSignature, err.Error())
+		return
+	}
+
+	SuccessResponse(c, true)
 }

@@ -12,6 +12,7 @@ import (
 	"owl-backend/internal/constant"
 	"owl-backend/internal/database"
 	"owl-backend/internal/eth"
+	"owl-backend/internal/eventlistener"
 	"owl-backend/internal/model"
 	"owl-backend/pkg/log"
 )
@@ -88,6 +89,8 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 			boxInfo = &elfInfo
 		}
 		boxInfo.Total += 1
+		boxInfo.TotalClaimed = boxInfo.TotalClaimed.Add(token.ClaimedRewards)
+		boxInfo.TotalEarning = boxInfo.TotalEarning.Add(token.CurrentRewards)
 
 		if token.IsStaking {
 			boxInfo.Staked += 1
@@ -338,4 +341,37 @@ func loadOwlBalanceByWallet(wallet common.Address) (*decimal.Decimal, error) {
 
 	amount := decimal.NewFromBigInt(balance, -18)
 	return &amount, nil
+}
+
+func ClaimToken(user string, tokenIds []uint64) (response *model.ClaimBoxResponse, code model.ResponseCode, msg string) {
+	claimedIdList, totalRewards, burnedRewards, txHash, err := eventlistener.ClaimMultipleTokenRewards(user, tokenIds)
+	if err != nil {
+		return nil, model.ServerInternalError, fmt.Sprintf("Failed to claim. err: %v", err)
+	}
+
+	var tokenList []model.MysteryBoxToken
+	if err = database.DB.
+		Where("token_id IN ?", claimedIdList).
+		Find(&tokenList).
+		Error; err != nil {
+		log.Warnf("Failed to load claimedTokenIds: %v, err: %v", claimedIdList, err)
+		return nil, model.ServerInternalError, fmt.Sprintf("Failed to load tokens. err=%v", err)
+	}
+
+	response = &model.ClaimBoxResponse{
+		TotalClaimed:    totalRewards,
+		TotalBurned:     burnedRewards,
+		TransactionHash: txHash,
+		ClaimedBoxes:    tokenList,
+	}
+
+	if totalRewards.IsZero() || len(tokenList) == 0 {
+		response.Status = constant.ClaimStatusNoRewards
+	} else if txHash == "" {
+		response.Status = constant.ClaimStatusProcessing
+	} else {
+		response.Status = constant.ClaimStatusSuccess
+	}
+
+	return response, model.Success, ""
 }
