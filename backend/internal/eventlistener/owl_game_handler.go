@@ -900,7 +900,7 @@ func burnOwlToken(
 	return
 }
 
-func RetryClaimMultipleTask(taskId int64) error {
+func RetryClaimMultipleTask(taskId int64, doTransfer bool, doBurn bool) error {
 	task := model.TransferMultipleRewards{}
 	task.ID = uint(taskId)
 
@@ -908,21 +908,42 @@ func RetryClaimMultipleTask(taskId int64) error {
 		return err
 	}
 
-	txHash, blockHash, blockNumber, err := transferRewardsToUser(common.HexToAddress(task.User), task.ClaimedRewards)
-	if err != nil {
-		task.Result = task.Result + fmt.Sprintf("Error : %v;", err)
-		task.Status = constant.MintJobStatusFailed
-	} else {
-		task.TransferTxHash = txHash
-		task.TransferBlockNumber = blockNumber
-		task.TransferBlockHash = blockHash
-		task.Result = task.Result + fmt.Sprintf("Success(%v);", txHash)
-		task.Status = constant.MintJobStatusSuccess
+	if doTransfer && task.ClaimedRewards.IsPositive() {
+		txHash, blockHash, blockNumber, err := transferRewardsToUser(common.HexToAddress(task.User), task.ClaimedRewards)
+		if err != nil {
+			task.Result = task.Result + fmt.Sprintf("Error : %v;", err)
+			task.Status = constant.MintJobStatusFailed
+		} else {
+			task.TransferTxHash = txHash
+			task.TransferBlockNumber = blockNumber
+			task.TransferBlockHash = blockHash
+			task.Result = task.Result + fmt.Sprintf("Success(%v);", txHash)
+			task.Status = constant.MintJobStatusSuccess
+		}
+
+		if err = database.DB.Save(&task).Error; err != nil {
+			log.Warnf("Error update transferRecord for transfer: %v", err)
+			return err
+		}
 	}
 
-	if err = database.DB.Save(&task).Error; err != nil {
-		log.Warnf("Error update transferRecord for transfer: %v", err)
-		return err
+	if doBurn && task.BurnedRewards.IsPositive() {
+		burnTxHash, _, _, err := burnOwlToken(task.BurnedRewards)
+		if err != nil {
+			task.Result = task.Result + fmt.Sprintf("BurnError : %v;", err)
+		} else {
+			task.Result = task.Result + fmt.Sprintf("BurnSuccess(%v);", burnTxHash)
+		}
+		task.BurnTxHash = burnTxHash
+		if err = database.DB.Save(&task).Error; err != nil {
+			log.Warnf("Error update transferRecord for burna: %v", err)
+			return err
+		}
+
+		err = UpdateDailyPoolSnapshot(DailyPoolUpdater{Burn: task.BurnedRewards})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

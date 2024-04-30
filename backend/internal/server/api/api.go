@@ -253,7 +253,7 @@ func RetryTransferMultiple(c *gin.Context) {
 		return
 	}
 
-	data, code, msg := service.RetryTransferMultiple(req.TaskId)
+	data, code, msg := service.RetryTransferMultiple(req.TaskId, req.Transfer, req.Burn)
 
 	if code == model.Success {
 		SuccessResponse(c, data)

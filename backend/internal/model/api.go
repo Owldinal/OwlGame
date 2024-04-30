@@ -211,8 +211,10 @@ type UpdateFruitRequest struct {
 }
 
 type RetryTransferMultipleRequest struct {
-	Secret string `json:"secret" form:"secret"`
-	TaskId int64  `json:"task_id" form:"task_id"`
+	Secret   string `json:"secret" form:"secret"`
+	TaskId   int64  `json:"task_id" form:"task_id"`
+	Transfer bool   `json:"transfer" form:"transfer"`
+	Burn     bool   `json:"burn" form:"burn"`
 }
 
 type RequestJobRequest struct {
