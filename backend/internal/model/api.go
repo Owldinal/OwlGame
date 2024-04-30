@@ -103,12 +103,14 @@ type UserReferralRewards struct {
 }
 
 type UserBoxInfo struct {
-	Total          int      `json:"total"`
-	Staked         int      `json:"staked"`
-	Apr            float64  `json:"apr"`
-	Apy            float64  `json:"apy"`
-	StakedIdList   []uint64 `json:"staked_id_list"`
-	UnstakedIdList []uint64 `json:"unstaked_id_list"`
+	Total          int             `json:"total"`
+	Staked         int             `json:"staked"`
+	Apr            float64         `json:"apr"`
+	Apy            float64         `json:"apy"`
+	TotalClaimed   decimal.Decimal `json:"total_claimed"`
+	TotalEarning   decimal.Decimal `json:"total_earning"`
+	StakedIdList   []uint64        `json:"staked_id_list"`
+	UnstakedIdList []uint64        `json:"unstaked_id_list"`
 }
 
 type GetUserOwldinalsRequest struct {

@@ -89,6 +89,8 @@ func GetUserInfo(wallet string) (response *model.GetUserInfoResponse, code model
 			boxInfo = &elfInfo
 		}
 		boxInfo.Total += 1
+		boxInfo.TotalClaimed = boxInfo.TotalClaimed.Add(token.ClaimedRewards)
+		boxInfo.TotalEarning = boxInfo.TotalEarning.Add(token.CurrentRewards)
 
 		if token.IsStaking {
 			boxInfo.Staked += 1
