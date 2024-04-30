@@ -756,7 +756,7 @@ func ClaimMultipleTokenRewards(
 			transferTxHash = txHash
 			transferRecord.TransferBlockNumber = blockNumber
 			transferRecord.TransferBlockHash = blockHash
-			transferRecord.Result = transferRecord.Result + fmt.Sprintf("Success;")
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("Success(%v);", txHash)
 			transferRecord.Status = constant.MintJobStatusSuccess
 
 		}
@@ -773,7 +773,7 @@ func ClaimMultipleTokenRewards(
 		if err != nil {
 			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnError : %v;", err)
 		} else {
-			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnSuccess;")
+			transferRecord.Result = transferRecord.Result + fmt.Sprintf("BurnSuccess(%v);", burnTxHash)
 		}
 		transferRecord.BurnTxHash = burnTxHash
 		if err = database.DB.Save(&transferRecord).Error; err != nil {
@@ -898,6 +898,34 @@ func burnOwlToken(
 	blockNumber = receipt.BlockNumber.Uint64()
 
 	return
+}
+
+func RetryClaimMultipleTask(taskId int64) error {
+	task := model.TransferMultipleRewards{}
+	task.ID = uint(taskId)
+
+	if err := database.DB.Where(&task).First(&task).Error; err != nil {
+		return err
+	}
+
+	txHash, blockHash, blockNumber, err := transferRewardsToUser(common.HexToAddress(task.User), task.ClaimedRewards)
+	if err != nil {
+		task.Result = task.Result + fmt.Sprintf("Error : %v;", err)
+		task.Status = constant.MintJobStatusFailed
+	} else {
+		task.TransferTxHash = txHash
+		task.TransferBlockNumber = blockNumber
+		task.TransferBlockHash = blockHash
+		task.Result = task.Result + fmt.Sprintf("Success(%v);", txHash)
+		task.Status = constant.MintJobStatusSuccess
+	}
+
+	if err = database.DB.Save(&task).Error; err != nil {
+		log.Warnf("Error update transferRecord for transfer: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 type OwlGameOwlTokenBurnedHandler struct{}

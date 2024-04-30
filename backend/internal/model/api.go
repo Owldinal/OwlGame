@@ -210,6 +210,11 @@ type UpdateFruitRequest struct {
 	CompareTime *time.Time `json:"compare_time" form:"compare_time" time_format:"2006-01-02T15:04:05Z" time_utc:"1"`
 }
 
+type RetryTransferMultipleRequest struct {
+	Secret string `json:"secret" form:"secret"`
+	TaskId int64  `json:"task_id" form:"task_id"`
+}
+
 type RequestJobRequest struct {
 	Tx string `json:"tx" form:"tx"`
 }

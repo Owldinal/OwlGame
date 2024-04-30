@@ -241,6 +241,27 @@ func RetryAllJobs(c *gin.Context) {
 	}
 }
 
+func RetryTransferMultiple(c *gin.Context) {
+	var req model.RetryTransferMultipleRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ErrorResponse(c, model.WrongParam, "Missing Param")
+		return
+	}
+
+	if req.Secret != config.C.Secret {
+		ErrorResponse(c, model.WrongParam, "Wrong Param")
+		return
+	}
+
+	data, code, msg := service.RetryTransferMultiple(req.TaskId)
+
+	if code == model.Success {
+		SuccessResponse(c, data)
+	} else {
+		ErrorResponse(c, code, msg)
+	}
+}
+
 func GetRequestJob(c *gin.Context) {
 	var req model.RequestJobRequest
 	if err := c.ShouldBind(&req); err != nil {

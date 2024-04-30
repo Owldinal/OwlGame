@@ -55,5 +55,7 @@ func registerRouters(engine *gin.Engine) {
 		apiGroup.POST("/admin/update_rewards", api.UpdateRewards)
 		apiGroup.POST("/admin/retry_all_jobs", api.RetryAllJobs)
 		apiGroup.POST("/admin/reload_log", api.ReloadLog)
+		apiGroup.POST("/admin/retry_transfer_multiple", api.RetryTransferMultiple)
+
 	}
 }
