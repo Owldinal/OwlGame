@@ -674,6 +674,12 @@ func ClaimMultipleTokenRewards(
 		}
 	}
 
+	if totalRewards.IsZero() { // Should never happen
+		log.Warnf("ClaimMultiple: rewards is zero: %v", tokenIdList)
+		tx.Rollback()
+		return
+	}
+
 	if err = tx.Commit().Error; err != nil {
 		log.Warnf("Error committing transaction: %v", err)
 		return
@@ -688,12 +694,7 @@ func ClaimMultipleTokenRewards(
 		BurnedRewards:  burnedRewards,
 		BuffLevel:      buffLevel,
 		MoonBoost:      isMoonBoost,
-	}
-
-	if totalRewards.IsZero() {
-		transferRecord.Status = constant.MintJobStatusSuccess
-	} else {
-		transferRecord.Status = constant.MintJobStatusProcessing
+		Status:         constant.MintJobStatusProcessing,
 	}
 
 	if err = database.DB.Create(&transferRecord).Error; err != nil {
