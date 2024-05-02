@@ -97,6 +97,10 @@ func processJobs() (jobIds []uint) {
 
 func RetryTransferMultiple(taskId int64, doTransfer bool, doBurn bool) (response interface{}, code model.ResponseCode, msg string) {
 	log.Infof("Retry Transfer Multiple for %v", taskId)
-	jobIds := eventlistener.RetryClaimMultipleTask(taskId, doTransfer, doBurn)
-	return jobIds, model.Success, ""
+	err := eventlistener.RetryClaimMultipleTask(taskId, doTransfer, doBurn)
+	if err != nil {
+		return nil, model.ServerInternalError, err.Error()
+	}
+
+	return true, model.Success, ""
 }

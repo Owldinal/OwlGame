@@ -64,6 +64,7 @@ func StartJobListening() {
 			processJobs(owlGame)
 		case <-checkUnconfirmJobTicker.C:
 			CheckUnconfirmedJob()
+			RetryTransferMultipleJob()
 		case <-done:
 			log.Infof("Job listener stopped.")
 		}
@@ -177,6 +178,33 @@ func CheckUnconfirmedJob() {
 	}
 
 	log.Infof("JobRetry: size=%v, id=%v", len(requestIdList), requestIdList)
+}
+
+func RetryTransferMultipleJob() {
+	var jobs []model.TransferMultipleRewards
+	now := time.Now()
+	err := database.DB.
+		Where("created_at <= ?", now.Add(-5*time.Minute)).
+		Where("status = ?", constant.MintJobStatusFailed).
+		Find(&jobs).Error
+	if err != nil {
+		log.Warnf("Error retrieving jobs: %v", err)
+		return
+	}
+
+	requestIdList := make([]uint64, 0)
+	for _, job := range jobs {
+		doBurn := job.BurnedRewards.IsPositive()
+		err := RetryClaimMultipleTask(int64(job.ID), true, doBurn)
+		if err != nil {
+			log.Warnf("Failed to Retry transfer multiple job. err = %v", err)
+		}
+		requestIdList = append(requestIdList, uint64(job.ID))
+	}
+
+	if len(jobs) > 0 {
+		log.Infof("RetryTransferMultipleJob: size=%v, id=%v", len(requestIdList), requestIdList)
+	}
 }
 
 func UpdateFruitReward(compareTime *time.Time) {
