@@ -3,30 +3,33 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/shopspring/decimal"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
+	"owl-backend/abigen"
 	"owl-backend/internal/config"
+	"owl-backend/internal/eth"
 	"owl-backend/pkg/log"
 	"syscall"
 	"time"
 )
 
 var (
-	client *ethclient.Client
-	wallet string
+	wallet           string
+	owlTokenContract *abigen.OwlToken
 )
 
 func init() {
 	var err error
-	client, err = ethclient.Dial(config.C.NodeUrl)
+	owlTokenContract, err = abigen.NewOwlToken(common.HexToAddress(config.C.OwlTokenAddr), eth.Client)
 	if err != nil {
-		log.Fatal("Failed to connect to the Ethereum client: %v", err)
+		log.Fatalf("Failed init telegram bot: %v", err)
 	}
+
 	wallet = config.C.BackendWalletAddress
 }
 
@@ -46,18 +49,19 @@ func main() {
 		select {
 		case <-ticker.C:
 			checkWalletBalance()
+			checkOwldinalBalance()
 		case <-done:
 			log.Infof("Job listener stopped.")
 		}
 	}
-
 }
 
 func checkWalletBalance() {
 	account := common.HexToAddress(wallet)
-	balanceByWei, err := client.BalanceAt(context.Background(), account, nil)
+	balanceByWei, err := eth.Client.BalanceAt(context.Background(), account, nil)
 	if err != nil {
 		log.Warnf("Balance : failed to fetch : %v", err)
+		sendMessage(fmt.Sprintf("Failed to fetch wallet balance"))
 		return
 	}
 
@@ -65,7 +69,24 @@ func checkWalletBalance() {
 	log.Infof("balance is %v", balance)
 
 	if balance.LessThan(decimal.NewFromFloat(0.002)) {
-		sendMessage(fmt.Sprintf("Wallet balance remaining %v . Please transfer to: %v", balance, config.C.BackendWalletAddress))
+		sendMessage(fmt.Sprintf("Wallet balance remaining %v . Please transfer BTC to: %v", balance, config.C.BackendWalletAddress))
+	}
+}
+
+func checkOwldinalBalance() {
+	account := common.HexToAddress(wallet)
+	balanceByWei, err := owlTokenContract.BalanceOf(&bind.CallOpts{}, account)
+	if err != nil {
+		log.Warnf("Balance : failed to fetch : %v", err)
+		sendMessage(fmt.Sprintf("Failed to fetch Owldinal balance"))
+		return
+	}
+
+	balance := decimal.NewFromBigInt(balanceByWei, -18)
+	log.Infof("owl token is %v", balance)
+
+	if balance.LessThan(decimal.NewFromFloat(10000000)) {
+		sendMessage(fmt.Sprintf("OwlToken remaining %v . Please transfer more OwlToken to: %v", balance.IntPart(), config.C.BackendWalletAddress))
 	}
 }
 
