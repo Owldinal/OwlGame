@@ -50,6 +50,9 @@ func StartJobListening() {
 	checkUnconfirmJobTicker := time.NewTicker(10 * time.Minute)
 	defer checkUnconfirmJobTicker.Stop()
 
+	checkUnconfirmTransferMultipleJobTicker := time.NewTicker(10 * time.Minute)
+	defer checkUnconfirmTransferMultipleJobTicker.Stop()
+
 	done := make(chan bool)
 	go func() {
 		quit := make(chan os.Signal, 1)
@@ -64,6 +67,7 @@ func StartJobListening() {
 			processJobs(owlGame)
 		case <-checkUnconfirmJobTicker.C:
 			CheckUnconfirmedJob()
+		case <-checkUnconfirmTransferMultipleJobTicker.C:
 			RetryTransferMultipleJob()
 		case <-done:
 			log.Infof("Job listener stopped.")
