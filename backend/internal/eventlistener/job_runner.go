@@ -198,7 +198,7 @@ func RetryTransferMultipleJob() {
 
 	requestIdList := make([]uint64, 0)
 	for _, job := range jobs {
-		doBurn := job.BurnedRewards.IsPositive()
+		doBurn := job.BurnedRewards.IsPositive() && job.BurnTxHash == ""
 		err := RetryClaimMultipleTask(int64(job.ID), true, doBurn)
 		if err != nil {
 			log.Warnf("Failed to Retry transfer multiple job. err = %v", err)
