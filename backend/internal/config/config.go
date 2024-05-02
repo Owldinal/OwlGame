@@ -14,6 +14,7 @@ type Config struct {
 	Port int    `env:"PORT" envDefault:"8080"`
 
 	BackendWalletPrivateKey string `env:"BACKEND_WALLET_PRIVATE_KEY" envDefault:""`
+	BackendWalletAddress    string `env:"BACKEND_WALLET_ADDR" envDefault:""`
 	Secret                  string `env:"SECRET" envDefault:""`
 
 	HCaptchaKey     string `env:"HCAPTCHA_KEY" envDefault:""`
@@ -39,6 +40,9 @@ type Config struct {
 
 	NeedCheckMoonBoost bool  `env:"NEED_CHECK_MOON_BOOST" envDefault:"false"`
 	GasPrice           int64 `env:"GAS_PRICE" envDefault:"0"`
+
+	TgBotApiKey string `env:"TGBOT_KEY" envDefault:""`
+	TgBotChatId string `env:"TGBOT_CHAT_ID" envDefault:""`
 }
 
 func init() {
