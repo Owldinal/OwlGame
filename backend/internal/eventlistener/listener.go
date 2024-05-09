@@ -136,6 +136,77 @@ func StartEventChecker() error {
 	return nil
 }
 
+func StartEventCheckerWithDelay() {
+
+	log.Infof("Check with delay Start event checker with delay")
+
+	startBlock := big.NewInt(config.C.EventStartBlock)
+	gapBlocks := big.NewInt(1024)
+
+	for {
+
+		log.Infof("Check with delay Start block: %v", startBlock)
+
+		currentBlock, err := getCurrentBlock()
+		log.Infof("Check with delay Current block: %v", currentBlock)
+		if err != nil {
+			log.Fatal("Check with delay Failed to get the latest block header: %v", err)
+			time.Sleep(100 * time.Second)
+			continue
+		}
+
+		// 24 blocks per min,
+		// so we pick about 10 minutes here
+		endBlock := big.NewInt(0).Sub(currentBlock, big.NewInt(200))
+		log.Infof("Check with delay end block: %v", endBlock)
+		if endBlock.Cmp(startBlock) <= 0 {
+			time.Sleep(100 * time.Second)
+			continue
+		}
+
+		for startBlock.Cmp(endBlock) < 0 {
+
+			nextBlock := big.NewInt(0).Add(startBlock, gapBlocks)
+			if nextBlock.Cmp(endBlock) > 0 {
+				nextBlock.Set(endBlock)
+			}
+
+			log.Infof("Check with delay : handle history from %v to %v", startBlock, nextBlock)
+			eventQuery := ethereum.FilterQuery{
+				FromBlock: startBlock,
+				ToBlock:   nextBlock,
+				Addresses: contractAddress,
+			}
+
+			logs := FilterWithRetry(context.Background(), eventQuery)
+
+			for _, vLog := range logs {
+				err := checkLogExistAndReturnError(vLog)
+				if err != nil {
+					log.Infof("Check with delay Retry block : %v ", vLog.BlockNumber)
+					block := big.NewInt(int64(vLog.BlockNumber))
+					ProcessLogs(block, block)
+				}
+			}
+
+			startBlock = big.NewInt(0).Add(nextBlock, big.NewInt(1))
+
+		}
+
+	}
+
+}
+
+func FilterWithRetry(ctx context.Context, eventQuery ethereum.FilterQuery) []types.Log {
+	logs, err := client.FilterLogs(ctx, eventQuery)
+	if err != nil {
+		log.Fatal("Failed to filter logs: %v", err)
+		time.Sleep(10 * time.Second)
+		return FilterWithRetry(ctx, eventQuery)
+	}
+	return logs
+}
+
 func registerHandlers(eventProcessor *EventProcessor) {
 	owldinalNftAddr := common.HexToAddress(config.C.NftOwlAddr)
 	genOneBoxAddr := common.HexToAddress(config.C.NftMysteryBoxAddr)
@@ -335,6 +406,10 @@ func checkHistoryEvents(
 }
 
 func checkLogExist(vlog types.Log) {
+	_ = checkLogExistAndReturnError(vlog)
+}
+
+func checkLogExistAndReturnError(vlog types.Log) error {
 	eventHash := vlog.Topics[0].Hex()
 	var err error
 	if vlog.Address == owlGameAddr {
@@ -475,4 +550,6 @@ func checkLogExist(vlog types.Log) {
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Warnf("Missing Event: hash= %v , blockNum= %v", vlog.TxHash, vlog.BlockNumber)
 	}
+
+	return err
 }

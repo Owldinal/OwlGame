@@ -6,5 +6,6 @@ import (
 
 func main() {
 	go eventlistener.StartJobListening()
-	eventlistener.StartEventListening()
+	go eventlistener.StartEventCheckerWithDelay()
+	_ = eventlistener.StartEventListening()
 }
