@@ -34,6 +34,15 @@ func init() {
 		panic(err)
 	}
 
+	// import cycle
+	//if !DB.Migrator().HasTable(&model.BlockRecords{}) {
+	//	err := DB.Migrator().CreateTable(&model.BlockRecords{})
+	//	if err != nil {
+	//		log.Errorf("Failed to create table: %v", err)
+	//		return
+	//	}
+	//}
+
 	fmt.Printf("%v mysql init successfully\n", time.Now())
 }
 

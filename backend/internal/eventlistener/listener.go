@@ -105,7 +105,10 @@ func init() {
 }
 
 func StartEventListening() error {
-	startBlock := big.NewInt(config.C.EventStartBlock)
+	//startBlock := big.NewInt(config.C.EventStartBlock)
+	var result uint64
+	database.DB.Raw("select block_height from block_records where record_type = 0 limit 1").Scan(&result)
+	startBlock := big.NewInt(int64(result))
 	header, err := getCurrentBlock()
 	if err != nil {
 		log.Fatal("Failed to get the latest block header: %v", err)
@@ -138,33 +141,29 @@ func StartEventChecker() error {
 
 func StartEventCheckerWithDelay() {
 
-	log.Infof("Check with delay Start event checker with delay")
+	log.Infof("Start event checker with delay")
 
-	startBlock, e := getCurrentBlock()
-	if e != nil {
-		log.Fatal("Failed to get the latest block header: %v", e)
-		startBlock = big.NewInt(config.C.EventStartBlock)
-	}
+	var result uint64
+	database.DB.Raw("select block_height from block_records where record_type = 1 limit 1").Scan(&result)
+	startBlock := big.NewInt(int64(result))
 	gapBlocks := big.NewInt(1024)
-	time.Sleep(100 * time.Second)
+	//time.Sleep(100 * time.Second)
 
 	for {
 
-		log.Infof("Check with delay Start block: %v", startBlock)
+		log.Debugf("Check with delay Start block: %v", startBlock)
 
-		currentBlock, err := getCurrentBlock()
-		log.Infof("Check with delay Current block: %v", currentBlock)
-		if err != nil {
-			log.Fatal("Check with delay Failed to get the latest block header: %v", err)
-			time.Sleep(100 * time.Second)
-			continue
-		}
+		var result uint64
+		database.DB.Raw("select block_height from block_records where record_type = 0 limit 1").Scan(&result)
+		currentBlock := big.NewInt(int64(result))
+		log.Debugf("Check with delay Current block: %v", currentBlock)
 
 		// 24 blocks per min,
 		// so we pick about 10 minutes here
 		endBlock := big.NewInt(0).Sub(currentBlock, big.NewInt(200))
-		log.Infof("Check with delay end block: %v", endBlock)
+		log.Debugf("Check with delay end block: %v", endBlock)
 		if endBlock.Cmp(startBlock) <= 0 {
+			log.Debugf("Check with delay runs too fast, time to sleep")
 			time.Sleep(100 * time.Second)
 			continue
 		}
@@ -176,7 +175,7 @@ func StartEventCheckerWithDelay() {
 				nextBlock.Set(endBlock)
 			}
 
-			log.Infof("Check with delay : handle history from %v to %v", startBlock, nextBlock)
+			log.Debugf("Check with delay : handle history from %v to %v", startBlock, nextBlock)
 			eventQuery := ethereum.FilterQuery{
 				FromBlock: startBlock,
 				ToBlock:   nextBlock,
@@ -193,6 +192,8 @@ func StartEventCheckerWithDelay() {
 					ProcessLogs(block, block)
 				}
 			}
+
+			database.DB.Exec("update block_records set block_height = ? where record_type = 1", nextBlock.Uint64())
 
 			startBlock = big.NewInt(0).Add(nextBlock, big.NewInt(1))
 
@@ -285,6 +286,8 @@ func handleHistoryEvents(
 			}
 		}
 
+		database.DB.Exec("update block_records set block_height = ? where record_type = 0", nextBlock.Uint64())
+
 		startBlock = big.NewInt(0).Add(nextBlock, big.NewInt(1))
 
 		header, err := getCurrentBlock()
@@ -339,6 +342,8 @@ func pollEvents(
 						log.Infof("Failed to process log: %v", err)
 					}
 				}
+
+				database.DB.Exec("update block_records set block_height = ? where record_type = 0", toBlock.Uint64())
 			}
 		}
 	}()

@@ -163,3 +163,9 @@ type TransferMultipleRewards struct {
 
 	BurnTxHash string `gorm:"size:66;"`
 }
+
+type BlockRecords struct {
+	database.Model
+	RecordType  constant.RecordType `gorm:"type:TINYINT UNSIGNED NOT NULL"`
+	BlockHeight uint64
+}

@@ -545,3 +545,18 @@ VALUES ('1970-01-01', 0.0, 0.0, 0.0, 0.0);
 INSERT INTO apr_snapshots (reward_count, total_fruit_count, total_elf_count, fruit_rewards, fruit_apr, fruit_apy,
                            elf_apr, elf_apy)
 VALUES (0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0);
+
+
+CREATE TABLE block_records
+(
+    `id`           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `record_type`  TINYINT UNSIGNED NOT NULL,
+    `block_height` BIGINT UNSIGNED  NOT NULL,
+    `created_at`   TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`   TIMESTAMP             DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at`   TIMESTAMP        NULL DEFAULT NULL
+);
+
+INSERT INTO block_records (record_type, block_height)
+VALUES (0, 8000000),
+       (1, 8000000);

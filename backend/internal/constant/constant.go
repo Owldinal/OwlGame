@@ -29,6 +29,13 @@ const (
 	ClaimStatusProcessing
 )
 
+type RecordType uint8
+
+const (
+	RecordOfIndexer RecordType = iota
+	RecordOfCheckWithDelay
+)
+
 const NoneAddr = "0x0000000000000000000000000000000000000000"
 const BurnAddr = "0x000000000000000000000000000000000000dEaD"
 
