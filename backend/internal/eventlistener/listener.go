@@ -140,8 +140,13 @@ func StartEventCheckerWithDelay() {
 
 	log.Infof("Check with delay Start event checker with delay")
 
-	startBlock := big.NewInt(config.C.EventStartBlock)
+	startBlock, e := getCurrentBlock()
+	if e != nil {
+		log.Fatal("Failed to get the latest block header: %v", e)
+		startBlock = big.NewInt(config.C.EventStartBlock)
+	}
 	gapBlocks := big.NewInt(1024)
+	time.Sleep(100 * time.Second)
 
 	for {
 
