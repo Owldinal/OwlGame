@@ -187,7 +187,7 @@ func StartEventCheckerWithDelay() {
 
 			for _, vLog := range logs {
 				err := checkLogExistAndReturnError(vLog)
-				if err != nil {
+				if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 					log.Infof("Check with delay Retry block : %v ", vLog.BlockNumber)
 					block := big.NewInt(int64(vLog.BlockNumber))
 					ProcessLogs(block, block)
